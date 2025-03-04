@@ -1,5 +1,11 @@
+import HomeScreen from "./pages/HomeScreen";
+
 const App = () => {
-  return <div></div>;
+  return (
+    <>
+      <HomeScreen />
+    </>
+  );
 };
 
 export default App;
