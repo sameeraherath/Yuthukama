@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
-import { Box } from "@mui/material";
 import {
+  Box,
   Card,
   CardMedia,
   CardContent,
@@ -9,40 +10,29 @@ import {
   Button,
 } from "@mui/material";
 
-const postsData = [
-  {
-    id: 1,
-    title: "Post 1",
-    image: "https://placehold.co/600x400",
-    description: "This is post 1.",
-  },
-  {
-    id: 2,
-    title: "Post 2",
-    image: "https://placehold.co/600x400",
-    description: "This is post 2.",
-  },
-  {
-    id: 3,
-    title: "Post 3",
-    image: "https://placehold.co/600x400",
-    description: "This is post 3.",
-  },
-  {
-    id: 4,
-    title: "Post 4",
-    image: "https://placehold.co/600x400",
-    description: "This is post 4.",
-  },
-  {
-    id: 5,
-    title: "Post 5",
-    image: "https://placehold.co/600x400",
-    description: "This is post 5.",
-  },
-];
-
 const HomeScreen = () => {
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SERVER_URL}/api/posts`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch posts");
+        }
+        const data = await response.json();
+        console.log(data);
+        setPosts(data);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
   return (
     <>
       <Navbar />
@@ -60,8 +50,8 @@ const HomeScreen = () => {
           px: { lg: 10 },
         }}
       >
-        {postsData.map((post) => (
-          <Card key={post.id} sx={{ maxWidth: 420, borderRadius: 5 }}>
+        {posts.map((post) => (
+          <Card key={post._id} sx={{ maxWidth: 420, borderRadius: 5 }}>
             <CardMedia
               component="img"
               height="200"
