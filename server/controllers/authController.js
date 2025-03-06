@@ -77,3 +77,19 @@ export const logoutUser = async (req, res) => {
   res.clearCookie("token");
   res.status(200).json({ message: "Logout successful" });
 };
+
+// @desc Check if user is authenticated
+// @route GET /api/auth/check
+// @access Private
+
+export const checkAuth = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
