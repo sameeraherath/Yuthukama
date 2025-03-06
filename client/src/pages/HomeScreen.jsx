@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
 import {
   Box,
   Card,
@@ -35,7 +34,6 @@ const HomeScreen = () => {
 
   return (
     <>
-      <Navbar />
       <Box
         sx={{
           display: "grid",

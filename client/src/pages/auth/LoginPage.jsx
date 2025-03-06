@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { TextField, Button, Typography, Box } from "@mui/material";
+import { Link } from "react-router-dom";
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -49,6 +50,16 @@ const LoginPage = () => {
           >
             Login
           </Button>
+          {/* Register Button */}
+          <Typography variant="body2" className="text-center mt-4">
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="text-blue-500 hover:text-blue-600 underline"
+            >
+              Register here
+            </Link>
+          </Typography>
         </form>
       </Box>
     </Box>
