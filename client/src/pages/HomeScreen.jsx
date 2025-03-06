@@ -8,9 +8,19 @@ import {
   CardActions,
   Button,
 } from "@mui/material";
+import { useAuth } from "../context/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const HomeScreen = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const fetchPosts = async () => {

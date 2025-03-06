@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { TextField, Button, Typography, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
@@ -13,6 +15,7 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     await register(formData.username, formData.email, formData.password);
+    navigate("/home");
   };
 
   return (

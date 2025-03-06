@@ -1,8 +1,17 @@
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { Typography, Box, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const ProfilePage = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   return (
     <Box className="flex justify-center items-center h-screen">

@@ -1,7 +1,6 @@
-import { createContext, useEffect, useState, useContext } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-
-const AuthContext = createContext();
+import AuthContext from "./AuthContext";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -11,9 +10,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data } = await axios.get("/api/auth/check", {
-          withCredentials: true,
-        });
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setUser(null);
+          return;
+        }
+
+        const { data } = await axios.get(
+          `${import.meta.env.VITE_SERVER_URL}/api/auth/check`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setUser(data);
       } catch (err) {
         console.log(err);
@@ -22,28 +32,36 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       }
     };
+
     checkUser();
   }, []);
 
   // Register user
   const register = async (username, email, password) => {
-    const { data } = await axios.post("/api/auth/register", {
-      username,
-      email,
-      password,
-    });
+    const { data } = await axios.post(
+      `${import.meta.env.VITE_SERVER_URL}/api/auth/register`,
+      { username, email, password }
+    );
+    localStorage.setItem("token", data.token); // Store the token
     setUser(data);
+    return data;
   };
 
   // Login user
   const login = async (email, password) => {
-    const { data } = await axios.post("/api/auth/login", { email, password });
+    const { data } = await axios.post(
+      `${import.meta.env.VITE_SERVER_URL}/api/auth/login`,
+      { email, password }
+    );
+    localStorage.setItem("token", data.token); // Store the token
     setUser(data);
+    return data;
   };
 
   // Logout user
   const logout = async () => {
-    await axios.post("/api/auth/logout");
+    await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/logout`);
+    localStorage.removeItem("token"); // Remove the token
     setUser(null);
   };
 
@@ -54,6 +72,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export default AuthContext;

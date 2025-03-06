@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { TextField, Button, Typography, Box } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
@@ -13,6 +14,7 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     await login(formData.email, formData.password);
+    navigate("/home");
   };
 
   return (
@@ -50,7 +52,6 @@ const LoginPage = () => {
           >
             Login
           </Button>
-          {/* Register Button */}
           <Typography variant="body2" className="text-center mt-4">
             Don't have an account?{" "}
             <Link
