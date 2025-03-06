@@ -14,8 +14,16 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await register(formData.username, formData.email, formData.password);
-    navigate("/home");
+    console.log("Form Data:", formData); // Log the form data
+    try {
+      await register(formData.username, formData.email, formData.password);
+      navigate("/home");
+    } catch (error) {
+      console.error(
+        "Registration failed:",
+        error.response?.data || error.message
+      );
+    }
   };
 
   return (

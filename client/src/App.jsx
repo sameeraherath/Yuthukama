@@ -1,6 +1,6 @@
 import HomeScreen from "./pages/HomeScreen";
 import { Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext.jsx";
+import { AuthProvider } from "./context/AuthContext.jsx"; // Import as named export
 import RegisterPage from "./pages/auth/RegisterPage";
 import LoginPage from "./pages/auth/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
