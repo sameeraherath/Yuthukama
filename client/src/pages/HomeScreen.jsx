@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { Box } from "@mui/material";
+import { Box, Typography, CircularProgress } from "@mui/material";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
 import PostCard from "../components/PostCard";
+import Navbar from "../components/Navbar";
+import usePosts from "../hooks/usePosts";
+import SearchBar from "../components/SearchBar";
 
 const HomeScreen = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [posts, setPosts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (!user) {
@@ -15,50 +18,47 @@ const HomeScreen = () => {
     }
   }, [user, navigate]);
 
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_SERVER_URL}/api/posts`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch posts");
-        }
-        const data = await response.json();
-        console.log(data);
-        setPosts(data);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      }
-    };
+  const { posts, loading, error } = usePosts(localStorage.getItem("token"));
 
-    fetchPost();
-  }, []);
+  const filteredPosts = posts.filter(
+    (post) =>
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          xs: "1fr",
-          sm: "1fr 1fr",
-          md: "repeat(3, 1fr)",
-          lg: "repeat(3, 1fr)",
-        },
-        gap: 3,
-        p: 3,
-        px: { lg: 10 },
-      }}
-    >
-      {posts.map((post) => {
-        return <PostCard key={post._id} post={post} />;
-      })}
-    </Box>
+    <>
+      <Navbar />
+      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Typography color="error" align="center" sx={{ mt: 4 }}>
+          Error loading posts: {error}
+        </Typography>
+      ) : (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "1fr 1fr",
+              md: "repeat(3, 1fr)",
+              lg: "repeat(3, 1fr)",
+            },
+            gap: 3,
+            padding: 3,
+            px: { lg: 10 },
+          }}
+        >
+          {filteredPosts.map((post) => (
+            <PostCard key={post._id} post={post} />
+          ))}
+        </Box>
+      )}
+    </>
   );
 };
 
