@@ -6,8 +6,11 @@ const usePosts = (token) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchPosts = async () => {
       try {
+        setLoading(true);
         const response = await fetch(
           `${import.meta.env.VITE_SERVER_URL}/api/posts`,
           {
@@ -17,15 +20,25 @@ const usePosts = (token) => {
           }
         );
         const data = await response.json();
-        console.log(data);
-        setPosts(data);
+
+        if (isMounted) {
+          const uniquePosts = Array.from(
+            new Map(data.map((post) => [post._id, post])).values()
+          );
+          setPosts(uniquePosts);
+        }
       } catch (error) {
-        setError(error.message);
+        if (isMounted) setError(error.message);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
+
     fetchPosts();
+
+    return () => {
+      isMounted = false;
+    };
   }, [token]);
 
   return { posts, loading, error };

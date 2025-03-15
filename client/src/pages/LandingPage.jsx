@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom"; // Import Link for navigation
+import { Link } from "react-router-dom";
 import { Button, Box, Typography } from "@mui/material";
 
 function LandingPage() {
@@ -18,7 +18,6 @@ function LandingPage() {
         >
           Login
         </Button>
-        {/* Optional: Button to navigate to Register Page */}
         <Button
           component={Link}
           to="/register"
