@@ -19,9 +19,13 @@ import { Formik, Field, Form } from "formik";
 import * as Yup from "yup";
 
 const validationSchema = Yup.object().shape({
-  postContent: Yup.string()
-    .required("Post content is required")
-    .min(5, "Content is too short"),
+  title: Yup.string()
+    .required("Title is required")
+    .min(3, "Title is too short"),
+  description: Yup.string()
+    .required("Description is required")
+    .min(3, "Description is too short"),
+  image: Yup.mixed().required("Image is required"),
 });
 
 const Navbar = () => {
@@ -43,7 +47,7 @@ const Navbar = () => {
 
   return (
     <div>
-      <AppBar position="static">
+      <AppBar position="static" elevation={0}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Yuthukama
@@ -66,26 +70,44 @@ const Navbar = () => {
         <DialogTitle>Create a New Post</DialogTitle>
         <DialogContent>
           <Formik
-            initialValues={{ postContent: "" }}
+            initialValues={{ title: "", description: "", image: null }}
             validationSchema={validationSchema}
             onSubmit={handlePostSubmit}
           >
-            {({ errors, touched }) => (
+            {({ setFieldValue, errors, touched }) => (
               <Form>
                 <Field
-                  name="postContent"
+                  name="title"
                   as={TextField}
-                  autoFocus
                   margin="dense"
-                  label="Post Content"
-                  type="text"
+                  label="Title"
+                  fullWidth
+                  variant="outlined"
+                  error={touched.title && !!errors.title}
+                  helperText={touched.title && errors.title}
+                />
+                <Field
+                  name="description"
+                  as={TextField}
+                  margin="dense"
+                  label="Description"
                   fullWidth
                   variant="outlined"
                   multiline
                   rows={4}
-                  error={touched.postContent && !!errors.postContent}
-                  helperText={touched.postContent && errors.postContent}
+                  error={touched.description && !!errors.description}
+                  helperText={touched.description && errors.description}
                 />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => {
+                    setFieldValue("image", event.currentTarget.files[0]);
+                  }}
+                />
+                {touched.image && errors.image && (
+                  <Typography color="error">{errors.image}</Typography>
+                )}
                 <DialogActions>
                   <Button onClick={handleClose} color="primary">
                     Cancel
