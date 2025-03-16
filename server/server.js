@@ -7,11 +7,21 @@ import { errorHandler } from "./utils/errorHandler.js";
 import authRoutes from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/userRoutes.js";
+import multer from "multer";
+
+const result = dotenv.config({ path: "D:/Yuthukama/server/.env" });
+if (result.error) {
+  console.error("Error loading .env:", result.error);
+} else {
+  console.log("Loaded .env successfully");
+}
 
 dotenv.config();
 connectDb();
 
 const app = express();
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(
   cors({
@@ -23,8 +33,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
-app.use("/api/posts", postRoutes);
+app.use("/api/posts", upload.single("image"), postRoutes);
 app.use("/api/users", userRoutes);
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
