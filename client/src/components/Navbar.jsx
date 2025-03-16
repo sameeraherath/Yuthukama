@@ -15,10 +15,17 @@ import {
 import PostAddIcon from "@mui/icons-material/PostAdd";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
+import { Formik, Field, Form } from "formik";
+import * as Yup from "yup";
+
+const validationSchema = Yup.object().shape({
+  postContent: Yup.string()
+    .required("Post content is required")
+    .min(5, "Content is too short"),
+});
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
-  const [postContent, setPostContent] = useState("");
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -28,9 +35,9 @@ const Navbar = () => {
     setOpen(false);
   };
 
-  const handlePostSubmit = () => {
-    console.log("Post Content: ", postContent);
-    setPostContent("");
+  const handlePostSubmit = (values, actions) => {
+    console.log("Post Content: ", values.postContent);
+    actions.resetForm();
     handleClose();
   };
 
@@ -58,28 +65,39 @@ const Navbar = () => {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Create a New Post</DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="postContent"
-            label="Post Content"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={postContent}
-            onChange={(e) => setPostContent(e.target.value)}
-            multiline
-            rows={4}
-          />
+          <Formik
+            initialValues={{ postContent: "" }}
+            validationSchema={validationSchema}
+            onSubmit={handlePostSubmit}
+          >
+            {({ errors, touched }) => (
+              <Form>
+                <Field
+                  name="postContent"
+                  as={TextField}
+                  autoFocus
+                  margin="dense"
+                  label="Post Content"
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  error={touched.postContent && !!errors.postContent}
+                  helperText={touched.postContent && errors.postContent}
+                />
+                <DialogActions>
+                  <Button onClick={handleClose} color="primary">
+                    Cancel
+                  </Button>
+                  <Button type="submit" color="primary">
+                    Post
+                  </Button>
+                </DialogActions>
+              </Form>
+            )}
+          </Formik>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handlePostSubmit} color="primary">
-            Post
-          </Button>
-        </DialogActions>
       </Dialog>
     </div>
   );
