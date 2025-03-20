@@ -17,7 +17,6 @@ const Navbar = () => {
   };
 
   const handlePostSubmit = (values, actions) => {
-    console.log("Post Content: ", values.postContent);
     actions.resetForm();
     handleClose();
   };
