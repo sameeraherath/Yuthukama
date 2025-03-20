@@ -45,7 +45,7 @@ export const createPost = async (req, res) => {
     const command = new PutObjectCommand(params);
     await s3Client.send(command);
 
-    const imageUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    const imageUrl = `https://${config.aws.bucket}.s3.${config.aws.region}.amazonaws.com/${fileName}`;
 
     const newPost = new Post({
       title,
