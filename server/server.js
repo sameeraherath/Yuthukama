@@ -8,18 +8,13 @@ import authRoutes from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/userRoutes.js";
 import multer from "multer";
-
-const result = dotenv.config({ path: "D:/Yuthukama/server/.env" });
-if (result.error) {
-  console.error("Error loading .env:", result.error);
-} else {
-  console.log("Loaded .env successfully");
-}
+import config from "./config/config.js";
 
 dotenv.config();
 connectDb();
 
 const app = express();
+const PORT = config.port;
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -38,5 +33,4 @@ app.use("/api/users", userRoutes);
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
