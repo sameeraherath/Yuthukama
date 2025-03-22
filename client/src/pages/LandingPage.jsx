@@ -115,7 +115,7 @@ function LandingPage() {
 
         <Grid2 container spacing={4} justifyContent="center">
           {features.map((feature, index) => (
-            <Grid2 item xs={12} sm={6} md={4} key={index}>
+            <Grid2 key={index}>
               <Paper
                 elevation={1}
                 sx={{
