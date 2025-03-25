@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 
 const PostCard = ({ post }) => {
+  console.log(post);
   return (
     <Card key={post._id} sx={{ maxWidth: 420, borderRadius: 5 }}>
       <CardMedia
