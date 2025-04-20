@@ -1,24 +1,25 @@
 import { useEffect, useState } from "react";
 import { Box, Typography, CircularProgress } from "@mui/material";
-import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
-import PostCard from "../components/PostCard";
-import Navbar from "../components/Navbar";
+
+import useAuth from "../hooks/useAuth";
 import usePosts from "../hooks/usePosts";
 import SearchBar from "../components/SearchBar";
+import PostCard from "../components/PostCard";
 
 const HomeScreen = () => {
-  const { user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    if (!user) {
+    if (!isAuthenticated) {
       navigate("/login");
     }
-  }, [user, navigate]);
+  }, [isAuthenticated, navigate]);
 
-  const { posts, loading, error } = usePosts(localStorage.getItem("token"));
+  const token = localStorage.getItem("token");
+  const { posts, loading, error } = usePosts(token);
 
   const filteredPosts = posts.filter(
     (post) =>
@@ -28,7 +29,6 @@ const HomeScreen = () => {
 
   return (
     <>
-      <Navbar />
       <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>

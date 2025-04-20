@@ -11,7 +11,6 @@ import {
 import { Formik, Field, Form } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
-import { useAuth } from "../context/useAuth";
 
 const validationSchema = Yup.object().shape({
   title: Yup.string()
@@ -24,8 +23,7 @@ const validationSchema = Yup.object().shape({
 });
 
 const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
-  const { user } = useAuth();
-
+  const token = localStorage.getItem("token");
   const handlePostSubmit = async (values, actions) => {
     const formData = new FormData();
     formData.append("title", values.title);
@@ -39,7 +37,7 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -48,10 +46,14 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
       actions.resetForm();
       handleClose();
     } catch (error) {
-      console.error("Error creating post:", error.response?.data?.message);
+      console.error(
+        "Error creating post:",
+        error.response?.data?.message || error.message
+      );
       actions.setSubmitting(false);
     }
   };
+
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle>Create a New Post</DialogTitle>
@@ -91,11 +93,14 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
                 onChange={(event) => {
                   setFieldValue("image", event.currentTarget.files[0]);
                 }}
+                style={{ marginTop: "16px" }}
               />
               {touched.image && errors.image && (
-                <Typography color="error">{errors.image}</Typography>
+                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                  {errors.image}
+                </Typography>
               )}
-              <DialogActions>
+              <DialogActions sx={{ mt: 2 }}>
                 <Button onClick={handleClose} color="primary">
                   Cancel
                 </Button>

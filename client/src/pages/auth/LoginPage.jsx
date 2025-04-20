@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useAuth } from "../../context/useAuth";
 import {
   TextField,
   Button,
@@ -13,23 +12,15 @@ import {
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { Visibility, VisibilityOff, Email, Lock } from "@mui/icons-material";
+import useAuth from "../../hooks/useAuth"; // ✅ Custom Redux hook
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login, loading } = useAuth(); // ✅ Redux auth logic
 
-  const { login } = useAuth();
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
-
-  const [isLoading, setIsLoading] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
-
   const [loginError, setLoginError] = useState("");
 
   const validateForm = () => {
@@ -50,18 +41,13 @@ const LoginPage = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    setIsLoading(true);
     setLoginError("");
 
     try {
       await login(formData.email, formData.password);
       navigate("/home");
     } catch (error) {
-      setLoginError(
-        error.message || "Failed to login. Please check your credentials."
-      );
-    } finally {
-      setIsLoading(false);
+      setLoginError(error);
     }
   };
 
@@ -113,23 +99,19 @@ const LoginPage = () => {
               fullWidth
               label="Email"
               type="email"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "25px",
-                },
-                "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                  borderColor: "#1DBF73",
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#1DBF73",
-                },
-              }}
               value={formData.email}
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
               error={!!errors.email}
               helperText={errors.email}
+              sx={{
+                "& .MuiOutlinedInput-root": { borderRadius: "25px" },
+                "& .MuiOutlinedInput-root.Mui-focused fieldset": {
+                  borderColor: "#1DBF73",
+                },
+                "& .MuiInputLabel-root.Mui-focused": { color: "#1DBF73" },
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -142,17 +124,6 @@ const LoginPage = () => {
             <TextField
               fullWidth
               label="Password"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "25px",
-                },
-                "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                  borderColor: "#1DBF73",
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#1DBF73",
-                },
-              }}
               type={showPassword ? "text" : "password"}
               value={formData.password}
               onChange={(e) =>
@@ -160,6 +131,13 @@ const LoginPage = () => {
               }
               error={!!errors.password}
               helperText={errors.password}
+              sx={{
+                "& .MuiOutlinedInput-root": { borderRadius: "25px" },
+                "& .MuiOutlinedInput-root.Mui-focused fieldset": {
+                  borderColor: "#1DBF73",
+                },
+                "& .MuiInputLabel-root.Mui-focused": { color: "#1DBF73" },
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -203,7 +181,7 @@ const LoginPage = () => {
               type="submit"
               variant="contained"
               fullWidth
-              disabled={isLoading}
+              disabled={loading}
               sx={{
                 py: 1.5,
                 mt: 1,
@@ -217,7 +195,7 @@ const LoginPage = () => {
                 },
               }}
             >
-              {isLoading ? <CircularProgress size={24} /> : "Log In"}
+              {loading ? <CircularProgress size={24} /> : "Log In"}
             </Button>
           </Box>
         </form>
