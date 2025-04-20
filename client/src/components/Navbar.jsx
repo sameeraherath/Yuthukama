@@ -41,12 +41,13 @@ const Navbar = () => {
         <Toolbar>
           <Typography
             variant="h6"
+            onClick={() => navigate("/home")}
             sx={{
               flexGrow: 1,
               color: "#404145",
               fontWeight: "bold",
-
               fontSize: "1.7rem",
+              cursor: "pointer",
             }}
           >
             Yuthukama

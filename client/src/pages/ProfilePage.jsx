@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "../context/useAuth";
+import useAuth from "../hooks/useAuth";
 import PostCard from "../components/PostCard";
 
 import {
   Avatar,
   Button,
   Container,
-  Grid2,
-  TextField,
   Typography,
   Box,
   Paper,
+  TextField,
   CircularProgress,
+  Grid2,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 const ProfilePage = () => {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState(null);
@@ -57,7 +57,7 @@ const ProfilePage = () => {
     formData.append("profilePic", file);
 
     try {
-      const response = await axios.put(
+      await axios.put(
         `${import.meta.env.VITE_SERVER_URL}/api/users/profile-pic`,
         formData,
         {
@@ -67,9 +67,8 @@ const ProfilePage = () => {
           },
         }
       );
-      setUser(response.data.user);
       setFile(null);
-      setMessage("Profile picture updated successfully");
+      setMessage("Profile picture updated. Please refresh to see changes.");
     } catch (error) {
       setMessage("Error uploading profile picture");
       console.error(error);
@@ -83,16 +82,17 @@ const ProfilePage = () => {
     }
 
     try {
-      const response = await axios.put(
+      await axios.put(
         `${import.meta.env.VITE_SERVER_URL}/api/users/username`,
         { username: newUsername },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
-      setUser(response.data.user);
       setNewUsername("");
-      setMessage("Username updated successfully");
+      setMessage("Username updated successfully. Please refresh to see it.");
     } catch (error) {
       setMessage(error.response?.data?.message || "Error updating username");
       console.error(error);

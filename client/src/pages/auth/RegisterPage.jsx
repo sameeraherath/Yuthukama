@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useAuth } from "../../context/useAuth";
 import {
   TextField,
   Button,
@@ -19,10 +18,11 @@ import {
   Lock,
   Person,
 } from "@mui/icons-material";
+import useAuth from "../../hooks/useAuth"; // ✅ Redux-powered hook
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, loading } = useAuth(); // ✅ from Redux
 
   const [formData, setFormData] = useState({
     username: "",
@@ -31,7 +31,6 @@ const RegisterPage = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [registerError, setRegisterError] = useState(null);
 
@@ -52,17 +51,14 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-    setIsLoading(true);
+
     setRegisterError("");
+
     try {
       await register(formData.username, formData.email, formData.password);
       navigate("/home");
     } catch (error) {
-      setRegisterError(
-        error.message || "Registration failed. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
+      setRegisterError(error);
     }
   };
 
@@ -96,16 +92,24 @@ const RegisterPage = () => {
             Sign up to get started
           </Typography>
         </Box>
+
         {registerError && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {registerError}
           </Alert>
         )}
+
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
             <TextField
               fullWidth
               label="Username"
+              value={formData.username}
+              onChange={(e) =>
+                setFormData({ ...formData, username: e.target.value })
+              }
+              error={!!errors.username}
+              helperText={errors.username}
               sx={{
                 "& .MuiOutlinedInput-root": { borderRadius: "25px" },
                 "& .MuiOutlinedInput-root.Mui-focused fieldset": {
@@ -113,12 +117,6 @@ const RegisterPage = () => {
                 },
                 "& .MuiInputLabel-root.Mui-focused": { color: "#1DBF73" },
               }}
-              value={formData.username}
-              onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
-              }
-              error={!!errors.username}
-              helperText={errors.username}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -127,10 +125,17 @@ const RegisterPage = () => {
                 ),
               }}
             />
+
             <TextField
               fullWidth
               label="Email"
               type="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              error={!!errors.email}
+              helperText={errors.email}
               sx={{
                 "& .MuiOutlinedInput-root": { borderRadius: "25px" },
                 "& .MuiOutlinedInput-root.Mui-focused fieldset": {
@@ -138,12 +143,6 @@ const RegisterPage = () => {
                 },
                 "& .MuiInputLabel-root.Mui-focused": { color: "#1DBF73" },
               }}
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              error={!!errors.email}
-              helperText={errors.email}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -157,6 +156,12 @@ const RegisterPage = () => {
               fullWidth
               label="Password"
               type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              error={!!errors.password}
+              helperText={errors.password}
               sx={{
                 "& .MuiOutlinedInput-root": { borderRadius: "25px" },
                 "& .MuiOutlinedInput-root.Mui-focused fieldset": {
@@ -164,12 +169,6 @@ const RegisterPage = () => {
                 },
                 "& .MuiInputLabel-root.Mui-focused": { color: "#1DBF73" },
               }}
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              error={!!errors.password}
-              helperText={errors.password}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -179,17 +178,18 @@ const RegisterPage = () => {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? <Visibility /> : <VisibilityOff />}
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
                 ),
               }}
             />
+
             <Button
               type="submit"
               variant="contained"
               fullWidth
-              disabled={isLoading}
+              disabled={loading}
               sx={{
                 py: 1.5,
                 mt: 1,
@@ -201,8 +201,9 @@ const RegisterPage = () => {
                 "&:hover": { backgroundColor: "#19a666" },
               }}
             >
-              {isLoading ? <CircularProgress size={24} /> : "Sign Up"}
+              {loading ? <CircularProgress size={24} /> : "Sign Up"}
             </Button>
+
             <Typography variant="body2" sx={{ textAlign: "center" }}>
               Already have an account?{" "}
               <Link to="/login" style={{ color: "#1DBF73" }}>
