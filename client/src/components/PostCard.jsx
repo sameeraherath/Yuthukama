@@ -16,6 +16,11 @@ const PostCard = ({ post }) => {
         height="200"
         image={post.image}
         alt={post.title}
+        sx={{
+          objectFit: "cover",
+          aspectRatio: "16/9",
+          width: "100%",
+        }}
       />
       <CardContent>
         <Typography variant="h6" gutterBottom>
@@ -26,11 +31,18 @@ const PostCard = ({ post }) => {
         </Typography>
       </CardContent>
       <CardActions>
-        <Button size="small" color="primary">
-          Like
-        </Button>
-        <Button size="small" color="primary">
-          Share
+        <Button
+          size="small"
+          variant="contained"
+          sx={{
+            fontWeight: "bold",
+            textTransform: "none",
+            borderRadius: 5,
+            padding: "10px 20px",
+            backgroundColor: "#1dbf73",
+          }}
+        >
+          Offer Support
         </Button>
       </CardActions>
     </Card>
