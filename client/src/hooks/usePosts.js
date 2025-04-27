@@ -1,47 +1,30 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPosts } from "../features/posts/postsAPI";
+import { clearError } from "../features/posts/postsSlice";
 
-const usePosts = (token) => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const usePosts = () => {
+  const dispatch = useDispatch();
+  const { allPosts, loading, error } = useSelector((state) => state.posts);
 
   useEffect(() => {
-    let isMounted = true;
+    dispatch(fetchPosts());
+  }, [dispatch]);
 
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `${import.meta.env.VITE_SERVER_URL}/api/posts`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const data = await response.json();
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        dispatch(clearError());
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, dispatch]);
 
-        if (isMounted) {
-          const uniquePosts = Array.from(
-            new Map(data.map((post) => [post._id, post])).values()
-          );
-          setPosts(uniquePosts);
-        }
-      } catch (error) {
-        if (isMounted) setError(error.message);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    fetchPosts();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [token]);
-
-  return { posts, loading, error };
+  return {
+    posts: allPosts,
+    loading,
+    error,
+  };
 };
 
 export default usePosts;

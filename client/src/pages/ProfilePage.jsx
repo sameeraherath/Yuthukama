@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
 import useAuth from "../hooks/useAuth";
 import PostCard from "../components/PostCard";
+import { fetchUserPosts } from "../features/posts/postsSlice";
+import {
+  updateProfilePicture,
+  updateUsername,
+  clearMessage,
+} from "../features/auth/userSlice";
 
 import {
   Avatar,
@@ -13,38 +19,42 @@ import {
   TextField,
   CircularProgress,
   Grid2,
+  Alert,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 const ProfilePage = () => {
+  const dispatch = useDispatch();
   const { user } = useAuth();
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [file, setFile] = useState(null);
   const [newUsername, setNewUsername] = useState("");
-  const [message, setMessage] = useState("");
+
+  const {
+    loading: postsLoading,
+    userPosts,
+    error: postsError,
+  } = useSelector((state) => state.posts);
+  const {
+    loading: userLoading,
+    error: userError,
+    message,
+  } = useSelector((state) => state.user);
 
   useEffect(() => {
-    const fetchUserPosts = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_SERVER_URL}/api/posts/user/${user._id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setPosts(response.data);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (user?._id) {
+      dispatch(fetchUserPosts(user._id));
+    }
+  }, [dispatch, user]);
 
-    if (user) fetchUserPosts();
-  }, [user]);
+  useEffect(() => {
+    // Clear messages after 3 seconds
+    if (message || userError) {
+      const timer = setTimeout(() => {
+        dispatch(clearMessage());
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message, userError, dispatch]);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -55,52 +65,19 @@ const ProfilePage = () => {
 
     const formData = new FormData();
     formData.append("profilePic", file);
-
-    try {
-      await axios.put(
-        `${import.meta.env.VITE_SERVER_URL}/api/users/profile-pic`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      setFile(null);
-      setMessage("Profile picture updated. Please refresh to see changes.");
-    } catch (error) {
-      setMessage("Error uploading profile picture");
-      console.error(error);
-    }
+    await dispatch(updateProfilePicture(formData));
+    setFile(null);
   };
 
   const handleUsernameChange = async () => {
-    if (!newUsername) {
-      setMessage("Please enter a new username");
-      return;
-    }
-
-    try {
-      await axios.put(
-        `${import.meta.env.VITE_SERVER_URL}/api/users/username`,
-        { username: newUsername },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      setNewUsername("");
-      setMessage("Username updated successfully. Please refresh to see it.");
-    } catch (error) {
-      setMessage(error.response?.data?.message || "Error updating username");
-      console.error(error);
-    }
+    if (!newUsername) return;
+    await dispatch(updateUsername(newUsername));
+    setNewUsername("");
   };
 
-  if (loading)
+  if (postsLoading || userLoading) {
     return <CircularProgress sx={{ display: "block", mx: "auto", mt: 4 }} />;
+  }
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -113,11 +90,11 @@ const ProfilePage = () => {
         }}
       >
         <Avatar
-          src={user.profilePic || "/uploads/profile-pics/default.jpg"}
-          sx={{ width: 128, height: 128, mb: 2 }}
+          src={user?.profilePic || "/uploads/profile-pics/default.jpg"}
+          sx={{ width: 154, height: 154, mb: 2 }}
         />
         <Typography variant="h4" component="h1" gutterBottom>
-          {user.username}
+          {user?.username}
         </Typography>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 2 }}>
@@ -164,27 +141,33 @@ const ProfilePage = () => {
           </Button>
         </Box>
 
-        {message && (
-          <Typography
-            variant="body2"
-            color={message.includes("Error") ? "error" : "success"}
-            sx={{ mt: 1 }}
+        {(message || userError) && (
+          <Alert
+            severity={userError ? "error" : "success"}
+            sx={{ mt: 2, width: "100%" }}
           >
-            {message}
-          </Typography>
+            {userError || message}
+          </Alert>
         )}
       </Box>
 
       <Paper elevation={1} sx={{ p: 2, mb: 4, textAlign: "center" }}>
-        <Typography variant="body1">Email: {user.email}</Typography>
+        <Typography variant="body1">Email: {user?.email}</Typography>
       </Paper>
 
       <Typography variant="h5" gutterBottom>
         Your Posts
       </Typography>
-      {posts.length > 0 ? (
+
+      {postsError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {postsError}
+        </Alert>
+      )}
+
+      {userPosts?.length > 0 ? (
         <Grid2 container spacing={2}>
-          {posts.map((post) => (
+          {userPosts.map((post) => (
             <Grid2 item xs={12} key={post._id}>
               <PostCard post={post} />
             </Grid2>
