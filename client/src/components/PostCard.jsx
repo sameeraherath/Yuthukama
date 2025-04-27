@@ -6,9 +6,22 @@ import {
   CardActions,
   Button,
 } from "@mui/material";
+import { useDispatch } from "react-redux";
+import { deletePost } from "../features/posts/postsAPI";
+import useAuth from "../hooks/useAuth";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-const PostCard = ({ post, showOfferButton = true }) => {
-  console.log(post);
+const PostCard = ({ post, showOfferButton = true, onDelete }) => {
+  const dispatch = useDispatch();
+  const { user } = useAuth();
+  const isOwner =
+    user && post.user && (user.id === post.user._id || user._id === post.user);
+
+  const handleDelete = async () => {
+    await dispatch(deletePost(post._id));
+    if (onDelete) onDelete(post._id);
+  };
+
   return (
     <Card key={post._id} sx={{ maxWidth: 420, borderRadius: 5 }}>
       <CardMedia
@@ -30,8 +43,8 @@ const PostCard = ({ post, showOfferButton = true }) => {
           {post.description}
         </Typography>
       </CardContent>
-      {showOfferButton && (
-        <CardActions>
+      <CardActions>
+        {showOfferButton && (
           <Button
             size="small"
             variant="contained"
@@ -45,8 +58,20 @@ const PostCard = ({ post, showOfferButton = true }) => {
           >
             Offer Support
           </Button>
-        </CardActions>
-      )}
+        )}
+        {isOwner && (
+          <Button
+            size="small"
+            color="error"
+            variant="outlined"
+            startIcon={<DeleteIcon />}
+            onClick={handleDelete}
+            sx={{ ml: 1, borderRadius: 5 }}
+          >
+            Delete
+          </Button>
+        )}
+      </CardActions>
     </Card>
   );
 };

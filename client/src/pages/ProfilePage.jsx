@@ -8,6 +8,7 @@ import {
   updateUsername,
   clearMessage,
 } from "../features/auth/userSlice";
+import { deletePost } from "../features/posts/postsAPI";
 
 import {
   Avatar,
@@ -21,6 +22,10 @@ import {
   Grid,
   Alert,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
@@ -31,6 +36,8 @@ const ProfilePage = () => {
   const [file, setFile] = useState(null);
   const [newUsername, setNewUsername] = useState("");
   const [editingUsername, setEditingUsername] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState(null);
 
   const {
     loading: postsLoading,
@@ -238,13 +245,53 @@ const ProfilePage = () => {
       )}
 
       {userPosts?.length > 0 ? (
-        <Grid container spacing={3}>
-          {userPosts.map((post) => (
-            <Grid item xs={12} sm={6} md={6} key={post._id}>
-              <PostCard post={post} showOfferButton={false} />
-            </Grid>
-          ))}
-        </Grid>
+        <>
+          <Grid container spacing={3}>
+            {userPosts.map((post) => (
+              <Grid item xs={12} sm={6} md={6} key={post._id}>
+                <PostCard
+                  post={post}
+                  showOfferButton={false}
+                  onDelete={() => {
+                    setPostToDelete(post._id);
+                    setDeleteDialogOpen(true);
+                  }}
+                />
+              </Grid>
+            ))}
+          </Grid>
+          <Dialog
+            open={deleteDialogOpen}
+            onClose={() => setDeleteDialogOpen(false)}
+          >
+            <DialogTitle>Delete Post</DialogTitle>
+            <DialogContent>
+              Are you sure you want to delete this post?
+            </DialogContent>
+            <DialogActions>
+              <Button
+                onClick={() => setDeleteDialogOpen(false)}
+                color="inherit"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (postToDelete) {
+                    await dispatch(deletePost(postToDelete));
+                    dispatch(fetchUserPosts(user._id));
+                  }
+                  setDeleteDialogOpen(false);
+                  setPostToDelete(null);
+                }}
+                color="error"
+                variant="contained"
+              >
+                Delete
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </>
       ) : (
         <Typography variant="body1">
           You haven't posted anything yet.
