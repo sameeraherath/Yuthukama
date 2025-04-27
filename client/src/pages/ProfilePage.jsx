@@ -47,7 +47,6 @@ const ProfilePage = () => {
   }, [dispatch, user]);
 
   useEffect(() => {
-    // Clear messages after 3 seconds
     if (message || userError) {
       const timer = setTimeout(() => {
         dispatch(clearMessage());
