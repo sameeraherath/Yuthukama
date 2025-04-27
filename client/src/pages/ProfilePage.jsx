@@ -20,14 +20,17 @@ import {
   CircularProgress,
   Grid,
   Alert,
+  IconButton,
 } from "@mui/material";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import EditIcon from "@mui/icons-material/Edit";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 
 const ProfilePage = () => {
   const dispatch = useDispatch();
   const { user } = useAuth();
   const [file, setFile] = useState(null);
   const [newUsername, setNewUsername] = useState("");
+  const [editingUsername, setEditingUsername] = useState(false);
 
   const {
     loading: postsLoading,
@@ -88,56 +91,126 @@ const ProfilePage = () => {
           mb: 4,
         }}
       >
-        <Avatar
-          src={user?.profilePic || "/uploads/profile-pics/default.jpg"}
-          sx={{ width: 154, height: 154, mb: 2 }}
-        />
-        <Typography variant="h4" component="h1" gutterBottom>
-          {user?.username}
-        </Typography>
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 2 }}>
-          <input
-            accept="image/jpeg,image/png"
-            style={{ display: "none" }}
-            id="profile-pic-upload"
-            type="file"
-            onChange={handleFileChange}
+        <Box sx={{ position: "relative", display: "inline-block", mb: 2 }}>
+          <Avatar
+            src={user?.profilePic || "/uploads/profile-pics/default.jpg"}
+            sx={{ width: 154, height: 154 }}
           />
           <label htmlFor="profile-pic-upload">
-            <Button
-              variant="outlined"
-              component="span"
-              startIcon={<CloudUploadIcon />}
+            <input
+              accept="image/jpeg,image/png"
+              style={{ display: "none" }}
+              id="profile-pic-upload"
+              type="file"
+              onChange={handleFileChange}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 8,
+                right: 8,
+                bgcolor: "rgba(0,0,0,0.6)",
+                borderRadius: "50%",
+                p: 1,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              Choose File
-            </Button>
+              <CameraAltIcon sx={{ color: "#fff" }} />
+            </Box>
           </label>
+        </Box>
+        {file && (
           <Button
             variant="contained"
             color="primary"
             onClick={handleUpload}
-            disabled={!file}
+            sx={{
+              mb: 2,
+              fontWeight: "bold",
+              textTransform: "none",
+              borderRadius: 5,
+              padding: "10px 20px",
+              backgroundColor: "#1dbf73",
+            }}
           >
-            Upload Profile Picture
+            Update Profile Picture
           </Button>
-        </Box>
+        )}
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 2 }}>
-          <TextField
-            label="New Username"
-            value={newUsername}
-            onChange={(e) => setNewUsername(e.target.value)}
-            variant="outlined"
-            size="small"
-          />
-          <Button
-            variant="contained"
-            color="success"
-            onClick={handleUsernameChange}
-          >
-            Update Username
-          </Button>
+          {editingUsername ? (
+            <>
+              <TextField
+                label="New Username"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{
+                  minWidth: 180,
+                  "& .MuiOutlinedInput-root": { borderRadius: "25px" },
+                  "& .MuiOutlinedInput-root.Mui-focused fieldset": {
+                    borderColor: "#1DBF73",
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": { color: "#1DBF73" },
+                }}
+              />
+              <Button
+                variant="contained"
+                color="success"
+                sx={{
+                  fontWeight: "bold",
+                  textTransform: "none",
+                  borderRadius: 5,
+                  padding: "10px 20px",
+                  backgroundColor: "#1dbf73",
+                }}
+                onClick={async () => {
+                  await handleUsernameChange();
+                  setEditingUsername(false);
+                }}
+                disabled={!newUsername}
+              >
+                Update
+              </Button>
+              <Button
+                variant="text"
+                color="inherit"
+                sx={{ textTransform: "none", borderRadius: 5 }}
+                onClick={() => {
+                  setEditingUsername(false);
+                  setNewUsername("");
+                }}
+              >
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <>
+              <Typography
+                variant="h4"
+                component="h1"
+                gutterBottom
+                sx={{ mb: 0 }}
+              >
+                {user?.username}
+              </Typography>
+              <IconButton
+                aria-label="Edit Username"
+                onClick={() => {
+                  setEditingUsername(true);
+                  setNewUsername(user?.username || "");
+                }}
+                size="small"
+                sx={{ ml: 1 }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </>
+          )}
         </Box>
 
         {(message || userError) && (
