@@ -12,7 +12,7 @@ const s3Client = new S3Client({
 });
 
 const postController = {
-  getPosts: async (res) => {
+  getPosts: async (req, res) => {
     try {
       const posts = await Post.find()
         .sort({ createdAt: -1 })
@@ -78,7 +78,6 @@ const postController = {
       res.status(500).json({ message: "Error fetching user posts" });
     }
   },
-
 
   deletePost: async (req, res) => {
     try {
