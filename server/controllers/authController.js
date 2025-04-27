@@ -1,94 +1,88 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import config from "../config/config.js";
 
-// @desc Register a new user
-// POST /api/auth/register
-// @access public
+const authController = {
+  registerUser: async (req, res) => {
+    try {
+      const { username, email, password } = req.body;
 
-export const registerUser = async (req, res) => {
-  const { username, email, password } = req.body;
+      let user = await User.findOne({ email });
+      if (user) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+      user = new User({
+        username,
+        email,
+        password,
+      });
+      await user.save();
 
-  try {
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+      const token = jwt.sign({ id: user._id }, config.jwtSecret, {
+        expiresIn: "30d",
+      });
+      res.status(201).json({
+        token,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          profilePicture: user.profilePicture,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error in user registration" });
     }
+  },
+  loginUser: async (req, res) => {
+    try {
+      const { email, password } = req.body;
 
-    // Create new user
-    const user = await User.create({ username, email, password });
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ message: "Invalid credentials" });
+      }
+      const isMatch = await user.matchPassword(password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Invalid credentials" });
+      }
+      const token = jwt.sign({ id: user._id }, config.jwtSecret, {
+        expiresIn: "30d",
+      });
 
-    // Generate JWT
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    res.status(201).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      token,
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+      res.json({
+        token,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          profilePicture: user.profilePicture,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error in user login" });
+    }
+  },
+  logoutUser: (req, res) => {
+    try {
+      res.json({ message: "Logged out successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error logging out" });
+    }
+  },
+  checkAuth: async (req, res) => {
+    try {
+      const user = await User.findById(req.user.id).select("-password");
+      if (!user) {
+        return res.status(401).json({ message: "Session expired" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Error checking session" });
+    }
+  },
 };
 
-// @desc Login a user
-// POST /api/auth/login
-// @access public
-
-export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "User does not exist" });
-    }
-
-    // Check if password matches
-    const isMatch = await user.matchPassword(password);
-
-    if (!isMatch) {
-      return res.status(400).json({ message: "Not match password" });
-    }
-
-    // Generate JWT
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    res.status(200).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      token,
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// @desc Logout user
-// @route POST /api/auth/logout
-// @access private
-export const logoutUser = async (req, res) => {
-  res.clearCookie("token");
-  res.status(200).json({ message: "Logout successful" });
-};
-
-// @desc Check if user is authenticated
-// @route GET /api/auth/check
-// @access Private
-
-export const checkAuth = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-    res.status(200).json(user);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+export { authController as default };
+export const { registerUser, loginUser, logoutUser, checkAuth } =
+  authController;
