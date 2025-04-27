@@ -18,7 +18,7 @@ import {
   Paper,
   TextField,
   CircularProgress,
-  Grid2,
+  Grid,
   Alert,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -165,13 +165,13 @@ const ProfilePage = () => {
       )}
 
       {userPosts?.length > 0 ? (
-        <Grid2 container spacing={2}>
+        <Grid container spacing={3}>
           {userPosts.map((post) => (
-            <Grid2 item xs={12} key={post._id}>
-              <PostCard post={post} />
-            </Grid2>
+            <Grid item xs={12} sm={6} md={6} key={post._id}>
+              <PostCard post={post} showOfferButton={false} />
+            </Grid>
           ))}
-        </Grid2>
+        </Grid>
       ) : (
         <Typography variant="body1">
           You haven't posted anything yet.

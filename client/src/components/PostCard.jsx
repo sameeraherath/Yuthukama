@@ -7,7 +7,7 @@ import {
   Button,
 } from "@mui/material";
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, showOfferButton = true }) => {
   console.log(post);
   return (
     <Card key={post._id} sx={{ maxWidth: 420, borderRadius: 5 }}>
@@ -30,21 +30,23 @@ const PostCard = ({ post }) => {
           {post.description}
         </Typography>
       </CardContent>
-      <CardActions>
-        <Button
-          size="small"
-          variant="contained"
-          sx={{
-            fontWeight: "bold",
-            textTransform: "none",
-            borderRadius: 5,
-            padding: "10px 20px",
-            backgroundColor: "#1dbf73",
-          }}
-        >
-          Offer Support
-        </Button>
-      </CardActions>
+      {showOfferButton && (
+        <CardActions>
+          <Button
+            size="small"
+            variant="contained"
+            sx={{
+              fontWeight: "bold",
+              textTransform: "none",
+              borderRadius: 5,
+              padding: "10px 20px",
+              backgroundColor: "#1dbf73",
+            }}
+          >
+            Offer Support
+          </Button>
+        </CardActions>
+      )}
     </Card>
   );
 };
