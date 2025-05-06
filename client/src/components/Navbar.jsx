@@ -4,11 +4,15 @@ import PostAddIcon from "@mui/icons-material/PostAdd";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PostDialog from "./PostDialog";
+import LogoutDialog from "./LogoutDialog";
 import { useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -25,6 +29,20 @@ const Navbar = () => {
 
   const handleProfileClick = () => {
     navigate("/profile");
+  };
+
+  const handleLogoutClick = () => {
+    setLogoutConfirmOpen(true);
+  };
+
+  const handleLogoutConfirmClose = () => {
+    setLogoutConfirmOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setLogoutConfirmOpen(false);
+    navigate("/");
   };
 
   return (
@@ -54,17 +72,24 @@ const Navbar = () => {
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <IconButton color="inherit" onClick={handleClickOpen}>
-              <PostAddIcon />
+              <PostAddIcon sx={{ fontSize: "32px" }} />
             </IconButton>
             <IconButton color="inherit" onClick={handleProfileClick}>
-              <AccountCircleIcon />
+              <AccountCircleIcon sx={{ fontSize: "32px" }} />
             </IconButton>
-            <IconButton color="inherit">
-              <LogoutIcon />
+            <IconButton color="inherit" onClick={handleLogoutClick}>
+              <LogoutIcon sx={{ fontSize: "32px" }} />
             </IconButton>
           </Box>
         </Toolbar>
       </AppBar>
+
+      {/* Using the new LogoutDialog component */}
+      <LogoutDialog
+        open={logoutConfirmOpen}
+        onClose={handleLogoutConfirmClose}
+        onLogout={handleLogout}
+      />
 
       <PostDialog
         open={open}
