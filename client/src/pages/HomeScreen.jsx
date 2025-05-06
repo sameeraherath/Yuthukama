@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import useAuth from "../hooks/useAuth";
 import usePosts from "../hooks/usePosts";
 import SearchBar from "../components/SearchBar";
 import PostCard from "../components/PostCard";
+import GlobalLoadingSpinner from "../components/GlobalLoadingSpinner";
 
 const HomeScreen = () => {
   const { isAuthenticated } = useAuth();
@@ -19,7 +20,7 @@ const HomeScreen = () => {
   }, [isAuthenticated, navigate]);
 
   const token = localStorage.getItem("token");
-  const { posts, loading, error } = usePosts(token);
+  const { posts, error } = usePosts(token);
 
   const filteredPosts = posts.filter(
     (post) =>
@@ -30,11 +31,8 @@ const HomeScreen = () => {
   return (
     <>
       <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
+      <GlobalLoadingSpinner actions={["posts/fetchPosts"]} />
+      {error ? (
         <Typography color="error" align="center" sx={{ mt: 4 }}>
           Error loading posts: {error}
         </Typography>
