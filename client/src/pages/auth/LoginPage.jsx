@@ -4,7 +4,6 @@ import {
   Button,
   Typography,
   Box,
-  CircularProgress,
   Alert,
   Paper,
   InputAdornment,
@@ -12,11 +11,12 @@ import {
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { Visibility, VisibilityOff, Email, Lock } from "@mui/icons-material";
-import useAuth from "../../hooks/useAuth"; // ✅ Custom Redux hook
+import useAuth from "../../hooks/useAuth";
+import GlobalLoadingSpinner from "../../components/GlobalLoadingSpinner";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, loading } = useAuth(); // ✅ Redux auth logic
+  const { login, loading } = useAuth();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
@@ -62,6 +62,8 @@ const LoginPage = () => {
         padding: { xs: 2, sm: 4 },
       }}
     >
+      <GlobalLoadingSpinner actions={["auth/loginUser"]} />
+
       <Paper
         sx={{
           width: "100%",
@@ -195,7 +197,7 @@ const LoginPage = () => {
                 },
               }}
             >
-              {loading ? <CircularProgress size={24} /> : "Log In"}
+              Log In
             </Button>
           </Box>
         </form>
