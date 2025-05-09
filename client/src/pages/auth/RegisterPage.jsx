@@ -4,7 +4,6 @@ import {
   Button,
   Typography,
   Box,
-  CircularProgress,
   Alert,
   Paper,
   InputAdornment,
@@ -18,11 +17,12 @@ import {
   Lock,
   Person,
 } from "@mui/icons-material";
-import useAuth from "../../hooks/useAuth"; // ✅ Redux-powered hook
+import useAuth from "../../hooks/useAuth";
+import GlobalLoadingSpinner from "../../components/GlobalLoadingSpinner";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const { register, loading } = useAuth(); // ✅ from Redux
+  const { register, loading } = useAuth();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -73,6 +73,7 @@ const RegisterPage = () => {
         padding: { xs: 2, sm: 4 },
       }}
     >
+      <GlobalLoadingSpinner actions={["auth/register"]} />
       <Paper
         sx={{
           width: "100%",
@@ -201,7 +202,7 @@ const RegisterPage = () => {
                 "&:hover": { backgroundColor: "#19a666" },
               }}
             >
-              {loading ? <CircularProgress size={24} /> : "Sign Up"}
+              Sign Up
             </Button>
 
             <Typography variant="body2" sx={{ textAlign: "center" }}>
