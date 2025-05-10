@@ -14,8 +14,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 const PostCard = ({ post, showOfferButton = true, onDelete }) => {
   const dispatch = useDispatch();
   const { user } = useAuth();
-  const isOwner =
-    user && post.user && (user.id === post.user._id || user._id === post.user);
+  const isOwner = user?._id && post?.user?._id && user._id === post.user._id;
+
+  console.log("User ID:", user?._id);
+  console.log("Post User ID:", post?.user);
+  console.log("Is Owner:", isOwner);
 
   const handleDelete = async () => {
     await dispatch(deletePost(post._id));
@@ -62,14 +65,15 @@ const PostCard = ({ post, showOfferButton = true, onDelete }) => {
         {isOwner && (
           <Button
             size="small"
-            color="error"
             variant="outlined"
+            color="error"
             startIcon={<DeleteIcon />}
             onClick={handleDelete}
-            sx={{ ml: 1, borderRadius: 5 }}
-          >
-            Delete
-          </Button>
+            sx={{
+              border: "none",
+              padding: "5px 15px",
+            }}
+          />
         )}
       </CardActions>
     </Card>

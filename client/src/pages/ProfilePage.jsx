@@ -272,8 +272,12 @@ const ProfilePage = () => {
                   post={post}
                   showOfferButton={false}
                   onDelete={() => {
-                    setPostToDelete(post._id);
-                    setDeleteDialogOpen(true);
+                    if (post.user === user._id) {
+                      setPostToDelete(post._id);
+                      setDeleteDialogOpen(true);
+                    } else {
+                      alert("You are not authorized to delete this post.");
+                    }
                   }}
                   sx={{ boxShadow: 2, borderRadius: 3 }}
                 />

@@ -95,7 +95,9 @@ const postController = {
         return res.status(404).json({ message: "Post not found" });
       }
       if (post.user.toString() !== req.user.id) {
-        return res.status(403).json({ message: "Not authorized" });
+        return res
+          .status(403)
+          .json({ message: "Not authorized to delete this post" });
       }
 
       await Post.findByIdAndDelete(req.params.id);
