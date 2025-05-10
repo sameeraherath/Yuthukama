@@ -67,11 +67,12 @@ const PostCard = ({ post, showOfferButton = true, onDelete }) => {
             size="small"
             variant="outlined"
             color="error"
-            startIcon={<DeleteIcon />}
+            startIcon={<DeleteIcon style={{ fontSize: "28px" }} />}
             onClick={handleDelete}
             sx={{
               border: "none",
               padding: "5px 15px",
+              color: "#B0B0B0",
             }}
           />
         )}
