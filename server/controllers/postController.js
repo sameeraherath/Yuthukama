@@ -26,7 +26,14 @@ const postController = {
 
   createPost: async (req, res) => {
     try {
-      const { content } = req.body;
+      const { title, description } = req.body;
+
+      if (!title || !description) {
+        return res
+          .status(400)
+          .json({ message: "Title and description are required." });
+      }
+
       let imageUrl = null;
 
       if (req.file) {
@@ -46,7 +53,8 @@ const postController = {
       }
 
       const post = new Post({
-        content,
+        title,
+        description,
         image: imageUrl,
         user: req.user.id,
       });
