@@ -54,7 +54,7 @@ const ProfilePage = () => {
     if (user?._id) {
       dispatch(fetchUserPosts(user._id));
     }
-  }, [dispatch, user]);
+  }, [dispatch, user?._id]);
 
   useEffect(() => {
     if (message || userError) {
@@ -65,13 +65,10 @@ const ProfilePage = () => {
     }
   }, [message, userError, dispatch]);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
+  const handleFileChange = (e) => setFile(e.target.files[0]);
 
   const handleUpload = async () => {
     if (!file) return;
-
     const formData = new FormData();
     formData.append("profilePic", file);
     await dispatch(updateProfilePicture(formData));
@@ -82,26 +79,50 @@ const ProfilePage = () => {
     if (!newUsername) return;
     await dispatch(updateUsername(newUsername));
     setNewUsername("");
+    setEditingUsername(false);
+  };
+
+  const handleEditUsername = () => {
+    setEditingUsername(true);
+    setNewUsername(user?.username || "");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUsername(false);
+    setNewUsername("");
+  };
+
+  const handleDeletePost = async () => {
+    if (postToDelete) {
+      await dispatch(deletePost(postToDelete));
+      dispatch(fetchUserPosts(user._id));
+    }
+    setDeleteDialogOpen(false);
+    setPostToDelete(null);
   };
 
   if (postsLoading || userLoading) {
-    return <CircularProgress sx={{ display: "block", mx: "auto", mt: 4 }} />;
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          mb: 4,
-        }}
+      <Paper
+        sx={{ p: 4, mb: 4, borderRadius: 4, textAlign: "center", boxShadow: 1 }}
       >
         <Box sx={{ position: "relative", display: "inline-block", mb: 2 }}>
           <Avatar
             src={user?.profilePic || "/uploads/profile-pics/default.jpg"}
-            sx={{ width: 154, height: 154 }}
+            sx={{
+              width: 154,
+              height: 154,
+              border: "4px solid #1dbf73",
+              boxShadow: 1,
+            }}
           />
           <label htmlFor="profile-pic-upload">
             <input
@@ -116,13 +137,15 @@ const ProfilePage = () => {
                 position: "absolute",
                 bottom: 8,
                 right: 8,
-                bgcolor: "rgba(0,0,0,0.6)",
+                bgcolor: "rgba(0,0,0,0.7)",
                 borderRadius: "50%",
-                p: 1,
+                p: 1.2,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                transition: "background 0.2s",
+                "&:hover": { bgcolor: "#1dbf73" },
               }}
             >
               <CameraAltIcon sx={{ color: "#fff" }} />
@@ -132,22 +155,30 @@ const ProfilePage = () => {
         {file && (
           <Button
             variant="contained"
-            color="primary"
+            color="success"
             onClick={handleUpload}
             sx={{
               mb: 2,
               fontWeight: "bold",
               textTransform: "none",
               borderRadius: 5,
-              padding: "10px 20px",
+              px: 4,
               backgroundColor: "#1dbf73",
+              boxShadow: 1,
             }}
           >
             Update Profile Picture
           </Button>
         )}
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            mt: 2,
+            justifyContent: "center",
+          }}
+        >
           {editingUsername ? (
             <>
               <TextField
@@ -164,6 +195,7 @@ const ProfilePage = () => {
                   },
                   "& .MuiInputLabel-root.Mui-focused": { color: "#1DBF73" },
                 }}
+                autoFocus
               />
               <Button
                 variant="contained"
@@ -172,25 +204,19 @@ const ProfilePage = () => {
                   fontWeight: "bold",
                   textTransform: "none",
                   borderRadius: 5,
-                  padding: "10px 20px",
+                  px: 3,
                   backgroundColor: "#1dbf73",
                 }}
-                onClick={async () => {
-                  await handleUsernameChange();
-                  setEditingUsername(false);
-                }}
+                onClick={handleUsernameChange}
                 disabled={!newUsername}
               >
                 Update
               </Button>
               <Button
-                variant="text"
+                variant="outlined"
                 color="inherit"
-                sx={{ textTransform: "none", borderRadius: 5 }}
-                onClick={() => {
-                  setEditingUsername(false);
-                  setNewUsername("");
-                }}
+                sx={{ textTransform: "none", borderRadius: 5, px: 3 }}
+                onClick={handleCancelEdit}
               >
                 Cancel
               </Button>
@@ -201,16 +227,13 @@ const ProfilePage = () => {
                 variant="h4"
                 component="h1"
                 gutterBottom
-                sx={{ mb: 0 }}
+                sx={{ mb: 0, fontWeight: 600 }}
               >
                 {user?.username}
               </Typography>
               <IconButton
                 aria-label="Edit Username"
-                onClick={() => {
-                  setEditingUsername(true);
-                  setNewUsername(user?.username || "");
-                }}
+                onClick={handleEditUsername}
                 size="small"
                 sx={{ ml: 1 }}
               >
@@ -219,33 +242,29 @@ const ProfilePage = () => {
             </>
           )}
         </Box>
-
         {(message || userError) && (
           <Alert
             severity={userError ? "error" : "success"}
-            sx={{ mt: 2, width: "100%" }}
+            sx={{ mt: 2, width: "100%", borderRadius: 2, fontWeight: 500 }}
           >
             {userError || message}
           </Alert>
         )}
-      </Box>
-
-      <Paper elevation={1} sx={{ p: 2, mb: 4, textAlign: "center" }}>
-        <Typography variant="body1">Email: {user?.email}</Typography>
+        <Typography variant="body1" sx={{ mt: 3, color: "#555" }}>
+          Email: <b>{user?.email}</b>
+        </Typography>
       </Paper>
 
-      <Typography variant="h5" gutterBottom>
-        Your Posts
-      </Typography>
-
-      {postsError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {postsError}
-        </Alert>
-      )}
-
-      {userPosts?.length > 0 ? (
-        <>
+      <Paper elevation={1} sx={{ p: 3, mb: 4, borderRadius: 4 }}>
+        <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+          Your Posts
+        </Typography>
+        {postsError && (
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+            {postsError}
+          </Alert>
+        )}
+        {userPosts?.length > 0 ? (
           <Grid container spacing={3}>
             {userPosts.map((post) => (
               <Grid item xs={12} sm={6} md={6} key={post._id}>
@@ -256,47 +275,46 @@ const ProfilePage = () => {
                     setPostToDelete(post._id);
                     setDeleteDialogOpen(true);
                   }}
+                  sx={{ boxShadow: 2, borderRadius: 3 }}
                 />
               </Grid>
             ))}
           </Grid>
-          <Dialog
-            open={deleteDialogOpen}
-            onClose={() => setDeleteDialogOpen(false)}
+        ) : (
+          <Typography variant="body1" sx={{ color: "#888", mt: 2 }}>
+            You haven't posted anything yet.
+          </Typography>
+        )}
+      </Paper>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>Delete Post</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete this post?
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            color="inherit"
+            variant="outlined"
+            sx={{ borderRadius: 2 }}
           >
-            <DialogTitle>Delete Post</DialogTitle>
-            <DialogContent>
-              Are you sure you want to delete this post?
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={() => setDeleteDialogOpen(false)}
-                color="inherit"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={async () => {
-                  if (postToDelete) {
-                    await dispatch(deletePost(postToDelete));
-                    dispatch(fetchUserPosts(user._id));
-                  }
-                  setDeleteDialogOpen(false);
-                  setPostToDelete(null);
-                }}
-                color="error"
-                variant="contained"
-              >
-                Delete
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </>
-      ) : (
-        <Typography variant="body1">
-          You haven't posted anything yet.
-        </Typography>
-      )}
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeletePost}
+            color="error"
+            variant="contained"
+            sx={{ borderRadius: 2 }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
