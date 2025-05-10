@@ -14,6 +14,7 @@ export const fetchUserPosts = createAsyncThunk(
         },
       });
       return data;
+      
     } catch (error) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to fetch posts"
@@ -25,7 +26,6 @@ export const fetchUserPosts = createAsyncThunk(
 const initialState = {
   userPosts: [],
   allPosts: [],
-  // Removed loading state as it's now handled globally
   error: null,
   currentPost: null,
 };
@@ -44,50 +44,39 @@ const postsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchUserPosts.pending, (state) => {
-        // Removed loading state management
         state.error = null;
       })
       .addCase(fetchUserPosts.fulfilled, (state, action) => {
-        // Removed loading state management
         state.userPosts = action.payload;
       })
       .addCase(fetchUserPosts.rejected, (state, action) => {
-        // Removed loading state management
         state.error = action.payload;
       })
       .addCase(fetchPosts.pending, (state) => {
-        // Removed loading state management
         state.error = null;
       })
       .addCase(fetchPosts.fulfilled, (state, action) => {
-        // Removed loading state management
         state.allPosts = action.payload;
       })
       .addCase(fetchPosts.rejected, (state, action) => {
-        // Removed loading state management
         state.error = action.payload;
       })
       .addCase(createPost.pending, (state) => {
-        // Removed loading state management
         state.error = null;
       })
       .addCase(createPost.fulfilled, (state, action) => {
-        // Removed loading state management
         state.allPosts = [action.payload, ...state.allPosts];
         if (action.payload.user === action.meta.arg.userId) {
           state.userPosts = [action.payload, ...state.userPosts];
         }
       })
       .addCase(createPost.rejected, (state, action) => {
-        // Removed loading state management
         state.error = action.payload;
       })
       .addCase(deletePost.pending, (state) => {
-        // Removed loading state management
         state.error = null;
       })
       .addCase(deletePost.fulfilled, (state, action) => {
-        // Removed loading state management
         state.userPosts = state.userPosts.filter(
           (post) => post._id !== action.payload
         );
@@ -96,12 +85,10 @@ const postsSlice = createSlice({
         );
       })
       .addCase(deletePost.rejected, (state, action) => {
-        // Removed loading state management
         state.error = action.payload;
       });
   },
 });
 
-// Export actions and reducer
 export const { clearError, setCurrentPost } = postsSlice.actions;
 export default postsSlice.reducer;
