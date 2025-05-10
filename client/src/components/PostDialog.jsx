@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Dialog,
   DialogActions,
@@ -11,6 +10,8 @@ import {
 import { Formik, Field, Form } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
+import { useDispatch } from "react-redux";
+import { addPost } from "../features/posts/postsSlice";
 
 const validationSchema = Yup.object().shape({
   title: Yup.string()
@@ -24,6 +25,8 @@ const validationSchema = Yup.object().shape({
 
 const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
   const token = localStorage.getItem("token");
+  const dispatch = useDispatch();
+
   const handlePostSubmit = async (values, actions) => {
     const formData = new FormData();
     formData.append("title", values.title);
@@ -42,6 +45,9 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
         }
       );
       console.log("Post created:", response.data);
+
+      dispatch(addPost(response.data));
+
       parentSubmit?.(values, actions);
       actions.resetForm();
       handleClose();

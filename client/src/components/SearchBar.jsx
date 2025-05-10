@@ -9,14 +9,18 @@ const SearchBar = ({ searchTerm, setSearchTerm }) => {
         justifyContent: "center",
         alignItems: "center",
         marginTop: "20px",
+        marginBottom: "20px",
+        padding: "10px",
+        paddingLeft: "20px",
+        paddingRight: "20px",
       }}
     >
       <TextField
-        variant="outlined"      
+        variant="outlined"
         fullWidth
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        sx={{ maxWidth: "500px", borderRadius: "20px" }}
+        sx={{ maxWidth: "400px", borderRadius: "20px" }}
         placeholder="Search for a post"
         InputProps={{
           sx: { borderRadius: "40px" },

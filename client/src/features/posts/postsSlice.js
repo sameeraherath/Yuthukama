@@ -14,7 +14,6 @@ export const fetchUserPosts = createAsyncThunk(
         },
       });
       return data;
-      
     } catch (error) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to fetch posts"
@@ -39,6 +38,12 @@ const postsSlice = createSlice({
     },
     setCurrentPost: (state, action) => {
       state.currentPost = action.payload;
+    },
+    addPost: (state, action) => {
+      state.allPosts = [action.payload, ...state.allPosts];
+      if (action.payload.user === action.payload.userId) {
+        state.userPosts = [action.payload, ...state.userPosts];
+      }
     },
   },
   extraReducers: (builder) => {
@@ -90,5 +95,5 @@ const postsSlice = createSlice({
   },
 });
 
-export const { clearError, setCurrentPost } = postsSlice.actions;
+export const { clearError, setCurrentPost, addPost } = postsSlice.actions;
 export default postsSlice.reducer;
