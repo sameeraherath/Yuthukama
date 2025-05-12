@@ -60,7 +60,7 @@ const PostCard = ({ post, showOfferButton = true, onDelete }) => {
               padding: "10px 20px",
               backgroundColor: "#1dbf73",
             }}
-            onClick={handleConnect} 
+            onClick={handleConnect}
           >
             Connect
           </Button>
