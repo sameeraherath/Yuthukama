@@ -6,6 +6,7 @@ import uiReducer, {
   loadingMiddleware,
   injectStore,
 } from "../features/ui/uiSlice";
+import chatReducer from "../features/chat/chatSlice";
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     user: userReducer,
     posts: postsReducer,
     ui: uiReducer,
+    chat: chatReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(loadingMiddleware),

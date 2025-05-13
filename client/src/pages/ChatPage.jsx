@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { addMessage } from "../features/chat/chatSlice";
 import {
   Paper,
   Box,
@@ -17,36 +19,65 @@ const ChatPage = () => {
   const postOwner = location.state?.postOwner;
   const displayName = postOwner?.username || "Unknown Author";
 
-  const [messages, setMessages] = useState([
-    {
-      sender: "system",
-      text: "Start chatting with " + displayName,
-      timestamp: new Date(),
-    },
-  ]);
-
+  const messages = useSelector((state) => state.chat.messages);
+  const dispatch = useDispatch();
   const [newMessage, setNewMessage] = useState("");
 
   const handleSendMessage = () => {
-    if (newMessage.trim() === "") return;
-
-    setMessages([
-      ...messages,
-      { sender: "user", text: newMessage, timestamp: new Date() },
-    ]);
+    if (!newMessage.trim()) return;
+    dispatch(
+      addMessage({ sender: "user", text: newMessage, timestamp: new Date() })
+    );
     setNewMessage("");
 
     setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
+      dispatch(
+        addMessage({
           sender: displayName,
           text: "Thanks for your message!",
           timestamp: new Date(),
-        },
-      ]);
+        })
+      );
     }, 1000);
   };
+
+  const renderMessage = (message, index) => (
+    <Box
+      key={index}
+      sx={{
+        alignSelf: message.sender === "user" ? "flex-end" : "flex-start",
+        maxWidth: "70%",
+      }}
+    >
+      <Paper
+        elevation={1}
+        sx={{
+          p: 1.5,
+          backgroundColor: message.sender === "user" ? "#e3f2fd" : "#f5f5f5",
+          borderRadius: 2,
+        }}
+      >
+        {message.sender === "system" ? (
+          <Typography
+            variant="body2"
+            sx={{ fontStyle: "italic", color: "text.secondary" }}
+          >
+            {message.text}
+          </Typography>
+        ) : (
+          <>
+            <Typography variant="body1">{message.text}</Typography>
+            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+              {message.timestamp.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Typography>
+          </>
+        )}
+      </Paper>
+    </Box>
+  );
 
   return (
     <Box
@@ -88,48 +119,7 @@ const ChatPage = () => {
             gap: 1.5,
           }}
         >
-          {messages.map((message, index) => (
-            <Box
-              key={index}
-              sx={{
-                alignSelf:
-                  message.sender === "user" ? "flex-end" : "flex-start",
-                maxWidth: "70%",
-              }}
-            >
-              <Paper
-                elevation={1}
-                sx={{
-                  p: 1.5,
-                  backgroundColor:
-                    message.sender === "user" ? "#e3f2fd" : "#f5f5f5",
-                  borderRadius: 2,
-                }}
-              >
-                {message.sender === "system" ? (
-                  <Typography
-                    variant="body2"
-                    sx={{ fontStyle: "italic", color: "text.secondary" }}
-                  >
-                    {message.text}
-                  </Typography>
-                ) : (
-                  <>
-                    <Typography variant="body1">{message.text}</Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </Typography>
-                  </>
-                )}
-              </Paper>
-            </Box>
-          ))}
+          {messages.map(renderMessage)}
         </Box>
 
         <Divider />
