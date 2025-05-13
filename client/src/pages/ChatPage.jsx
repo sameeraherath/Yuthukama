@@ -50,7 +50,6 @@ const ChatPage = () => {
       }}
     >
       <Paper
-        elevation={1}
         sx={{
           p: 1.5,
           backgroundColor: message.sender === "user" ? "#e3f2fd" : "#f5f5f5",
@@ -80,9 +79,8 @@ const ChatPage = () => {
   );
 
   return (
-    <Box
-      sx={{ minHeight: "100vh", padding: "20px", backgroundColor: "#f0f2f5" }}
-    >
+    <Box sx={{ minHeight: "100vh", padding: "20px" }}>
+      {" "}
       <Paper
         elevation={3}
         sx={{
@@ -91,24 +89,27 @@ const ChatPage = () => {
           height: "80vh",
           display: "flex",
           flexDirection: "column",
+          borderRadius: 4,
+          overflow: "hidden",
         }}
       >
+        {" "}
         <Box
           sx={{
             p: 2,
-            backgroundColor: "#1976d2",
+            backgroundColor: "#1ac173",
             color: "white",
             display: "flex",
             alignItems: "center",
             gap: 2,
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
           }}
         >
           <Avatar>{displayName.charAt(0)}</Avatar>
           <Typography variant="h6">Chat with {displayName}</Typography>
         </Box>
-
         <Divider />
-
         <Box
           sx={{
             flexGrow: 1,
@@ -121,10 +122,9 @@ const ChatPage = () => {
         >
           {messages.map(renderMessage)}
         </Box>
-
-        <Divider />
-
+        <Divider />{" "}
         <Stack direction="row" spacing={1} sx={{ p: 2 }}>
+          {" "}
           <TextField
             fullWidth
             variant="outlined"
@@ -135,10 +135,23 @@ const ChatPage = () => {
             onKeyPress={(e) => {
               if (e.key === "Enter") handleSendMessage();
             }}
-          />
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 3,
+                "&.Mui-focused fieldset": {
+                  borderColor: "#1ac173",
+                  borderWidth: 2,
+                },
+              },
+            }}
+          />{" "}
           <Button
             variant="contained"
-            color="primary"
+            sx={{
+              backgroundColor: "#1ac173",
+              borderRadius: 3,
+              padding: "8px 16px",
+            }}
             endIcon={<SendIcon />}
             onClick={handleSendMessage}
           >
