@@ -1,8 +1,15 @@
-import React, { useState } from "react";
-import { AppBar, Toolbar, IconButton, Typography, Box } from "@mui/material";
+import { useState } from "react";
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Box,
+} from "@mui/material";
 import PostAddIcon from "@mui/icons-material/PostAdd";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
+import ChatIcon from "@mui/icons-material/Chat";
 import PostDialog from "./PostDialog";
 import LogoutDialog from "./LogoutDialog";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +33,6 @@ const Navbar = () => {
     actions.resetForm();
     handleClose();
   };
-
   const handleProfileClick = () => {
     navigate("/profile");
   };
@@ -69,10 +75,16 @@ const Navbar = () => {
             }}
           >
             Yuthukama
-          </Typography>
+          </Typography>{" "}
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <IconButton color="inherit" onClick={handleClickOpen}>
               <PostAddIcon sx={{ fontSize: "32px" }} />
+            </IconButton>
+            <IconButton
+              color="inherit"
+              onClick={() => navigate("/conversations")}
+            >
+              <ChatIcon sx={{ fontSize: "32px" }} />
             </IconButton>
             <IconButton color="inherit" onClick={handleProfileClick}>
               <AccountCircleIcon sx={{ fontSize: "32px" }} />
@@ -83,14 +95,11 @@ const Navbar = () => {
           </Box>
         </Toolbar>
       </AppBar>
-
-      {/* Using the new LogoutDialog component */}
       <LogoutDialog
         open={logoutConfirmOpen}
         onClose={handleLogoutConfirmClose}
         onLogout={handleLogout}
       />
-
       <PostDialog
         open={open}
         handleClose={handleClose}

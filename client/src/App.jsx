@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import HomeScreen from "./pages/HomeScreen";
 import RegisterPage from "./pages/auth/RegisterPage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage";
 import ProfilePage from "./pages/ProfilePage";
 import MainLayout from "./layouts/MainLayout.jsx";
 import ChatPage from "./pages/ChatPage";
+import ConversationsPage from "./pages/ConversationsPage";
 
 import { checkUserSession } from "./features/auth/authAPI";
 const App = () => {
@@ -28,7 +29,7 @@ const App = () => {
             <HomeScreen />
           </MainLayout>
         }
-      />
+      />{" "}
       <Route
         path="/profile"
         element={
@@ -38,10 +39,26 @@ const App = () => {
         }
       />
       <Route
-        path="/chat/:userId"
+        path="/profile/:userId"
+        element={
+          <MainLayout>
+            <ProfilePage />
+          </MainLayout>
+        }
+      />{" "}
+      <Route
+        path="/chat"
         element={
           <MainLayout>
             <ChatPage />
+          </MainLayout>
+        }
+      />
+      <Route
+        path="/conversations"
+        element={
+          <MainLayout>
+            <ConversationsPage />
           </MainLayout>
         }
       />

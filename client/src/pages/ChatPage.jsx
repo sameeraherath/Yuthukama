@@ -1,7 +1,15 @@
-import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { addMessage } from "../features/chat/chatSlice";
+import {
+  addMessage,
+  getOrCreateConversation,
+  fetchMessages,
+  clearMessages,
+} from "../features/chat/chatSlice";
+import useAuth from "../hooks/useAuth";
+import useChat from "../hooks/useChat";
+import useLoading from "../hooks/useLoading";
 import {
   Paper,
   Box,
@@ -11,48 +19,135 @@ import {
   Avatar,
   Stack,
   Divider,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 
 const ChatPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const dispatch = useDispatch();
+  const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const [isSending, setIsSending] = useState(false);
+
   const postOwner = location.state?.postOwner;
+  const receiverId = postOwner?._id;
   const displayName = postOwner?.username || "Unknown Author";
 
-  const messages = useSelector((state) => state.chat.messages);
-  const dispatch = useDispatch();
+  const { messages, currentConversation, isTyping, error } = useSelector(
+    (state) => state.chat
+  );
+  const { isLoading } = useLoading();
+
   const [newMessage, setNewMessage] = useState("");
 
-  const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
-    dispatch(
-      addMessage({ sender: "user", text: newMessage, timestamp: new Date() })
-    );
-    setNewMessage("");
+  const { isConnected, sendMessage, startTyping, stopTyping } = useChat(
+    user?._id,
+    receiverId,
+    currentConversation?._id
+  );
 
-    setTimeout(() => {
-      dispatch(
-        addMessage({
-          sender: displayName,
-          text: "Thanks for your message!",
-          timestamp: new Date(),
+  useEffect(() => {
+    if (user && receiverId) {
+      dispatch(getOrCreateConversation(receiverId))
+        .unwrap()
+        .then((conversation) => {
+          if (conversation._id) {
+            dispatch(fetchMessages(conversation._id));
+          }
         })
-      );
-    }, 1000);
+        .catch((err) => {
+          console.error("Failed to load conversation:", err);
+        });
+    }
+
+    return () => {
+      dispatch(clearMessages());
+    };
+  }, [dispatch, user, receiverId]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+  const handleSendMessage = () => {
+    if (!newMessage.trim() || !isConnected) {
+      console.log("Cannot send message: empty message or not connected");
+      return;
+    }
+
+    if (!currentConversation?._id) {
+      console.log("Cannot send message: no active conversation");
+      return;
+    }
+
+    const trimmedMessage = newMessage.trim();
+    setIsSending(true);
+
+    try {
+      const messageData = sendMessage(trimmedMessage);
+
+      if (messageData) {
+        console.log(
+          "Message sent successfully, adding to local state:",
+          messageData
+        );
+        dispatch(addMessage(messageData));
+        setNewMessage("");
+
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+          stopTyping();
+          typingTimeoutRef.current = null;
+        }
+      } else {
+        console.error("Failed to send message");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setIsSending(false);
+    }
   };
+
+  const handleTyping = useCallback(
+    (e) => {
+      setNewMessage(e.target.value);
+
+      if (e.target.value.trim() && isConnected) {
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        } else {
+          startTyping();
+        }
+
+        typingTimeoutRef.current = setTimeout(() => {
+          stopTyping();
+          typingTimeoutRef.current = null;
+        }, 2000);
+      } else if (!e.target.value.trim() && typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        stopTyping();
+        typingTimeoutRef.current = null;
+      }
+    },
+    [isConnected, startTyping, stopTyping]
+  );
 
   const renderMessage = (message, index) => (
     <Box
       key={index}
       sx={{
-        alignSelf: message.sender === "user" ? "flex-end" : "flex-start",
+        alignSelf: message.sender === user?._id ? "flex-end" : "flex-start",
         maxWidth: "70%",
       }}
     >
       <Paper
         sx={{
           p: 1.5,
-          backgroundColor: message.sender === "user" ? "#e3f2fd" : "#f5f5f5",
+          backgroundColor: message.sender === user?._id ? "#e3f2fd" : "#f5f5f5",
           borderRadius: 2,
         }}
       >
@@ -65,9 +160,10 @@ const ChatPage = () => {
           </Typography>
         ) : (
           <>
+            {" "}
             <Typography variant="body1">{message.text}</Typography>
             <Typography variant="caption" sx={{ color: "text.secondary" }}>
-              {message.timestamp.toLocaleTimeString([], {
+              {new Date(message.timestamp).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
@@ -78,9 +174,43 @@ const ChatPage = () => {
     </Box>
   );
 
+  if (!receiverId && !location.state?.postOwner) {
+    return (
+      <Box sx={{ minHeight: "100vh", padding: "20px" }}>
+        <Paper
+          elevation={3}
+          sx={{
+            maxWidth: 800,
+            margin: "0 auto",
+            padding: 3,
+            borderRadius: 4,
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="h5" mb={2}>
+            No chat selected
+          </Typography>
+          <Typography variant="body1" mb={3}>
+            Please select a user to chat with.
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => navigate("/")}
+            sx={{
+              backgroundColor: "#1ac173",
+              borderRadius: 3,
+              padding: "8px 16px",
+            }}
+          >
+            Return to Home
+          </Button>
+        </Paper>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ minHeight: "100vh", padding: "20px" }}>
-      {" "}
       <Paper
         elevation={3}
         sx={{
@@ -93,7 +223,6 @@ const ChatPage = () => {
           overflow: "hidden",
         }}
       >
-        {" "}
         <Box
           sx={{
             p: 2,
@@ -107,9 +236,13 @@ const ChatPage = () => {
           }}
         >
           <Avatar>{displayName.charAt(0)}</Avatar>
-          <Typography variant="h6">Chat with {displayName}</Typography>
+          <Typography variant="h6">
+            Chat with {displayName}
+            {!isConnected && <span> (Connecting...)</span>}
+          </Typography>
         </Box>
         <Divider />
+
         <Box
           sx={{
             flexGrow: 1,
@@ -118,23 +251,55 @@ const ChatPage = () => {
             display: "flex",
             flexDirection: "column",
             gap: 1.5,
+            position: "relative",
           }}
         >
-          {messages.map(renderMessage)}
+          {isLoading && !messages.length ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <CircularProgress sx={{ color: "#1ac173" }} />
+            </Box>
+          ) : error ? (
+            <Alert severity="error" sx={{ m: 2 }}>
+              {error}
+            </Alert>
+          ) : (
+            <>
+              {messages.map(renderMessage)}
+              {isTyping && (
+                <Box sx={{ alignSelf: "flex-start", ml: 1 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontStyle: "italic", color: "text.secondary" }}
+                  >
+                    {displayName} is typing...
+                  </Typography>
+                </Box>
+              )}
+              <div ref={messagesEndRef} />
+            </>
+          )}
         </Box>
-        <Divider />{" "}
+        <Divider />
+
         <Stack direction="row" spacing={1} sx={{ p: 2 }}>
-          {" "}
           <TextField
             fullWidth
             variant="outlined"
             placeholder="Type your message..."
             size="small"
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={handleTyping}
             onKeyPress={(e) => {
               if (e.key === "Enter") handleSendMessage();
             }}
+            disabled={!isConnected}
             sx={{
               "& .MuiOutlinedInput-root": {
                 borderRadius: 3,
@@ -152,10 +317,17 @@ const ChatPage = () => {
               borderRadius: 3,
               padding: "8px 16px",
             }}
-            endIcon={<SendIcon />}
+            endIcon={
+              isSending ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <SendIcon />
+              )
+            }
             onClick={handleSendMessage}
+            disabled={!newMessage.trim() || !isConnected || isSending}
           >
-            Send
+            {isSending ? "Sending..." : "Send"}
           </Button>
         </Stack>
       </Paper>

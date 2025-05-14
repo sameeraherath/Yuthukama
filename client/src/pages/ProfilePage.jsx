@@ -29,6 +29,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import ChatIcon from "@mui/icons-material/Chat";
 
 const ProfilePage = () => {
   const dispatch = useDispatch();

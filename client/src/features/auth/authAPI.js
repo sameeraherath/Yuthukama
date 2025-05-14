@@ -68,11 +68,7 @@ export const checkUserSession = createAsyncThunk(
       const token = localStorage.getItem("token");
       if (!token) return thunkAPI.rejectWithValue("No token");
 
-      const { data } = await axios.get(`${API_BASE}/api/auth/check`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const { data } = await axios.get(`${API_BASE}/api/auth/check`);
 
       localStorage.setItem("user", JSON.stringify(data));
       return data;

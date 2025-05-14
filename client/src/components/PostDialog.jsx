@@ -24,9 +24,7 @@ const validationSchema = Yup.object().shape({
 });
 
 const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
-  const token = localStorage.getItem("token");
   const dispatch = useDispatch();
-
   const handlePostSubmit = async (values, actions) => {
     const formData = new FormData();
     formData.append("title", values.title);
@@ -40,7 +38,6 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
           },
         }
       );

@@ -11,20 +11,25 @@ import { deletePost } from "../features/posts/postsAPI";
 import useAuth from "../hooks/useAuth";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
+import MessageButton from "./MessageButton";
 
-const PostCard = ({ post, showOfferButton = true, onDelete }) => {
+const PostCard = ({
+  post,
+  showOfferButton = true,
+  onDelete,
+  showDeleteButton = true,
+}) => {
   const dispatch = useDispatch();
   const { user } = useAuth();
   const navigate = useNavigate();
   const isOwner = user?._id && post?.user?._id && user._id === post.user._id;
-
   const handleDelete = async () => {
     await dispatch(deletePost(post._id));
     if (onDelete) onDelete(post._id);
   };
 
-  const handleConnect = () => {
-    navigate(`/chat/${post.user._id}`, { state: { postOwner: post.user } });
+  const handleNavigateToChat = () => {
+    navigate("/chat", { state: { postOwner: post.user } });
   };
 
   return (
@@ -49,7 +54,7 @@ const PostCard = ({ post, showOfferButton = true, onDelete }) => {
         </Typography>
       </CardContent>
       <CardActions>
-        {showOfferButton && (
+        {showOfferButton && !isOwner && (
           <Button
             size="small"
             variant="contained"
@@ -60,12 +65,13 @@ const PostCard = ({ post, showOfferButton = true, onDelete }) => {
               padding: "10px 20px",
               backgroundColor: "#1dbf73",
             }}
-            onClick={handleConnect}
+            onClick={handleNavigateToChat}
           >
             Connect
           </Button>
         )}
-        {isOwner && (
+        {!isOwner && <MessageButton user={post.user} />}
+        {isOwner && showDeleteButton && (
           <Button
             size="small"
             variant="outlined"
