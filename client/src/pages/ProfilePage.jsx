@@ -30,6 +30,14 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 
+/**
+ * Profile page component that displays user information and posts
+ * @component
+ * @returns {JSX.Element} Profile page with user details and posts grid
+ * @example
+ * // In App.jsx
+ * <Route path="/profile" element={<ProfilePage />} />
+ */
 const ProfilePage = () => {
   const dispatch = useDispatch();
   const { user } = useAuth();
@@ -39,6 +47,11 @@ const ProfilePage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
 
+  /**
+   * Effect hook to log user state changes
+   * @effect
+   * @listens {user} - Current user data
+   */
   useEffect(() => {
     console.log("Current user state:", user);
     console.log("Profile picture URL:", user?.profilePicture);
@@ -55,12 +68,25 @@ const ProfilePage = () => {
     message,
   } = useSelector((state) => state.user);
 
+  /**
+   * Effect hook to fetch user posts when user ID changes
+   * @effect
+   * @listens {user?._id} - User ID
+   * @listens {dispatch} - Redux dispatch function
+   */
   useEffect(() => {
     if (user?._id) {
       dispatch(fetchUserPosts(user._id));
     }
   }, [dispatch, user?._id]);
 
+  /**
+   * Effect hook to clear messages after timeout
+   * @effect
+   * @listens {message} - Success message
+   * @listens {userError} - Error message
+   * @listens {dispatch} - Redux dispatch function
+   */
   useEffect(() => {
     if (message || userError) {
       const timer = setTimeout(() => {
@@ -70,11 +96,21 @@ const ProfilePage = () => {
     }
   }, [message, userError, dispatch]);
 
+  /**
+   * Handles file selection for profile picture
+   * @function
+   * @param {Event} e - File input change event
+   */
   const handleFileChange = (e) => {
     console.log("Selected file:", e.target.files[0]);
     setFile(e.target.files[0]);
   };
 
+  /**
+   * Handles profile picture upload
+   * @async
+   * @function
+   */
   const handleUpload = async () => {
     if (!file) return;
     console.log("Uploading file:", file);
@@ -89,6 +125,11 @@ const ProfilePage = () => {
     }
   };
 
+  /**
+   * Handles username update
+   * @async
+   * @function
+   */
   const handleUsernameChange = async () => {
     if (!newUsername) return;
     await dispatch(updateUsername(newUsername));
@@ -96,16 +137,29 @@ const ProfilePage = () => {
     setEditingUsername(false);
   };
 
+  /**
+   * Initiates username editing mode
+   * @function
+   */
   const handleEditUsername = () => {
     setEditingUsername(true);
     setNewUsername(user?.username || "");
   };
 
+  /**
+   * Cancels username editing
+   * @function
+   */
   const handleCancelEdit = () => {
     setEditingUsername(false);
     setNewUsername("");
   };
 
+  /**
+   * Handles post deletion
+   * @async
+   * @function
+   */
   const handleDeletePost = async () => {
     if (postToDelete) {
       await dispatch(deletePost(postToDelete));

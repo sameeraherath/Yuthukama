@@ -13,6 +13,10 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { addPost } from "../features/posts/postsSlice";
 
+/**
+ * Form validation schema for post creation
+ * @type {Object}
+ */
 const validationSchema = Yup.object().shape({
   title: Yup.string()
     .required("Title is required")
@@ -23,8 +27,34 @@ const validationSchema = Yup.object().shape({
   image: Yup.mixed().required("Image is required"),
 });
 
+/**
+ * Dialog component for creating new posts
+ * @component
+ * @param {Object} props - Component props
+ * @param {boolean} props.open - Whether the dialog is open
+ * @param {Function} props.handleClose - Function to close the dialog
+ * @param {Function} props.handlePostSubmit - Parent callback for post submission
+ * @returns {JSX.Element} Dialog with post creation form
+ * @example
+ * <PostDialog
+ *   open={isOpen}
+ *   handleClose={() => setIsOpen(false)}
+ *   handlePostSubmit={(values) => console.log('Post submitted:', values)}
+ * />
+ */
 const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
   const dispatch = useDispatch();
+
+  /**
+   * Handles post submission and file upload
+   * @async
+   * @function
+   * @param {Object} values - Form values
+   * @param {string} values.title - Post title
+   * @param {string} values.description - Post description
+   * @param {File} values.image - Post image file
+   * @param {Object} actions - Formik form actions
+   */
   const handlePostSubmit = async (values, actions) => {
     const formData = new FormData();
     formData.append("title", values.title);

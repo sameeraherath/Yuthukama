@@ -1,3 +1,8 @@
+/**
+ * Authentication state management slice
+ * @module authSlice
+ */
+
 import { createSlice } from "@reduxjs/toolkit";
 import {
   loginUser,
@@ -7,12 +12,25 @@ import {
 } from "./authAPI";
 import { updateProfilePicture } from "./userSlice";
 
+/**
+ * Initial user state from localStorage
+ * @type {Object|null}
+ */
 const user = localStorage.getItem("user")
   ? JSON.parse(localStorage.getItem("user"))
   : null;
 
 console.log("Initial user state from localStorage:", user);
 
+/**
+ * Initial state for the auth slice
+ * @type {Object}
+ * @property {Object|null} user - Current user data
+ * @property {boolean} loading - Loading state
+ * @property {string|null} error - Error message
+ * @property {boolean} isAuthenticated - Authentication status
+ * @property {string} message - Status message
+ */
 const initialState = {
   user: user,
   loading: false,
@@ -21,15 +39,27 @@ const initialState = {
   message: "",
 };
 
+/**
+ * Redux slice for authentication state management
+ * @type {import('@reduxjs/toolkit').Slice}
+ */
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    /**
+     * Resets the auth state to initial values
+     * @param {Object} state - Current state
+     */
     reset: (state) => {
       state.loading = false;
       state.error = null;
       state.message = "";
     },
+    /**
+     * Clears any error messages
+     * @param {Object} state - Current state
+     */
     clearError: (state) => {
       state.error = null;
     },

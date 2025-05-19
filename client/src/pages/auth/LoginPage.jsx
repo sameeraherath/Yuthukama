@@ -14,15 +14,34 @@ import { Visibility, VisibilityOff, Email, Lock } from "@mui/icons-material";
 import useAuth from "../../hooks/useAuth";
 import GlobalLoadingSpinner from "../../components/GlobalLoadingSpinner";
 
+/**
+ * Login page component that handles user authentication
+ * @component
+ * @returns {JSX.Element} The login form with email and password fields
+ * @example
+ * // In App.jsx
+ * <Route path="/login" element={<LoginPage />} />
+ */
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login, loading } = useAuth();
 
+  /**
+   * Form data state
+   * @type {Object}
+   * @property {string} email - User's email address
+   * @property {string} password - User's password
+   */
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
 
+  /**
+   * Validates the login form data
+   * @function
+   * @returns {boolean} True if form is valid, false otherwise
+   */
   const validateForm = () => {
     const newErrors = {};
     if (!formData.email) newErrors.email = "Email is required";
@@ -37,6 +56,13 @@ const LoginPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  /**
+   * Handles form submission and user login
+   * @async
+   * @function
+   * @param {Event} e - Form submission event
+   * @throws {Error} If login fails
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;

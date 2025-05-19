@@ -1,6 +1,17 @@
 import { TextField, Box, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
+/**
+ * Search bar component for filtering posts
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.searchTerm - Current search term
+ * @param {Function} props.setSearchTerm - Function to update search term
+ * @returns {JSX.Element} Search input field with icon
+ * @example
+ * const [searchTerm, setSearchTerm] = useState('');
+ * <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+ */
 const SearchBar = ({ searchTerm, setSearchTerm }) => {
   return (
     <Box

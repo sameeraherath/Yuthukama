@@ -1,7 +1,24 @@
+/**
+ * Controller module for handling chat-related operations
+ * @module chatController
+ */
+
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
 import mongoose from "mongoose";
 
+/**
+ * Retrieves all conversations for the authenticated user
+ * @param {Object} req - Express request object
+ * @param {Object} req.user - Authenticated user object
+ * @param {string} req.user._id - User's ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing array of conversations
+ * @throws {Error} If conversation retrieval fails
+ * @example
+ * // Route: GET /api/chat/conversations
+ * // Returns all conversations where the user is a participant
+ */
 export const getUserConversations = async (req, res) => {
   try {
     const conversations = await Conversation.find({
@@ -16,6 +33,20 @@ export const getUserConversations = async (req, res) => {
   }
 };
 
+/**
+ * Retrieves all messages for a specific conversation
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.conversationId - ID of the conversation
+ * @param {Object} req.user - Authenticated user object
+ * @param {string} req.user._id - User's ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing array of messages
+ * @throws {Error} If message retrieval fails or user is not authorized
+ * @example
+ * // Route: GET /api/chat/conversations/:conversationId/messages
+ * // Returns all messages in the conversation and marks unread messages as read
+ */
 export const getConversationMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
@@ -52,6 +83,20 @@ export const getConversationMessages = async (req, res) => {
   }
 };
 
+/**
+ * Gets an existing conversation or creates a new one between two users
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.receiverId - ID of the other participant
+ * @param {Object} req.user - Authenticated user object
+ * @param {string} req.user._id - User's ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing conversation details
+ * @throws {Error} If conversation creation/retrieval fails
+ * @example
+ * // Route: GET /api/chat/conversations/:receiverId
+ * // Returns existing conversation or creates a new one
+ */
 export const getOrCreateConversation = async (req, res) => {
   try {
     const { receiverId } = req.params;

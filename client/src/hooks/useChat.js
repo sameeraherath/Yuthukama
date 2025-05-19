@@ -3,8 +3,29 @@ import { io } from "socket.io-client";
 import { useDispatch } from "react-redux";
 import { addMessage, setTyping } from "../features/chat/chatSlice";
 
+/**
+ * Socket.IO instance for real-time communication
+ * @type {Socket}
+ */
 let socket;
 
+/**
+ * Custom hook for managing real-time chat functionality
+ * @param {string} userId - Current user's ID
+ * @param {string} receiverId - Recipient's user ID
+ * @param {string} conversationId - Current conversation ID
+ * @returns {Object} Chat state and methods
+ * @property {boolean} isConnected - Socket connection status
+ * @property {Function} sendMessage - Function to send a message
+ * @property {Function} startTyping - Function to indicate typing start
+ * @property {Function} stopTyping - Function to indicate typing stop
+ * @property {boolean} isTyping - Whether the other user is typing
+ * @example
+ * const { isConnected, sendMessage } = useChat(userId, receiverId, conversationId);
+ *
+ * // Send a message
+ * const messageData = sendMessage('Hello!');
+ */
 const useChat = (userId, receiverId, conversationId) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isTyping] = useState(false);
@@ -12,6 +33,15 @@ const useChat = (userId, receiverId, conversationId) => {
 
   const roomId =
     userId && receiverId ? [userId, receiverId].sort().join("_") : null;
+
+  /**
+   * Effect hook to manage socket connection and event handlers
+   * @effect
+   * @listens {userId} - Current user ID
+   * @listens {receiverId} - Recipient user ID
+   * @listens {conversationId} - Conversation ID
+   * @listens {dispatch} - Redux dispatch function
+   */
   useEffect(() => {
     if (!userId || !receiverId) return;
     if (!socket) {
@@ -28,6 +58,10 @@ const useChat = (userId, receiverId, conversationId) => {
       socket.connect();
     }
 
+    /**
+     * Handles socket connection
+     * @function
+     */
     const handleConnect = () => {
       console.log("Socket connected");
       setIsConnected(true);
@@ -36,10 +70,20 @@ const useChat = (userId, receiverId, conversationId) => {
       }
     };
 
+    /**
+     * Handles socket disconnection
+     * @function
+     */
     const handleDisconnect = () => {
       console.log("Socket disconnected");
       setIsConnected(false);
     };
+
+    /**
+     * Handles connection errors and attempts reconnection
+     * @function
+     * @param {Error} error - Connection error
+     */
     const handleConnectError = (error) => {
       console.error("Connection error:", error);
       console.log(
@@ -56,6 +100,11 @@ const useChat = (userId, receiverId, conversationId) => {
       }, 5000);
     };
 
+    /**
+     * Handles incoming messages
+     * @function
+     * @param {Object} message - Received message data
+     */
     const handleReceiveMessage = (message) => {
       console.log("Received message:", message);
       if (message.sender !== userId) {
@@ -63,14 +112,26 @@ const useChat = (userId, receiverId, conversationId) => {
       }
     };
 
+    /**
+     * Handles typing indicator start
+     * @function
+     */
     const handleTypingStart = () => {
       dispatch(setTyping(true));
     };
 
+    /**
+     * Handles typing indicator stop
+     * @function
+     */
     const handleTypingStop = () => {
       dispatch(setTyping(false));
     };
 
+    /**
+     * Joins a chat room
+     * @function
+     */
     const joinRoom = () => {
       if (roomId) {
         console.log(`Joining room: ${roomId}`);
@@ -98,6 +159,13 @@ const useChat = (userId, receiverId, conversationId) => {
       socket.off("stop_typing", handleTypingStop);
     };
   }, [dispatch, userId, receiverId, roomId, conversationId]);
+
+  /**
+   * Sends a message through the socket
+   * @function
+   * @param {string} text - Message text
+   * @returns {Object|null} Message data or null if conditions not met
+   */
   const sendMessage = useCallback(
     (text) => {
       if (!isConnected || !text.trim() || !roomId) {
@@ -138,12 +206,20 @@ const useChat = (userId, receiverId, conversationId) => {
     [isConnected, roomId, conversationId, userId]
   );
 
+  /**
+   * Indicates that the user has started typing
+   * @function
+   */
   const startTyping = useCallback(() => {
     if (isConnected && roomId) {
       socket.emit("typing", { roomId, userId });
     }
   }, [isConnected, roomId, userId]);
 
+  /**
+   * Indicates that the user has stopped typing
+   * @function
+   */
   const stopTyping = useCallback(() => {
     if (isConnected && roomId) {
       socket.emit("stop_typing", { roomId, userId });

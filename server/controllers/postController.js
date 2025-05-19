@@ -1,8 +1,17 @@
+/**
+ * Controller module for handling post-related operations
+ * @module postController
+ */
+
 import Post from "../models/Post.js";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import config from "../config/config.js";
 import { v4 as uuidv4 } from "uuid";
 
+/**
+ * AWS S3 client instance for handling file uploads
+ * @type {S3Client}
+ */
 const s3Client = new S3Client({
   region: config.aws.region,
   credentials: {
@@ -11,7 +20,18 @@ const s3Client = new S3Client({
   },
 });
 
+/**
+ * Controller object containing post-related functions
+ * @namespace postController
+ */
 const postController = {
+  /**
+   * Retrieves all posts with user details
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing array of posts
+   * @throws {Error} If post retrieval fails
+   */
   getPosts: async (req, res) => {
     try {
       const posts = await Post.find()
@@ -24,6 +44,19 @@ const postController = {
     }
   },
 
+  /**
+   * Creates a new post with optional image upload
+   * @param {Object} req - Express request object
+   * @param {Object} req.body - Request body containing post details
+   * @param {string} req.body.title - Post title
+   * @param {string} req.body.description - Post description
+   * @param {Object} [req.file] - Uploaded image file
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user.id - User's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing created post
+   * @throws {Error} If post creation fails
+   */
   createPost: async (req, res) => {
     try {
       const { title, description } = req.body;
@@ -75,6 +108,15 @@ const postController = {
     }
   },
 
+  /**
+   * Retrieves all posts for a specific user
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Request parameters
+   * @param {string} req.params.userId - ID of the user whose posts to retrieve
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing array of user's posts
+   * @throws {Error} If post retrieval fails
+   */
   getUserPosts: async (req, res) => {
     try {
       const { userId } = req.params;
@@ -87,6 +129,17 @@ const postController = {
     }
   },
 
+  /**
+   * Deletes a post if the user is authorized
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Request parameters
+   * @param {string} req.params.id - ID of the post to delete
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user.id - User's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response confirming post deletion
+   * @throws {Error} If post deletion fails or user is not authorized
+   */
   deletePost: async (req, res) => {
     try {
       const post = await Post.findById(req.params.id);

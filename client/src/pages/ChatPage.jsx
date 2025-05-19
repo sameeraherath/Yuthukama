@@ -23,6 +23,14 @@ import {
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 
+/**
+ * Chat page component for real-time messaging between users
+ * @component
+ * @returns {JSX.Element} Chat interface with message history and input
+ * @example
+ * // In App.jsx
+ * <Route path="/chat/:conversationId?" element={<ChatPage />} />
+ */
 const ChatPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,6 +61,14 @@ const ChatPage = () => {
     currentConversation?._id
   );
 
+  /**
+   * Effect hook to load conversation and messages
+   * @effect
+   * @listens {conversationId} - Current conversation ID
+   * @listens {user} - Current user
+   * @listens {receiverId} - Message receiver ID
+   * @listens {dispatch} - Redux dispatch function
+   */
   useEffect(() => {
     if (conversationId) {
       dispatch(fetchMessages(conversationId))
@@ -78,9 +94,20 @@ const ChatPage = () => {
     };
   }, [dispatch, user, receiverId, conversationId]);
 
+  /**
+   * Effect hook to scroll to latest message
+   * @effect
+   * @listens {messages} - Message array
+   */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  /**
+   * Handles sending a new message
+   * @async
+   * @function
+   */
   const handleSendMessage = () => {
     if (!newMessage.trim() || !isConnected) {
       console.log("Cannot send message: empty message or not connected");
@@ -121,6 +148,11 @@ const ChatPage = () => {
     }
   };
 
+  /**
+   * Handles typing indicator and message input
+   * @function
+   * @param {Event} e - Input change event
+   */
   const handleTyping = useCallback(
     (e) => {
       setNewMessage(e.target.value);
@@ -145,6 +177,16 @@ const ChatPage = () => {
     [isConnected, startTyping, stopTyping]
   );
 
+  /**
+   * Renders a single message in the chat
+   * @function
+   * @param {Object} message - Message data
+   * @param {string} message.sender - Sender ID
+   * @param {string} message.text - Message text
+   * @param {string} message.timestamp - Message timestamp
+   * @param {number} index - Message index
+   * @returns {JSX.Element} Message bubble with content and timestamp
+   */
   const renderMessage = (message, index) => (
     <Box
       key={index}

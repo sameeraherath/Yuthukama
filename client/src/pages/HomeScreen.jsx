@@ -8,11 +8,25 @@ import SearchBar from "../components/SearchBar";
 import PostCard from "../components/PostCard";
 import GlobalLoadingSpinner from "../components/GlobalLoadingSpinner";
 
+/**
+ * Home screen component that displays a grid of posts with search functionality
+ * @component
+ * @returns {JSX.Element} The home screen layout with posts grid
+ * @example
+ * // In App.jsx
+ * <Route path="/home" element={<HomeScreen />} />
+ */
 const HomeScreen = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
 
+  /**
+   * Effect hook to redirect unauthenticated users to login
+   * @effect
+   * @listens {isAuthenticated} - Authentication status
+   * @listens {navigate} - Navigation function
+   */
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -22,6 +36,12 @@ const HomeScreen = () => {
   const token = localStorage.getItem("token");
   const { posts, error } = usePosts(token);
 
+  /**
+   * Filters posts based on search term
+   * @type {Array<Object>}
+   * @property {string} title - Post title
+   * @property {string} description - Post description
+   */
   const filteredPosts = posts.filter(
     (post) =>
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

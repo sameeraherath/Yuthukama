@@ -3,6 +3,17 @@ import axios from "axios";
 
 const API_BASE = import.meta.env.VITE_SERVER_URL;
 
+/**
+ * Fetches all posts from the API
+ * @async
+ * @function fetchPosts
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If authentication is missing or request fails
+ * @example
+ * // In a component
+ * const dispatch = useDispatch();
+ * const posts = await dispatch(fetchPosts()).unwrap();
+ */
 export const fetchPosts = createAsyncThunk(
   "posts/fetchPosts",
   async (_, thunkAPI) => {
@@ -25,11 +36,20 @@ export const fetchPosts = createAsyncThunk(
   }
 );
 
+/**
+ * Creates a new post
+ * @async
+ * @function createPost
+ * @param {Object} postData - Post data to create
+ * @param {string} postData.content - Post content
+ * @param {string} [postData.image] - Optional image URL
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If post creation fails
+ */
 export const createPost = createAsyncThunk(
   "posts/createPost",
   async (postData, thunkAPI) => {
     try {
-     
       const { data } = await axios.post(`${API_BASE}/api/posts`, postData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -44,6 +64,14 @@ export const createPost = createAsyncThunk(
   }
 );
 
+/**
+ * Deletes a post by ID
+ * @async
+ * @function deletePost
+ * @param {string} postId - ID of the post to delete
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If post deletion fails
+ */
 export const deletePost = createAsyncThunk(
   "posts/deletePost",
   async (postId, thunkAPI) => {

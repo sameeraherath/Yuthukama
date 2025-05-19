@@ -1,7 +1,27 @@
+/**
+ * Authentication middleware module
+ * @module authMiddleware
+ */
+
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-// Middleware to protect routes that require authentication
+/**
+ * Middleware to protect routes that require authentication
+ * Verifies JWT token and attaches user object to request
+ * @param {Object} req - Express request object
+ * @param {Object} req.headers - Request headers
+ * @param {string} req.headers.authorization - Bearer token in format 'Bearer <token>'
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @returns {void}
+ * @throws {Error} If token is missing, invalid, or expired
+ * @example
+ * // In route file
+ * router.get('/protected-route', protect, (req, res) => {
+ *   // Access authenticated user via req.user
+ * });
+ */
 export const protect = async (req, res, next) => {
   let token;
 

@@ -5,20 +5,45 @@ import { formatDistanceToNow } from "date-fns";
 import { fetchConversations } from "../features/chat/chatSlice";
 import GlobalLoadingSpinner from "../components/GlobalLoadingSpinner";
 
+/**
+ * Conversations page component that displays a list of user conversations
+ * @component
+ * @returns {JSX.Element} List of conversations with search functionality
+ * @example
+ * // In App.jsx
+ * <Route path="/conversations" element={<ConversationsPage />} />
+ */
 const ConversationsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { conversations, error } = useSelector((state) => state.chat);
 
+  /**
+   * Effect hook to fetch conversations on component mount
+   * @effect
+   * @listens {dispatch} - Redux dispatch function
+   */
   useEffect(() => {
     dispatch(fetchConversations());
   }, [dispatch]);
 
+  /**
+   * Navigates to chat page for selected conversation
+   * @function
+   * @param {string} conversationId - ID of the selected conversation
+   */
   const handleConversationClick = (conversationId) => {
     navigate(`/chat/${conversationId}`);
   };
 
+  /**
+   * Filters conversations based on search query
+   * @type {Array<Object>}
+   * @property {string} _id - Conversation ID
+   * @property {Array<Object>} participants - Conversation participants
+   * @property {Object} lastMessage - Last message in conversation
+   */
   const filteredConversations = conversations.filter((conversation) =>
     conversation.participants[0]?.username
       .toLowerCase()

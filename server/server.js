@@ -1,3 +1,8 @@
+/**
+ * Main server application file that sets up Express server with Socket.IO for real-time communication
+ * @module server
+ */
+
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -23,8 +28,16 @@ const app = express();
 const PORT = config.port;
 const httpServer = createServer(app);
 
+/**
+ * List of allowed origins for CORS
+ * @type {string[]}
+ */
 const allowedOrigins = ["http://localhost:5173", "http://localhost:5000"];
 
+/**
+ * Socket.IO server instance configuration
+ * @type {Server}
+ */
 const io = new Server(httpServer, {
   cors: {
     origin: allowedOrigins,
@@ -37,8 +50,13 @@ const io = new Server(httpServer, {
   pingInterval: 10000,
 });
 
+/**
+ * Multer instance for handling file uploads
+ * @type {multer.Multer}
+ */
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Middleware setup
 app.use(
   cors({
     origin: allowedOrigins,
@@ -48,6 +66,7 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// Route setup
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", upload.single("image"), postRoutes);
 app.use("/api/users", userRoutes);
@@ -55,13 +74,31 @@ app.use("/api/chat", chatRoutes);
 
 app.use(errorHandler);
 
+/**
+ * Socket.IO connection handler
+ * @param {Socket} socket - Socket.IO socket instance
+ */
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
+
+  /**
+   * Handles room joining for chat conversations
+   * @param {string} roomId - ID of the chat room to join
+   */
   socket.on("join_room", (roomId) => {
     socket.join(roomId);
     console.log(`User ${socket.id} joined room: ${roomId}`);
   });
 
+  /**
+   * Handles sending messages in chat rooms
+   * @param {Object} messageData - Message data object
+   * @param {string} messageData.roomId - ID of the chat room
+   * @param {string} messageData.sender - ID of the message sender
+   * @param {string} messageData.text - Message content
+   * @param {string} messageData.conversationId - ID of the conversation
+   * @param {string} [messageData.messageId] - Optional custom message ID
+   */
   socket.on("send_message", async (messageData) => {
     try {
       const { roomId, sender, text, conversationId, messageId } = messageData;
@@ -93,17 +130,36 @@ io.on("connection", (socket) => {
     }
   });
 
+  /**
+   * Handles typing indicator events
+   * @param {Object} data - Typing event data
+   * @param {string} data.roomId - ID of the chat room
+   * @param {string} data.userId - ID of the typing user
+   */
   socket.on("typing", (data) => {
     socket.to(data.roomId).emit("typing", data);
   });
 
+  /**
+   * Handles stop typing indicator events
+   * @param {Object} data - Stop typing event data
+   * @param {string} data.roomId - ID of the chat room
+   * @param {string} data.userId - ID of the user who stopped typing
+   */
   socket.on("stop_typing", (data) => {
     socket.to(data.roomId).emit("stop_typing", data);
   });
 
+  /**
+   * Handles socket disconnection
+   */
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });
 });
 
+/**
+ * Starts the HTTP server
+ * @param {number} PORT - Port number to listen on
+ */
 httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));

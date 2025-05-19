@@ -3,6 +3,20 @@ import axios from "axios";
 
 const API_BASE = import.meta.env.VITE_SERVER_URL;
 
+/**
+ * Async thunk for user login
+ * @async
+ * @function loginUser
+ * @param {Object} credentials - User login credentials
+ * @param {string} credentials.email - User's email address
+ * @param {string} credentials.password - User's password
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If login fails
+ * @example
+ * // In a component
+ * const dispatch = useDispatch();
+ * const result = await dispatch(loginUser({ email: 'user@example.com', password: 'password' })).unwrap();
+ */
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async ({ email, password }, thunkAPI) => {
@@ -24,6 +38,25 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+/**
+ * Async thunk for user registration
+ * @async
+ * @function registerUser
+ * @param {Object} userData - User registration data
+ * @param {string} userData.username - User's username
+ * @param {string} userData.email - User's email address
+ * @param {string} userData.password - User's password
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If registration fails
+ * @example
+ * // In a component
+ * const dispatch = useDispatch();
+ * const result = await dispatch(registerUser({
+ *   username: 'newuser',
+ *   email: 'user@example.com',
+ *   password: 'password'
+ * })).unwrap();
+ */
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async ({ username, email, password }, thunkAPI) => {
@@ -46,6 +79,17 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+/**
+ * Async thunk for user logout
+ * @async
+ * @function logoutUser
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If logout fails
+ * @example
+ * // In a component
+ * const dispatch = useDispatch();
+ * await dispatch(logoutUser()).unwrap();
+ */
 export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, thunkAPI) => {
@@ -61,6 +105,17 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+/**
+ * Async thunk for checking user session validity
+ * @async
+ * @function checkUserSession
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If session check fails or token is invalid
+ * @example
+ * // In a component
+ * const dispatch = useDispatch();
+ * const result = await dispatch(checkUserSession()).unwrap();
+ */
 export const checkUserSession = createAsyncThunk(
   "auth/checkUserSession",
   async (_, thunkAPI) => {

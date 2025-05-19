@@ -4,6 +4,15 @@ import { fetchPosts, createPost, deletePost } from "./postsAPI";
 
 const API_BASE = import.meta.env.VITE_SERVER_URL;
 
+/**
+ * Async thunk for fetching posts by user ID
+ * @async
+ * @function fetchUserPosts
+ * @param {string} userId - ID of the user whose posts to fetch
+ * @param {Object} thunkAPI - Redux Thunk API object
+ * @returns {Promise<Array>} Array of user's posts
+ * @throws {Error} If the API request fails
+ */
 export const fetchUserPosts = createAsyncThunk(
   "posts/fetchUserPosts",
   async (userId, thunkAPI) => {
@@ -22,6 +31,14 @@ export const fetchUserPosts = createAsyncThunk(
   }
 );
 
+/**
+ * Initial state for the posts slice
+ * @type {Object}
+ * @property {Array} userPosts - Array of posts by the current user
+ * @property {Array} allPosts - Array of all posts
+ * @property {string|null} error - Error message if any
+ * @property {Object|null} currentPost - Currently selected post
+ */
 const initialState = {
   userPosts: [],
   allPosts: [],
@@ -29,16 +46,34 @@ const initialState = {
   currentPost: null,
 };
 
+/**
+ * Redux slice for managing posts state
+ * @type {Object}
+ */
 const postsSlice = createSlice({
   name: "posts",
   initialState,
   reducers: {
+    /**
+     * Clears any error message in the state
+     * @param {Object} state - Current state
+     */
     clearError: (state) => {
       state.error = null;
     },
+    /**
+     * Sets the currently selected post
+     * @param {Object} state - Current state
+     * @param {Object} action - Action object containing the post to set
+     */
     setCurrentPost: (state, action) => {
       state.currentPost = action.payload;
     },
+    /**
+     * Adds a new post to the state
+     * @param {Object} state - Current state
+     * @param {Object} action - Action object containing the post to add
+     */
     addPost: (state, action) => {
       state.allPosts = [action.payload, ...state.allPosts];
       if (action.payload.user === action.payload.userId) {
@@ -48,6 +83,7 @@ const postsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Handle fetchUserPosts actions
       .addCase(fetchUserPosts.pending, (state) => {
         state.error = null;
       })
@@ -57,6 +93,7 @@ const postsSlice = createSlice({
       .addCase(fetchUserPosts.rejected, (state, action) => {
         state.error = action.payload;
       })
+      // Handle fetchPosts actions
       .addCase(fetchPosts.pending, (state) => {
         state.error = null;
       })
@@ -66,6 +103,7 @@ const postsSlice = createSlice({
       .addCase(fetchPosts.rejected, (state, action) => {
         state.error = action.payload;
       })
+      // Handle createPost actions
       .addCase(createPost.pending, (state) => {
         state.error = null;
       })
@@ -78,6 +116,7 @@ const postsSlice = createSlice({
       .addCase(createPost.rejected, (state, action) => {
         state.error = action.payload;
       })
+      // Handle deletePost actions
       .addCase(deletePost.pending, (state) => {
         state.error = null;
       })

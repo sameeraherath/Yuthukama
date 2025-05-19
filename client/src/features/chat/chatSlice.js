@@ -1,6 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+/**
+ * Async thunk for fetching all conversations
+ * @async
+ * @function fetchConversations
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If the API request fails
+ */
 export const fetchConversations = createAsyncThunk(
   "chat/fetchConversations",
   async (_, { rejectWithValue }) => {
@@ -17,6 +24,14 @@ export const fetchConversations = createAsyncThunk(
   }
 );
 
+/**
+ * Async thunk for getting or creating a conversation with a user
+ * @async
+ * @function getOrCreateConversation
+ * @param {string} receiverId - ID of the user to start/continue conversation with
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If the API request fails
+ */
 export const getOrCreateConversation = createAsyncThunk(
   "chat/getOrCreateConversation",
   async (receiverId, { rejectWithValue }) => {
@@ -33,6 +48,14 @@ export const getOrCreateConversation = createAsyncThunk(
   }
 );
 
+/**
+ * Async thunk for fetching messages in a conversation
+ * @async
+ * @function fetchMessages
+ * @param {string} conversationId - ID of the conversation to fetch messages from
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If the API request fails
+ */
 export const fetchMessages = createAsyncThunk(
   "chat/fetchMessages",
   async (conversationId, { rejectWithValue }) => {
@@ -49,6 +72,16 @@ export const fetchMessages = createAsyncThunk(
   }
 );
 
+/**
+ * Initial state for the chat slice
+ * @type {Object}
+ * @property {Array} messages - Array of chat messages
+ * @property {Array} conversations - Array of conversations
+ * @property {Object|null} currentConversation - Currently active conversation
+ * @property {boolean} isTyping - Whether the other user is typing
+ * @property {boolean} loading - Loading state
+ * @property {string|null} error - Error message if any
+ */
 const initialState = {
   messages: [],
   conversations: [],
@@ -62,6 +95,15 @@ const chatSlice = createSlice({
   name: "chat",
   initialState,
   reducers: {
+    /**
+     * Adds a new message to the state
+     * @param {Object} state - Current state
+     * @param {Object} action - Action object containing the message to add
+     * @param {string} action.payload.messageId - Unique identifier for the message
+     * @param {string} action.payload.conversationId - ID of the conversation
+     * @param {string} action.payload.text - Message text
+     * @param {string} action.payload.timestamp - Message timestamp
+     */
     addMessage: (state, action) => {
       const newMessage = action.payload;
 
@@ -74,29 +116,20 @@ const chatSlice = createSlice({
 
       let exists = false;
       if (newMessage.messageId) {
-        // If a unique messageId is provided, use it for deduplication
         exists = state.messages.some(
           (m) => m.messageId === newMessage.messageId
         );
       } else {
-        // Message lacks a messageId. This is not ideal.
-        // The original fallback (timestamp, sender, text) could incorrectly drop messages.
-        // For now, to prevent messages from being dropped, we'll log a warning.
-        // We will NOT use the risky fallback. If no messageId, assume it's new for now.
-        // This prioritizes displaying messages over strict deduplication if IDs are missing.
-        // The root cause of missing messageId should be investigated.
         console.warn(
           "[chatSlice] addMessage: Received message without messageId. Adding it, but this may lead to duplicates if IDs are not handled correctly upstream. Message:",
           newMessage
         );
-        exists = false; // Treat as new if no ID, to avoid dropping it.
+        exists = false;
       }
 
       if (!exists) {
-        // console.log("[chatSlice] addMessage: Adding new message to state:", newMessage);
         state.messages.push(newMessage);
 
-        // Update the current conversation's last message details
         if (
           state.currentConversation &&
           newMessage.conversationId === state.currentConversation._id
@@ -105,8 +138,6 @@ const chatSlice = createSlice({
           state.currentConversation.lastMessageTimestamp = newMessage.timestamp;
         }
 
-        // Update the conversation in the main conversations list
-        // and move it to the top
         const convoIndex = state.conversations.findIndex(
           (c) => c._id === newMessage.conversationId
         );
@@ -116,22 +147,38 @@ const chatSlice = createSlice({
             lastMessage: newMessage.text,
             lastMessageTimestamp: newMessage.timestamp,
           };
-          state.conversations.splice(convoIndex, 1); // Remove from current position
-          state.conversations.unshift(updatedConversation); // Add to the beginning
+          state.conversations.splice(convoIndex, 1);
+          state.conversations.unshift(updatedConversation);
         }
-      } else {
-        // console.log("[chatSlice] addMessage: Message already exists in state, skipping:", newMessage);
       }
     },
+    /**
+     * Sets the typing indicator state
+     * @param {Object} state - Current state
+     * @param {Object} action - Action object containing the typing state
+     * @param {boolean} action.payload - Whether the other user is typing
+     */
     setTyping: (state, action) => {
       state.isTyping = action.payload;
     },
+    /**
+     * Clears all messages from the state
+     * @param {Object} state - Current state
+     */
     clearMessages: (state) => {
       state.messages = [];
     },
+    /**
+     * Clears the current conversation from the state
+     * @param {Object} state - Current state
+     */
     clearCurrentConversation: (state) => {
       state.currentConversation = null;
     },
+    /**
+     * Resets the entire chat state to initial values
+     * @returns {Object} Initial state
+     */
     clearChatState: () => initialState,
   },
   extraReducers: (builder) => {

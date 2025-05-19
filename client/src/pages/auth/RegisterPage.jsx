@@ -20,10 +20,25 @@ import {
 import useAuth from "../../hooks/useAuth";
 import GlobalLoadingSpinner from "../../components/GlobalLoadingSpinner";
 
+/**
+ * Registration page component that handles new user signup
+ * @component
+ * @returns {JSX.Element} The registration form with username, email, and password fields
+ * @example
+ * // In App.jsx
+ * <Route path="/register" element={<RegisterPage />} />
+ */
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { register, loading } = useAuth();
 
+  /**
+   * Form data state
+   * @type {Object}
+   * @property {string} username - Desired username
+   * @property {string} email - User's email address
+   * @property {string} password - User's password
+   */
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -34,6 +49,11 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [registerError, setRegisterError] = useState(null);
 
+  /**
+   * Validates the registration form data
+   * @function
+   * @returns {boolean} True if form is valid, false otherwise
+   */
   const validateForm = () => {
     const newErrors = {};
     if (!formData.username) newErrors.username = "Username is required";
@@ -48,6 +68,13 @@ const RegisterPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  /**
+   * Handles form submission and user registration
+   * @async
+   * @function
+   * @param {Event} e - Form submission event
+   * @throws {Error} If registration fails
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;

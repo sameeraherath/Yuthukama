@@ -1,8 +1,16 @@
+/**
+ * Controller module for handling user-related operations
+ * @module userController
+ */
+
 import User from "../models/User.js";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import config from "../config/config.js";
 
-// Initialize AWS S3 client for file uploads
+/**
+ * AWS S3 client instance for handling profile picture uploads
+ * @type {S3Client}
+ */
 const s3Client = new S3Client({
   region: config.aws.region,
   credentials: {
@@ -11,10 +19,24 @@ const s3Client = new S3Client({
   },
 });
 
-// Controller methods for user operations
+/**
+ * Controller object containing user-related functions
+ * @namespace userController
+ */
 const userController = {
-  // Update user's profile picture
-  // PUT /api/users/profile-pic
+  /**
+   * Updates a user's profile picture
+   * @param {Object} req - Express request object
+   * @param {Object} req.file - Uploaded file from multer middleware
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user.id - User's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing updated user object
+   * @throws {Error} If profile picture update fails
+   * @example
+   * // Route: PUT /api/users/profile-pic
+   * // Requires multipart/form-data with 'file' field
+   */
   updateProfilePicture: async (req, res) => {
     try {
       if (!req.file) {
@@ -56,8 +78,20 @@ const userController = {
     }
   },
 
-  // Update username
-  // PUT /api/users/username
+  /**
+   * Updates a user's username
+   * @param {Object} req - Express request object
+   * @param {Object} req.body - Request body
+   * @param {string} req.body.username - New username
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user.id - User's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing updated user object
+   * @throws {Error} If username update fails or username is already taken
+   * @example
+   * // Route: PUT /api/users/username
+   * // Request body: { "username": "newUsername" }
+   */
   updateUsername: async (req, res) => {
     try {
       const { username } = req.body;
@@ -89,8 +123,17 @@ const userController = {
     }
   },
 
-  // Get user profile by ID
-  // GET /api/users/:id
+  /**
+   * Retrieves a user's profile by ID
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Request parameters
+   * @param {string} req.params.id - ID of the user to retrieve
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing user profile
+   * @throws {Error} If user profile retrieval fails
+   * @example
+   * // Route: GET /api/users/:id
+   */
   getUserProfile: async (req, res) => {
     try {
       // Find user by ID (excluding password)
@@ -106,8 +149,18 @@ const userController = {
     }
   },
 
-  // Search users by username
-  // GET /api/users/search
+  /**
+   * Searches for users by username
+   * @param {Object} req - Express request object
+   * @param {Object} req.query - Query parameters
+   * @param {string} req.query.query - Search query string
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing array of matching users
+   * @throws {Error} If user search fails
+   * @example
+   * // Route: GET /api/users/search?query=john
+   * // Returns up to 10 users whose usernames match the query
+   */
   searchUsers: async (req, res) => {
     try {
       const { query } = req.query;

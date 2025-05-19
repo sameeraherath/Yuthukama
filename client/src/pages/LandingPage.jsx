@@ -23,10 +23,25 @@ import ShareIcon from "@mui/icons-material/Share";
 import EventIcon from "@mui/icons-material/Event";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 
+/**
+ * Landing page component that showcases the platform's features and value proposition
+ * @component
+ * @returns {JSX.Element} Landing page with hero section, features, and call-to-action
+ * @example
+ * // In App.jsx
+ * <Route path="/" element={<LandingPage />} />
+ */
 function LandingPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
+  /**
+   * Platform features to showcase
+   * @type {Array<Object>}
+   * @property {JSX.Element} icon - Feature icon component
+   * @property {string} title - Feature title
+   * @property {string} description - Feature description
+   */
   const features = [
     {
       icon: <PeopleIcon sx={{ fontSize: 40, color: "#1DBF73" }} />,
@@ -66,6 +81,13 @@ function LandingPage() {
     },
   ];
 
+  /**
+   * How to use the platform steps
+   * @type {Array<Object>}
+   * @property {JSX.Element} icon - Step icon component
+   * @property {string} title - Step title
+   * @property {string} description - Step description
+   */
   const howToUse = [
     {
       icon: <HowToRegIcon sx={{ fontSize: 40, color: "#1DBF73" }} />,
