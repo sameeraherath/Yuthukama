@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import {
   addMessage,
@@ -9,7 +9,6 @@ import {
 } from "../features/chat/chatSlice";
 import useAuth from "../hooks/useAuth";
 import useChat from "../hooks/useChat";
-import useLoading from "../hooks/useLoading";
 import {
   Paper,
   Box,
@@ -27,6 +26,7 @@ import SendIcon from "@mui/icons-material/Send";
 const ChatPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { conversationId } = useParams();
   const { user } = useAuth();
   const dispatch = useDispatch();
   const messagesEndRef = useRef(null);
@@ -37,10 +37,13 @@ const ChatPage = () => {
   const receiverId = postOwner?._id;
   const displayName = postOwner?.username || "Unknown Author";
 
-  const { messages, currentConversation, isTyping, error } = useSelector(
-    (state) => state.chat
-  );
-  const { isLoading } = useLoading();
+  const {
+    messages,
+    currentConversation,
+    isTyping,
+    error,
+    loading: chatLoading,
+  } = useSelector((state) => state.chat);
 
   const [newMessage, setNewMessage] = useState("");
 
@@ -51,7 +54,13 @@ const ChatPage = () => {
   );
 
   useEffect(() => {
-    if (user && receiverId) {
+    if (conversationId) {
+      dispatch(fetchMessages(conversationId))
+        .unwrap()
+        .catch((err) => {
+          console.error("Failed to load messages:", err);
+        });
+    } else if (user && receiverId) {
       dispatch(getOrCreateConversation(receiverId))
         .unwrap()
         .then((conversation) => {
@@ -67,7 +76,7 @@ const ChatPage = () => {
     return () => {
       dispatch(clearMessages());
     };
-  }, [dispatch, user, receiverId]);
+  }, [dispatch, user, receiverId, conversationId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -195,7 +204,7 @@ const ChatPage = () => {
           </Typography>
           <Button
             variant="contained"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/home")}
             sx={{
               backgroundColor: "#1ac173",
               borderRadius: 3,
@@ -254,7 +263,7 @@ const ChatPage = () => {
             position: "relative",
           }}
         >
-          {isLoading && !messages.length ? (
+          {chatLoading && !messages.length ? (
             <Box
               sx={{
                 display: "flex",

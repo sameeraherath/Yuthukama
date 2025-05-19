@@ -55,6 +55,14 @@ const App = () => {
         }
       />
       <Route
+        path="/chat/:conversationId"
+        element={
+          <MainLayout>
+            <ChatPage />
+          </MainLayout>
+        }
+      />
+      <Route
         path="/conversations"
         element={
           <MainLayout>

@@ -17,6 +17,7 @@
     "@mui/system": "^6.4.6",
     "@reduxjs/toolkit": "^2.7.0",
     "axios": "^1.8.1",
+    "date-fns": "^4.1.0",
     "formik": "^2.4.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
