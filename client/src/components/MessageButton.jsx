@@ -25,6 +25,9 @@ const MessageButton = ({ user }) => {
         textTransform: "none",
         borderColor: "#1ac173",
         color: "#1ac173",
+        width: "132px",
+        height: "48px",
+        fontSize: "16px",
         "&:hover": {
           borderColor: "#17a061",
           backgroundColor: "rgba(26, 193, 115, 0.04)",

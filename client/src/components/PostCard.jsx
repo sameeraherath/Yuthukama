@@ -13,12 +13,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
 import MessageButton from "./MessageButton";
 
-const PostCard = ({
-  post,
-  showOfferButton = true,
-  onDelete,
-  showDeleteButton = true,
-}) => {
+const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const dispatch = useDispatch();
   const { user } = useAuth();
   const navigate = useNavigate();
