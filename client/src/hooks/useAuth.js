@@ -13,6 +13,16 @@ const useAuth = () => {
     (state) => state.auth
   );
 
+  // Add debug logs
+  console.log("useAuth - Current Redux state:", {
+    user,
+    isAuthenticated,
+    loading,
+    error,
+  });
+
+  console.log("useAuth - LocalStorage user:", localStorage.getItem("user"));
+
   const login = (email, password) =>
     dispatch(loginUser({ email, password })).unwrap();
 

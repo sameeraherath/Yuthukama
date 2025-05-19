@@ -66,14 +66,25 @@ export const checkUserSession = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return thunkAPI.rejectWithValue("No token");
+      console.log("checkUserSession - Token:", token);
 
-      const { data } = await axios.get(`${API_BASE}/api/auth/check`);
+      if (!token) {
+        console.log("checkUserSession - No token found");
+        return thunkAPI.rejectWithValue("No token");
+      }
+
+      console.log("checkUserSession - Making API request to check session");
+      const { data } = await axios.get(`${API_BASE}/api/auth/check`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("checkUserSession - Server response:", data);
 
       localStorage.setItem("user", JSON.stringify(data));
       return data;
     } catch (error) {
-      console.error("Session check error:", error);
+      console.error("checkUserSession - Error:", error.response?.data || error);
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       return thunkAPI.rejectWithValue("Session expired");

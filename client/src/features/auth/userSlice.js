@@ -7,6 +7,7 @@ export const updateProfilePicture = createAsyncThunk(
   "user/updateProfilePicture",
   async (formData, thunkAPI) => {
     try {
+      console.log("Sending profile picture update request...");
       const { data } = await axios.put(
         `${API_BASE}/api/users/profile-pic`,
         formData,
@@ -17,8 +18,13 @@ export const updateProfilePicture = createAsyncThunk(
           },
         }
       );
+      console.log("Server response for profile picture update:", data);
       return data;
     } catch (error) {
+      console.error(
+        "Profile picture update error:",
+        error.response?.data || error
+      );
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to update profile picture"
       );
@@ -64,14 +70,27 @@ const userSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(updateProfilePicture.pending, (state) => {
+        console.log("Profile picture update pending...");
         state.loading = true;
         state.error = null;
       })
-      .addCase(updateProfilePicture.fulfilled, (state) => {
+      .addCase(updateProfilePicture.fulfilled, (state, action) => {
+        console.log("Profile picture update fulfilled:", action.payload);
         state.loading = false;
         state.message = "Profile picture updated successfully";
+        // Update the user in localStorage with the new profile picture
+        const currentUser = JSON.parse(localStorage.getItem("user"));
+        if (currentUser) {
+          console.log(
+            "Updating localStorage user with new profile picture:",
+            action.payload.profilePicture
+          );
+          currentUser.profilePicture = action.payload.profilePicture;
+          localStorage.setItem("user", JSON.stringify(currentUser));
+        }
       })
       .addCase(updateProfilePicture.rejected, (state, action) => {
+        console.error("Profile picture update rejected:", action.payload);
         state.loading = false;
         state.error = action.payload;
       })

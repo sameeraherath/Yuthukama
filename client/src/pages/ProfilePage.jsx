@@ -29,7 +29,6 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
-import ChatIcon from "@mui/icons-material/Chat";
 
 const ProfilePage = () => {
   const dispatch = useDispatch();
@@ -39,6 +38,11 @@ const ProfilePage = () => {
   const [editingUsername, setEditingUsername] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
+
+  useEffect(() => {
+    console.log("Current user state:", user);
+    console.log("Profile picture URL:", user?.profilePicture);
+  }, [user]);
 
   const {
     loading: postsLoading,
@@ -66,14 +70,23 @@ const ProfilePage = () => {
     }
   }, [message, userError, dispatch]);
 
-  const handleFileChange = (e) => setFile(e.target.files[0]);
+  const handleFileChange = (e) => {
+    console.log("Selected file:", e.target.files[0]);
+    setFile(e.target.files[0]);
+  };
 
   const handleUpload = async () => {
     if (!file) return;
+    console.log("Uploading file:", file);
     const formData = new FormData();
     formData.append("profilePic", file);
-    await dispatch(updateProfilePicture(formData));
-    setFile(null);
+    try {
+      const result = await dispatch(updateProfilePicture(formData));
+      console.log("Profile picture update result:", result);
+      setFile(null);
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+    }
   };
 
   const handleUsernameChange = async () => {
@@ -117,7 +130,7 @@ const ProfilePage = () => {
       >
         <Box sx={{ position: "relative", display: "inline-block", mb: 2 }}>
           <Avatar
-            src={user?.profilePic || "/uploads/profile-pics/default.jpg"}
+            src={user?.profilePicture || "/uploads/profile-pics/default.jpg"}
             sx={{
               width: 154,
               height: 154,

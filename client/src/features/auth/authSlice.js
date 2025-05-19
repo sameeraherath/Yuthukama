@@ -5,10 +5,13 @@ import {
   logoutUser,
   checkUserSession,
 } from "./authAPI";
+import { updateProfilePicture } from "./userSlice";
 
 const user = localStorage.getItem("user")
   ? JSON.parse(localStorage.getItem("user"))
   : null;
+
+console.log("Initial user state from localStorage:", user);
 
 const initialState = {
   user: user,
@@ -80,6 +83,18 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = null;
         state.isAuthenticated = false;
+      })
+      .addCase(updateProfilePicture.fulfilled, (state, action) => {
+        console.log(
+          "Auth slice - Profile picture update received:",
+          action.payload
+        );
+        console.log("Previous user state:", state.user);
+        state.user = {
+          ...state.user,
+          profilePicture: action.payload.profilePicture,
+        };
+        console.log("Updated user state:", state.user);
       });
   },
 });
