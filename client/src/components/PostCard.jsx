@@ -28,10 +28,6 @@ const PostCard = ({
     if (onDelete) onDelete(post._id);
   };
 
-  const handleNavigateToChat = () => {
-    navigate("/chat", { state: { postOwner: post.user } });
-  };
-
   return (
     <Card key={post._id} sx={{ maxWidth: 420, borderRadius: 5 }}>
       <CardMedia
@@ -54,22 +50,6 @@ const PostCard = ({
         </Typography>
       </CardContent>
       <CardActions>
-        {showOfferButton && !isOwner && (
-          <Button
-            size="small"
-            variant="contained"
-            sx={{
-              fontWeight: "bold",
-              textTransform: "none",
-              borderRadius: 5,
-              padding: "10px 20px",
-              backgroundColor: "#1dbf73",
-            }}
-            onClick={handleNavigateToChat}
-          >
-            Connect
-          </Button>
-        )}
         {!isOwner && <MessageButton user={post.user} />}
         {isOwner && showDeleteButton && (
           <Button
