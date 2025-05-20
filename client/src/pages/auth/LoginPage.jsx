@@ -70,9 +70,19 @@ const LoginPage = () => {
     setLoginError("");
 
     try {
-      await login(formData.email, formData.password);
-      navigate("/home");
+      const userData = await login(formData.email, formData.password);
+      console.log("User data:", userData);
+
+      // Check if user is admin and navigate accordingly
+      if (userData?.user?.role === "admin") {
+        console.log("Admin user detected, navigating to admin dashboard");
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        console.log("Regular user detected, navigating to home");
+        navigate("/home", { replace: true });
+      }
     } catch (error) {
+      console.error("Login error:", error);
       setLoginError(error);
     }
   };

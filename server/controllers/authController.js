@@ -82,6 +82,7 @@ const authController = {
           username: user.username,
           email: user.email,
           profilePicture: user.profilePicture,
+          role: user.role,
         },
       });
     } catch (error) {
@@ -117,7 +118,13 @@ const authController = {
       if (!user) {
         return res.status(401).json({ message: "Session expired" });
       }
-      res.json(user);
+      res.json({
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        profilePicture: user.profilePicture,
+        role: user.role,
+      });
     } catch (error) {
       res.status(500).json({ message: "Error checking session" });
     }

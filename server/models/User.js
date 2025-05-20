@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs";
  * @property {string} username - User's unique username
  * @property {string} email - User's unique email address
  * @property {string} password - User's hashed password
+ * @property {string} role - User's role (user/admin)
  * @property {string} profilePicture - URL to user's profile picture
  * @property {Date} createdAt - Timestamp of user creation
  */
@@ -31,6 +32,11 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+  },
+  role: {
+    type: String,
+    enum: ["user", "admin"],
+    default: "user",
   },
   profilePicture: {
     type: String,

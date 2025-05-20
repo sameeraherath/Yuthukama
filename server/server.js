@@ -20,6 +20,7 @@ import config from "./config/config.js";
 import Message from "./models/Message.js";
 import Conversation from "./models/Conversation.js";
 import mongoose from "mongoose";
+import adminRoutes from "./routes/adminRoutes.js";
 
 dotenv.config();
 connectDb();
@@ -71,6 +72,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/posts", upload.single("image"), postRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use(errorHandler);
 

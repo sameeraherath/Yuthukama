@@ -8,6 +8,7 @@ import PostDialog from "./PostDialog";
 import LogoutDialog from "./LogoutDialog";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import { useSelector } from "react-redux";
 
 /**
  * Navigation bar component that provides main navigation and actions
@@ -22,6 +23,8 @@ const Navbar = () => {
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { user } = useSelector((state) => state.auth);
+  const isAdmin = user?.role === "admin";
 
   /**
    * Opens the post creation dialog
@@ -98,7 +101,7 @@ const Navbar = () => {
         <Toolbar>
           <Typography
             variant="h6"
-            onClick={() => navigate("/home")}
+            onClick={() => navigate(isAdmin ? "/admin/dashboard" : "/home")}
             sx={{
               flexGrow: 1,
               color: "#404145",
@@ -110,21 +113,29 @@ const Navbar = () => {
             Yuthukama
           </Typography>{" "}
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <IconButton color="inherit" onClick={handleClickOpen}>
-              <PostAddIcon sx={{ fontSize: "32px" }} />
-            </IconButton>
-            <IconButton
-              color="inherit"
-              onClick={() => navigate("/conversations")}
-            >
-              <ChatIcon sx={{ fontSize: "32px" }} />
-            </IconButton>
-            <IconButton color="inherit" onClick={handleProfileClick}>
-              <AccountCircleIcon sx={{ fontSize: "32px" }} />
-            </IconButton>
-            <IconButton color="inherit" onClick={handleLogoutClick}>
-              <LogoutIcon sx={{ fontSize: "32px" }} />
-            </IconButton>
+            {isAdmin ? (
+              <IconButton color="inherit" onClick={handleLogoutClick}>
+                <LogoutIcon sx={{ fontSize: "32px" }} />
+              </IconButton>
+            ) : (
+              <>
+                <IconButton color="inherit" onClick={handleClickOpen}>
+                  <PostAddIcon sx={{ fontSize: "32px" }} />
+                </IconButton>
+                <IconButton
+                  color="inherit"
+                  onClick={() => navigate("/conversations")}
+                >
+                  <ChatIcon sx={{ fontSize: "32px" }} />
+                </IconButton>
+                <IconButton color="inherit" onClick={handleProfileClick}>
+                  <AccountCircleIcon sx={{ fontSize: "32px" }} />
+                </IconButton>
+                <IconButton color="inherit" onClick={handleLogoutClick}>
+                  <LogoutIcon sx={{ fontSize: "32px" }} />
+                </IconButton>
+              </>
+            )}
           </Box>
         </Toolbar>
       </AppBar>
