@@ -32,13 +32,9 @@ const httpServer = createServer(app);
 
 /**
  * List of allowed origins for CORS
- * @type {string[]}
+ * @type {string}
  */
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5000",
-  process.env.FRONTEND_URL || "http://localhost:5173",
-];
+const allowedOrigins = "*";
 
 /**
  * Socket.IO server instance configuration
