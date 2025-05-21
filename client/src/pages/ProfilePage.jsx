@@ -68,17 +68,19 @@ const ProfilePage = () => {
     message,
   } = useSelector((state) => state.user);
 
+  console.log("ProfilePage userPosts:", userPosts);
+
   /**
    * Effect hook to fetch user posts when user ID changes
    * @effect
-   * @listens {user?._id} - User ID
+   * @listens {user?.id} - User ID
    * @listens {dispatch} - Redux dispatch function
    */
   useEffect(() => {
-    if (user?._id) {
-      dispatch(fetchUserPosts(user._id));
+    if (user?.id) {
+      dispatch(fetchUserPosts(user.id));
     }
-  }, [dispatch, user?._id]);
+  }, [dispatch, user?.id]);
 
   /**
    * Effect hook to clear messages after timeout
@@ -163,7 +165,7 @@ const ProfilePage = () => {
   const handleDeletePost = async () => {
     if (postToDelete) {
       await dispatch(deletePost(postToDelete));
-      dispatch(fetchUserPosts(user._id));
+      dispatch(fetchUserPosts(user.id));
     }
     setDeleteDialogOpen(false);
     setPostToDelete(null);
@@ -340,7 +342,10 @@ const ProfilePage = () => {
                   post={post}
                   showOfferButton={false}
                   onDelete={() => {
-                    if (post.user === user._id) {
+                    if (
+                      (post.user && post.user._id === user._id) ||
+                      post.user === user._id
+                    ) {
                       setPostToDelete(post._id);
                       setDeleteDialogOpen(true);
                     } else {
