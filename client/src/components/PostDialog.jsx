@@ -6,6 +6,7 @@ import {
   TextField,
   Button,
   Typography,
+  Box,
 } from "@mui/material";
 import { Formik, Field, Form } from "formik";
 import * as Yup from "yup";
@@ -44,6 +45,7 @@ const validationSchema = Yup.object().shape({
  */
 const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
   const dispatch = useDispatch();
+  const ACCENT_COLOR = "#1DBF73";
 
   /**
    * Handles post submission and file upload
@@ -88,15 +90,23 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
   };
 
   return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>Create a New Post</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      PaperProps={{ sx: { borderRadius: 4, p: 2, minWidth: 400 } }}
+    >
+      <DialogTitle
+        sx={{ fontWeight: 700, color: ACCENT_COLOR, fontSize: "1.5rem" }}
+      >
+        Create a New Post
+      </DialogTitle>
       <DialogContent>
         <Formik
           initialValues={{ title: "", description: "", image: null }}
           validationSchema={validationSchema}
           onSubmit={handlePostSubmit}
         >
-          {({ setFieldValue, errors, touched }) => (
+          {({ setFieldValue, errors, touched, values }) => (
             <Form>
               <Field
                 name="title"
@@ -105,6 +115,14 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
                 label="Title"
                 fullWidth
                 variant="outlined"
+                sx={{
+                  mt: 2,
+                  "& .MuiOutlinedInput-root": { borderRadius: 3 },
+                  "& .MuiOutlinedInput-root.Mui-focused fieldset": {
+                    borderColor: ACCENT_COLOR,
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": { color: ACCENT_COLOR },
+                }}
                 error={touched.title && !!errors.title}
                 helperText={touched.title && errors.title}
               />
@@ -117,27 +135,86 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
                 variant="outlined"
                 multiline
                 rows={4}
+                sx={{
+                  mt: 2,
+                  "& .MuiOutlinedInput-root": { borderRadius: 3 },
+                  "& .MuiOutlinedInput-root.Mui-focused fieldset": {
+                    borderColor: ACCENT_COLOR,
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": { color: ACCENT_COLOR },
+                }}
                 error={touched.description && !!errors.description}
                 helperText={touched.description && errors.description}
               />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(event) => {
-                  setFieldValue("image", event.currentTarget.files[0]);
-                }}
-                style={{ marginTop: "16px" }}
-              />
-              {touched.image && errors.image && (
-                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                  {errors.image}
-                </Typography>
-              )}
-              <DialogActions sx={{ mt: 2 }}>
-                <Button onClick={handleClose} color="primary">
+              <Box sx={{ mt: 2, mb: 1 }}>
+                <label htmlFor="post-image-upload">
+                  <input
+                    id="post-image-upload"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) =>
+                      setFieldValue("image", e.currentTarget.files[0])
+                    }
+                  />
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    sx={{
+                      borderRadius: 3,
+                      borderColor: ACCENT_COLOR,
+                      color: ACCENT_COLOR,
+                      fontWeight: 600,
+                      textTransform: "none",
+                      px: 3,
+                    }}
+                  >
+                    Choose Image
+                  </Button>
+                  {values.image && (
+                    <Typography
+                      variant="body2"
+                      sx={{ ml: 2, display: "inline" }}
+                    >
+                      {values.image.name}
+                    </Typography>
+                  )}
+                </label>
+                {touched.image && errors.image && (
+                  <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                    {errors.image}
+                  </Typography>
+                )}
+              </Box>
+              <DialogActions sx={{ mt: 2, justifyContent: "flex-end" }}>
+                <Button
+                  onClick={handleClose}
+                  variant="outlined"
+                  color="inherit"
+                  sx={{
+                    borderRadius: 3,
+                    textTransform: "none",
+                    fontWeight: 600,
+                    px: 3,
+                  }}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" color="primary">
+                <Button
+                  type="submit"
+                  variant="contained"
+                  sx={{
+                    backgroundColor: ACCENT_COLOR,
+                    color: "white",
+                    borderRadius: 3,
+                    fontWeight: 600,
+                    textTransform: "none",
+                    px: 3,
+                    ml: 1,
+                    boxShadow: 1,
+                    "&:hover": { backgroundColor: "#179e5c" },
+                  }}
+                >
                   Post
                 </Button>
               </DialogActions>
