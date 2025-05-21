@@ -43,7 +43,9 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const dispatch = useDispatch();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isOwner = user?._id && post?.user?._id && user._id === post.user._id;
+  const isOwner =
+    (user?.id && post?.user?._id && user.id === post.user._id) ||
+    (user?.id && post?.user && user.id === post.user);
 
   /**
    * Handles post deletion

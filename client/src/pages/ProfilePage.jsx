@@ -348,8 +348,6 @@ const ProfilePage = () => {
                     ) {
                       setPostToDelete(post._id);
                       setDeleteDialogOpen(true);
-                    } else {
-                      alert("You are not authorized to delete this post.");
                     }
                   }}
                   sx={{ boxShadow: 2, borderRadius: 3 }}
