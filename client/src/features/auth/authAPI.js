@@ -21,18 +21,46 @@ export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async ({ email, password }, thunkAPI) => {
     try {
-      const { data } = await axios.post(`${API_BASE}/api/auth/login`, {
-        email,
-        password,
-      });
+      console.log("Attempting login to:", `${API_BASE}/api/auth/login`);
 
+      const { data } = await axios.post(
+        `${API_BASE}/api/auth/login`,
+        { email, password },
+        {
+          timeout: 10000, // 10 second timeout
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Login successful, storing token and user data");
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data));
 
       return data;
     } catch (error) {
+      console.error("Login error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        code: error.code,
+      });
+
+      if (error.code === "ECONNABORTED") {
+        return thunkAPI.rejectWithValue(
+          "Connection timed out. Please check your internet connection and try again."
+        );
+      }
+
+      if (!error.response) {
+        return thunkAPI.rejectWithValue(
+          "Unable to reach the server. Please check your internet connection."
+        );
+      }
+
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Login failed"
+        error.response?.data?.message || "Login failed. Please try again."
       );
     }
   }

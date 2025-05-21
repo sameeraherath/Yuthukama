@@ -27,14 +27,18 @@ dotenv.config();
 connectDb();
 
 const app = express();
-const PORT = config.port;
+const PORT = process.env.PORT || config.port;
 const httpServer = createServer(app);
 
 /**
  * List of allowed origins for CORS
  * @type {string[]}
  */
-const allowedOrigins = ["http://localhost:5173", "http://localhost:5000"];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5000",
+  process.env.FRONTEND_URL || "http://localhost:5173",
+];
 
 /**
  * Socket.IO server instance configuration
