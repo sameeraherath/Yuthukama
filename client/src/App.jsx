@@ -8,7 +8,6 @@ import LandingPage from "./pages/LandingPage";
 import ProfilePage from "./pages/ProfilePage";
 import MainLayout from "./layouts/MainLayout.jsx";
 import ChatPage from "./pages/ChatPage";
-import ConversationsPage from "./pages/ConversationsPage";
 import AdminDashboard from "./pages/admin/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { checkUserSession } from "./features/auth/authAPI";
@@ -104,16 +103,6 @@ const App = () => {
           <ProtectedRoute>
             <MainLayout>
               <ChatPage />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/conversations"
-        element={
-          <ProtectedRoute>
-            <MainLayout>
-              <ConversationsPage />
             </MainLayout>
           </ProtectedRoute>
         }

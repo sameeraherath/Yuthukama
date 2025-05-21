@@ -3,12 +3,13 @@ import { AppBar, Toolbar, IconButton, Typography, Box } from "@mui/material";
 import PostAddIcon from "@mui/icons-material/PostAdd";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
-import ChatIcon from "@mui/icons-material/Chat";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PostDialog from "./PostDialog";
 import LogoutDialog from "./LogoutDialog";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { useSelector } from "react-redux";
+import AIChatBot from "./AIChatBot";
 
 /**
  * Navigation bar component that provides main navigation and actions
@@ -21,6 +22,7 @@ import { useSelector } from "react-redux";
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { user } = useSelector((state) => state.auth);
@@ -124,9 +126,9 @@ const Navbar = () => {
                 </IconButton>
                 <IconButton
                   color="inherit"
-                  onClick={() => navigate("/conversations")}
+                  onClick={() => setShowAIChat((prev) => !prev)}
                 >
-                  <ChatIcon sx={{ fontSize: "32px" }} />
+                  <SmartToyIcon sx={{ fontSize: "32px" }} />
                 </IconButton>
                 <IconButton color="inherit" onClick={handleProfileClick}>
                   <AccountCircleIcon sx={{ fontSize: "32px" }} />
@@ -149,6 +151,7 @@ const Navbar = () => {
         handleClose={handleClose}
         handlePostSubmit={handlePostSubmit}
       />
+      {showAIChat && <AIChatBot onClose={() => setShowAIChat(false)} />}
     </div>
   );
 };
