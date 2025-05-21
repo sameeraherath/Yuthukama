@@ -15,6 +15,7 @@ import authRoutes from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/userRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import aiChatRoutes from "./routes/aiChat.js";
 import multer from "multer";
 import config from "./config/config.js";
 import Message from "./models/Message.js";
@@ -72,6 +73,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/posts", upload.single("image"), postRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/chat", aiChatRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.use(errorHandler);

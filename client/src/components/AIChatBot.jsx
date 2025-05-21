@@ -32,11 +32,31 @@ const AIChatBot = ({ onClose }) => {
     setIsLoading(true);
     setMessage("");
     try {
-      const response = await fetch("/api/chat/ai-message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg }),
-      });
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/chat/ai-message",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+          body: JSON.stringify({ message: userMsg }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
       const data = await response.json();
       setChatHistory((prev) => [
         ...prev,
@@ -46,9 +66,16 @@ const AIChatBot = ({ onClose }) => {
         },
       ]);
     } catch (error) {
+      console.error("Chat error:", error);
       setChatHistory((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, I encountered an error." },
+        {
+          role: "assistant",
+          content:
+            error.message === "No authentication token found"
+              ? "Please log in to use the chat"
+              : "Sorry, I encountered an error. Please try again.",
+        },
       ]);
     } finally {
       setIsLoading(false);

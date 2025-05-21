@@ -10,7 +10,7 @@ import {
   getConversationMessages,
   getOrCreateConversation,
 } from "../controllers/chatController.js";
-import { sendAIMessage } from "../controllers/aiChatController.js";
+import { getAIMessage } from "../controllers/aiChatController.js";
 
 /**
  * Express router instance for chat routes
@@ -46,6 +46,6 @@ router.get("/:conversationId/messages", protect, getConversationMessages);
  * @desc Send a message to the AI
  * @access Private
  */
-router.post("/ai-message", protect, sendAIMessage);
+router.post("/ai-message", protect, getAIMessage);
 
 export default router;
