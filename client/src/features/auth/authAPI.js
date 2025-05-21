@@ -2,6 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const API_BASE = import.meta.env.VITE_SERVER_URL;
+console.log("Auth API Base URL:", API_BASE); // Debug log
 
 /**
  * Async thunk for user login
@@ -27,12 +28,20 @@ export const loginUser = createAsyncThunk(
         `${API_BASE}/api/auth/login`,
         { email, password },
         {
-          timeout: 10000, // 10 second timeout
+          timeout: 15000, // Increased timeout to 15 seconds
           headers: {
             "Content-Type": "application/json",
           },
+          validateStatus: function (status) {
+            return status >= 200 && status < 500; // Accept all responses to handle them properly
+          },
         }
       );
+
+      if (data.error) {
+        console.error("Login error from server:", data.error);
+        return thunkAPI.rejectWithValue(data.error);
+      }
 
       console.log("Login successful, storing token and user data");
       localStorage.setItem("token", data.token);
@@ -45,17 +54,25 @@ export const loginUser = createAsyncThunk(
         response: error.response?.data,
         status: error.response?.status,
         code: error.code,
+        url: error.config?.url,
+        method: error.config?.method,
       });
 
       if (error.code === "ECONNABORTED") {
         return thunkAPI.rejectWithValue(
-          "Connection timed out. Please check your internet connection and try again."
+          "Connection timed out. The server is taking too long to respond. Please try again."
         );
       }
 
       if (!error.response) {
         return thunkAPI.rejectWithValue(
-          "Unable to reach the server. Please check your internet connection."
+          "Unable to connect to the server. Please check your internet connection and try again."
+        );
+      }
+
+      if (error.response.status === 404) {
+        return thunkAPI.rejectWithValue(
+          "Login endpoint not found. Please check the server configuration."
         );
       }
 
