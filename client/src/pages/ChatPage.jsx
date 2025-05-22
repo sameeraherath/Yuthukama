@@ -41,6 +41,7 @@ const ChatPage = () => {
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const [isSending, setIsSending] = useState(false);
+  const [connectionError, setConnectionError] = useState(null);
 
   // Debug auth state
   useEffect(() => {
@@ -92,9 +93,10 @@ const ChatPage = () => {
 
   const [newMessage, setNewMessage] = useState("");
 
-  // Only initialize chat if user is authenticated and has an ID
+  // Initialize chat with proper user ID handling
+  const userId = user?._id || user?.id;
   const { isConnected, sendMessage, startTyping, stopTyping } = useChat(
-    user?._id || user?.id, // Try both _id and id
+    userId,
     receiverId,
     currentConversation?._id
   );
@@ -105,65 +107,36 @@ const ChatPage = () => {
     displayName,
     isConnected,
     currentConversationId: currentConversation?._id,
-    userId: user?._id || user?.id, // Try both _id and id
+    userId: userId,
     messagesCount: messages?.length,
     isAuthenticated,
     authLoading,
     userData: user,
   });
 
+  // Handle conversation and messages loading
   useEffect(() => {
-    if (!isAuthenticated || authLoading) {
-      console.log("Waiting for authentication to complete");
-      return;
-    }
+    if (!isAuthenticated || authLoading || !userId) return;
 
-    if (!user?._id && !user?.id) {
-      console.log("User ID not found in auth state:", user);
-      return;
-    }
-
-    console.log("Effect triggered - Loading conversation and messages", {
-      conversationId,
-      userId: user?._id || user?.id,
-      receiverId,
-      currentConversationId: currentConversation?._id,
-    });
-
-    if (conversationId) {
-      console.log(
-        "Fetching messages for existing conversation:",
-        conversationId
-      );
-      dispatch(fetchMessages(conversationId))
-        .unwrap()
-        .then(() => console.log("Messages fetched successfully"))
-        .catch((err) => {
-          console.error("Failed to load messages:", err);
-        });
-    } else if (user && receiverId) {
-      console.log("Creating new conversation with receiver:", receiverId);
-      dispatch(getOrCreateConversation(receiverId))
-        .unwrap()
-        .then((conversation) => {
-          console.log("Conversation created/fetched:", {
-            conversationId: conversation._id,
-            participants: conversation.participants,
-          });
+    const loadConversation = async () => {
+      try {
+        if (conversationId) {
+          await dispatch(fetchMessages(conversationId)).unwrap();
+        } else if (userId && receiverId) {
+          const conversation = await dispatch(
+            getOrCreateConversation(receiverId)
+          ).unwrap();
           if (conversation._id) {
-            dispatch(fetchMessages(conversation._id));
+            await dispatch(fetchMessages(conversation._id));
           }
-        })
-        .catch((err) => {
-          console.error("Failed to load conversation:", err);
-        });
-    } else {
-      console.log("Missing required data for conversation:", {
-        hasUser: !!user,
-        hasUserId: !!(user?._id || user?.id),
-        hasReceiverId: !!receiverId,
-      });
-    }
+        }
+      } catch (err) {
+        console.error("Failed to load conversation:", err);
+        setConnectionError(err.message || "Failed to load conversation");
+      }
+    };
+
+    loadConversation();
 
     return () => {
       console.log("Cleaning up chat messages");
@@ -171,42 +144,41 @@ const ChatPage = () => {
     };
   }, [
     dispatch,
-    user,
+    userId,
     receiverId,
     conversationId,
-    currentConversation?._id,
     isAuthenticated,
     authLoading,
   ]);
 
-  /**
-   * Effect hook to scroll to latest message
-   * @effect
-   * @listens {messages} - Message array
-   */
+  // Scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Handle socket connection errors
+  useEffect(() => {
+    if (!isConnected && userId && receiverId) {
+      setConnectionError("Connection lost. Trying to reconnect...");
+    } else {
+      setConnectionError(null);
+    }
+  }, [isConnected, userId, receiverId]);
 
   /**
    * Handles sending a new message
    * @async
    * @function
    */
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     console.log("Attempting to send message:", {
       messageLength: newMessage.trim().length,
       isConnected,
       conversationId: currentConversation?._id,
     });
 
-    if (!newMessage.trim() || !isConnected) {
+    if (!newMessage.trim() || !isConnected || !currentConversation?._id) {
       console.log("Cannot send message: empty message or not connected");
-      return;
-    }
-
-    if (!currentConversation?._id) {
-      console.log("Cannot send message: no active conversation");
       return;
     }
 
@@ -231,6 +203,7 @@ const ChatPage = () => {
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      setConnectionError("Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -278,7 +251,7 @@ const ChatPage = () => {
    * @returns {JSX.Element} Message bubble with content and timestamp
    */
   const renderMessage = (message, index) => {
-    const currentUserId = user?._id || user?.id;
+    const currentUserId = userId;
     const isSentByCurrentUser = message.sender === currentUserId;
     return (
       <Box
@@ -464,9 +437,9 @@ const ChatPage = () => {
             >
               <CircularProgress sx={{ color: "#1ac173" }} />
             </Box>
-          ) : error ? (
+          ) : error || connectionError ? (
             <Alert severity="error" sx={{ m: 2 }}>
-              {error}
+              {error || connectionError}
             </Alert>
           ) : (
             <>

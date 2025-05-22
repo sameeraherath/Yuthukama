@@ -32,9 +32,9 @@ const httpServer = createServer(app);
 
 /**
  * List of allowed origins for CORS
- * @type {string}
+ * @type {string[]}
  */
-const allowedOrigins = "*";
+const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 /**
  * Socket.IO server instance configuration
@@ -45,6 +45,7 @@ const io = new Server(httpServer, {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   },
   path: "/socket.io",
   connectTimeout: 10000,
@@ -61,8 +62,16 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Middleware setup
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(express.json());

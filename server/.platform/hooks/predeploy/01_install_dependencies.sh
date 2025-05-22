@@ -1,3 +1,3 @@
 #!/bin/bash
 cd /var/app/staging
-npm install 
+npm install --production 
