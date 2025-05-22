@@ -13,6 +13,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 const PRIMARY_COLOR = "#404145";
 const ACCENT_COLOR = "#00b14f";
+const API_URL = import.meta.env.VITE_SERVER_URL;
 
 const AIChatBot = ({ onClose }) => {
   const [message, setMessage] = useState("");
@@ -37,18 +38,15 @@ const AIChatBot = ({ onClose }) => {
         throw new Error("No authentication token found");
       }
 
-      const response = await fetch(
-        "http://localhost:5000/api/chat/ai-message",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-          body: JSON.stringify({ message: userMsg }),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/chat/ai-message`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({ message: userMsg }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
