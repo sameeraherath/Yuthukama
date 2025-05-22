@@ -5,6 +5,7 @@ import {
   Typography,
   CardActions,
   Button,
+  Box,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { deletePost } from "../features/posts/postsAPI";
@@ -58,28 +59,76 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   };
 
   return (
-    <Card key={post._id} sx={{ maxWidth: 420, borderRadius: 5 }}>
+    <Card
+      key={post._id}
+      sx={{
+        maxWidth: 420,
+        borderRadius: 3,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+        },
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
       <CardMedia
         component="img"
-        height="200"
+        height="240"
         image={post.image}
         alt={post.title}
         sx={{
           objectFit: "cover",
           aspectRatio: "16/9",
           width: "100%",
+          transition: "transform 0.3s ease-in-out",
+          "&:hover": {
+            transform: "scale(1.05)",
+          },
         }}
       />
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
+      <CardContent sx={{ p: 3 }}>
+        <Typography
+          variant="h5"
+          gutterBottom
+          sx={{
+            fontWeight: 600,
+            color: "#2c3e50",
+            mb: 2,
+          }}
+        >
           {post.title}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{
+            lineHeight: 1.6,
+            color: "#666",
+            display: "-webkit-box",
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
           {post.description}
         </Typography>
       </CardContent>
-      <CardActions>
-        {!isOwner && <MessageButton user={post.user} />}
+      <CardActions
+        sx={{
+          p: 2,
+          pt: 0,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Box sx={{ display: "flex", gap: 1 }}>
+          {!isOwner && <MessageButton user={post.user} />}
+        </Box>
         {isOwner && showDeleteButton && (
           <Button
             size="small"
