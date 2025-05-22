@@ -109,13 +109,16 @@ const AIChatBot = ({ onClose }) => {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <SmartToyIcon sx={{ color: ACCENT_COLOR }} />
-          <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: 1 }}>
+          <SmartToyIcon sx={{ color: "#1DBF73" }} />
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 700, letterSpacing: 1, color: "#1DBF73" }}
+          >
             Yuthukama Assistant
           </Typography>
         </Box>
         <IconButton color="inherit" size="small" onClick={onClose}>
-          <CloseIcon sx={{ color: "white" }} />
+          <CloseIcon sx={{ color: "#1DBF73" }} />
         </IconButton>
       </Box>
       <Box
@@ -195,9 +198,9 @@ const AIChatBot = ({ onClose }) => {
         <IconButton
           type="submit"
           sx={{
-            bgcolor: ACCENT_COLOR,
+            bgcolor: "#1DBF73",
             color: "white",
-            "&:hover": { bgcolor: PRIMARY_COLOR },
+            "&:hover": { bgcolor: "#1A8851" },
             transition: "all 0.2s",
           }}
           disabled={isLoading || !message.trim()}

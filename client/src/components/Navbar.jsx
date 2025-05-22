@@ -106,7 +106,7 @@ const Navbar = () => {
             onClick={() => navigate(isAdmin ? "/admin/dashboard" : "/home")}
             sx={{
               flexGrow: 1,
-              color: "#404145",
+              color: "#1DBF73",
               fontWeight: "bold",
               fontSize: "1.7rem",
               cursor: "pointer",
@@ -117,24 +117,26 @@ const Navbar = () => {
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {isAdmin ? (
               <IconButton color="inherit" onClick={handleLogoutClick}>
-                <LogoutIcon sx={{ fontSize: "32px" }} />
+                <LogoutIcon sx={{ fontSize: "32px", color: "#1DBF73" }} />
               </IconButton>
             ) : (
               <>
                 <IconButton color="inherit" onClick={handleClickOpen}>
-                  <PostAddIcon sx={{ fontSize: "32px" }} />
+                  <PostAddIcon sx={{ fontSize: "32px", color: "#1DBF73" }} />
                 </IconButton>
                 <IconButton
                   color="inherit"
                   onClick={() => setShowAIChat((prev) => !prev)}
                 >
-                  <SmartToyIcon sx={{ fontSize: "32px" }} />
+                  <SmartToyIcon sx={{ fontSize: "32px", color: "#1DBF73" }} />
                 </IconButton>
                 <IconButton color="inherit" onClick={handleProfileClick}>
-                  <AccountCircleIcon sx={{ fontSize: "32px" }} />
+                  <AccountCircleIcon
+                    sx={{ fontSize: "32px", color: "#1DBF73" }}
+                  />
                 </IconButton>
                 <IconButton color="inherit" onClick={handleLogoutClick}>
-                  <LogoutIcon sx={{ fontSize: "32px" }} />
+                  <LogoutIcon sx={{ fontSize: "32px", color: "#1DBF73" }} />
                 </IconButton>
               </>
             )}
