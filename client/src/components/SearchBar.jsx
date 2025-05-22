@@ -1,4 +1,4 @@
-import { TextField, Box, InputAdornment } from "@mui/material";
+import { TextField, Box, InputAdornment, alpha } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
 /**
@@ -19,11 +19,10 @@ const SearchBar = ({ searchTerm, setSearchTerm }) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        marginTop: "20px",
-        marginBottom: "20px",
-        padding: "10px",
-        paddingLeft: "20px",
-        paddingRight: "20px",
+        marginTop: "24px",
+        marginBottom: "24px",
+        padding: "0 16px",
+        width: "100%",
       }}
     >
       <TextField
@@ -31,13 +30,51 @@ const SearchBar = ({ searchTerm, setSearchTerm }) => {
         fullWidth
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        sx={{ maxWidth: "400px", borderRadius: "20px" }}
-        placeholder="Search for a post"
+        sx={{
+          maxWidth: "600px",
+          width: "100%",
+          "& .MuiOutlinedInput-root": {
+            backgroundColor: "#f0fdf4",
+            borderRadius: "12px",
+            transition: "all 0.2s ease-in-out",
+            "&:hover": {
+              backgroundColor: "#dcfce7",
+              boxShadow: "0 2px 8px rgba(34, 197, 94, 0.1)",
+            },
+            "&.Mui-focused": {
+              backgroundColor: "#ffffff",
+              boxShadow: "0 4px 12px rgba(34, 197, 94, 0.15)",
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: "#22c55e",
+                borderWidth: "2px",
+              },
+            },
+          },
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#d1fae5",
+          },
+          "& .MuiInputBase-input": {
+            color: "#064e3b",
+            "&::placeholder": {
+              color: "#059669",
+              opacity: 0.7,
+            },
+          },
+        }}
+        placeholder="Search for posts..."
         InputProps={{
-          sx: { borderRadius: "40px" },
+          sx: {
+            height: "48px",
+            fontSize: "1rem",
+          },
           startAdornment: (
             <InputAdornment position="start">
-              <SearchIcon fontSize="medium" />
+              <SearchIcon
+                sx={{
+                  color: "#22c55e",
+                  fontSize: "1.5rem",
+                }}
+              />
             </InputAdornment>
           ),
         }}
