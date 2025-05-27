@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -8,8 +8,6 @@ import {
   Alert,
 } from "@mui/material";
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -20,24 +18,16 @@ import {
   Line,
 } from "recharts";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { checkUserSession } from "../../features/auth/authAPI";
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
     const initializeDashboard = async () => {
       try {
         // First check if we have a valid session
-        const sessionResult = await dispatch(checkUserSession()).unwrap();
-        console.log("Session check result:", sessionResult);
 
         // If admin check passes, fetch dashboard data
         await fetchDashboardData();
@@ -49,7 +39,7 @@ const AdminDashboard = () => {
     };
 
     initializeDashboard();
-  }, [dispatch]);
+  }, []);
 
   const fetchDashboardData = async () => {
     try {

@@ -19,7 +19,6 @@ import SecurityIcon from "@mui/icons-material/Security";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import ForumIcon from "@mui/icons-material/Forum";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import ShareIcon from "@mui/icons-material/Share";
 import EventIcon from "@mui/icons-material/Event";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 

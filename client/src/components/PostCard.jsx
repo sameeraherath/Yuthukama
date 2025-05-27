@@ -11,7 +11,6 @@ import { useDispatch } from "react-redux";
 import { deletePost } from "../features/posts/postsAPI";
 import useAuth from "../hooks/useAuth";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useNavigate } from "react-router-dom";
 import MessageButton from "./MessageButton";
 
 /**
@@ -43,7 +42,6 @@ import MessageButton from "./MessageButton";
 const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const dispatch = useDispatch();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const isOwner =
     (user?.id && post?.user?._id && user.id === post.user._id) ||
     (user?.id && post?.user && user.id === post.user);
