@@ -89,3 +89,16 @@ export const deletePost = createAsyncThunk(
     }
   }
 );
+
+/**
+ * Likes a post by ID
+ * @async
+ * @function likePost
+ * @param {string} postId - ID of the post to like
+ * @returns {Promise<Object>} Updated post data
+ * @throws {Error} If liking the post fails
+ */
+export const likePost = async (postId) => {
+  const response = await axios.put(`${API_BASE}/api/posts/${postId}/like`);
+  return response.data;
+};

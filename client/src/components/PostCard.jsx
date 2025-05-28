@@ -6,12 +6,16 @@ import {
   CardActions,
   Button,
   Box,
+  IconButton,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { deletePost } from "../features/posts/postsAPI";
 import useAuth from "../hooks/useAuth";
 import DeleteIcon from "@mui/icons-material/Delete";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import MessageButton from "./MessageButton";
+import { likePost } from "../features/posts/postsSlice";
 
 /**
  * Card component for displaying a post with image, title, and description
@@ -46,6 +50,9 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
     (user?.id && post?.user?._id && user.id === post.user._id) ||
     (user?.id && post?.user && user.id === post.user);
 
+  const isLiked = post.likes?.includes(user?.id);
+  const likesCount = post.likes?.length || 0;
+
   /**
    * Handles post deletion
    * @async
@@ -54,6 +61,12 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const handleDelete = async () => {
     await dispatch(deletePost(post._id));
     if (onDelete) onDelete(post._id);
+  };
+
+  const handleLike = () => {
+    if (user) {
+      dispatch(likePost(post._id));
+    }
   };
 
   return (
@@ -124,23 +137,35 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           alignItems: "center",
         }}
       >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <IconButton
+            onClick={handleLike}
+            color={isLiked ? "error" : "default"}
+            aria-label={isLiked ? "Unlike post" : "Like post"}
+          >
+            {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+          </IconButton>
+          <Typography variant="body2" color="text.secondary">
+            {likesCount} {likesCount === 1 ? "like" : "likes"}
+          </Typography>
+        </Box>
         <Box sx={{ display: "flex", gap: 1 }}>
           {!isOwner && <MessageButton user={post.user} />}
+          {isOwner && showDeleteButton && (
+            <Button
+              size="small"
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon style={{ fontSize: "28px" }} />}
+              onClick={handleDelete}
+              sx={{
+                border: "none",
+                padding: "5px 15px",
+                color: "#B0B0B0",
+              }}
+            />
+          )}
         </Box>
-        {isOwner && showDeleteButton && (
-          <Button
-            size="small"
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon style={{ fontSize: "28px" }} />}
-            onClick={handleDelete}
-            sx={{
-              border: "none",
-              padding: "5px 15px",
-              color: "#B0B0B0",
-            }}
-          />
-        )}
       </CardActions>
     </Card>
   );

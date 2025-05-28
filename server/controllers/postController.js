@@ -159,8 +159,49 @@ const postController = {
       res.status(500).json({ message: "Error deleting post" });
     }
   },
+  /**
+   * Toggle like on a post
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with updated likes array
+   */
+  toggleLikePost: async (req, res) => {
+    try {
+      const post = await Post.findById(req.params.id);
+
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      const userId = req.user._id.toString();
+      const isLiked = post.likes.includes(userId);
+
+      if (isLiked) {
+        // Unlike the post
+        post.likes = post.likes.filter((id) => id.toString() !== userId);
+      } else {
+        // Like the post
+        post.likes.push(userId);
+      }
+
+      const updatedPost = await post.save();
+
+      res.json({
+        postId: post._id,
+        likes: updatedPost.likes,
+      });
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      res.status(500).json({ message: "Error toggling like" });
+    }
+  },
 };
 
 export { postController as default, postController };
-export const { getPosts, createPost, getUserPosts, deletePost } =
-  postController;
+export const {
+  getPosts,
+  createPost,
+  getUserPosts,
+  deletePost,
+  toggleLikePost,
+} = postController;

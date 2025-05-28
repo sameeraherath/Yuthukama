@@ -32,6 +32,36 @@ export const fetchUserPosts = createAsyncThunk(
 );
 
 /**
+ * Async thunk for liking a post
+ * @async
+ * @function likePost
+ * @param {string} postId - ID of the post to like
+ * @returns {Promise<Object>} Object containing postId and updated likes count
+ * @throws {Error} If the API request fails
+ */
+export const likePost = createAsyncThunk(
+  "posts/likePost",
+  async (postId, thunkAPI) => {
+    try {
+      const { data } = await axios.put(
+        `${API_BASE}/api/posts/${postId}/like`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      return { postId, likes: data.likes };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to like post"
+      );
+    }
+  }
+);
+
+/**
  * Initial state for the posts slice
  * @type {Object}
  * @property {Array} userPosts - Array of posts by the current user
@@ -129,6 +159,26 @@ const postsSlice = createSlice({
         );
       })
       .addCase(deletePost.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      // Handle likePost actions
+      .addCase(likePost.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(likePost.fulfilled, (state, action) => {
+        const { postId, likes } = action.payload;
+        // Update post in allPosts
+        const post = state.allPosts.find((p) => p._id === postId);
+        if (post) {
+          post.likes = likes;
+        }
+        // Update post in userPosts if it exists there
+        const userPost = state.userPosts.find((p) => p._id === postId);
+        if (userPost) {
+          userPost.likes = likes;
+        }
+      })
+      .addCase(likePost.rejected, (state, action) => {
         state.error = action.payload;
       });
   },

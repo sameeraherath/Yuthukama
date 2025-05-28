@@ -4,6 +4,7 @@ import {
   createPost,
   getUserPosts,
   deletePost,
+  toggleLikePost,
 } from "../controllers/postController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -44,5 +45,6 @@ router.route("/user/:userId").get(protect, getUserPosts);
  * @returns {Object} JSON response confirming successful deletion
  */
 router.route("/:id").delete(protect, deletePost);
+router.put("/:id/like", protect, toggleLikePost);
 
 export default router;
