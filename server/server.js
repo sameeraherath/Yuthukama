@@ -16,6 +16,7 @@ import cookieParser from "cookie-parser";
 import userRoutes from "./routes/userRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import aiChatRoutes from "./routes/aiChat.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 import multer from "multer";
 import config from "./config/config.js";
 import Message from "./models/Message.js";
@@ -84,6 +85,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/chat", aiChatRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(errorHandler);
 
@@ -93,6 +95,13 @@ app.use(errorHandler);
  */
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
+
+  // Store user ID with socket ID for notifications
+  socket.on("authenticate", (userId) => {
+    socket.userId = userId;
+    socket.join(`user_${userId}`);
+    console.log(`User ${userId} authenticated with socket ${socket.id}`);
+  });
 
   /**
    * Handles room joining for chat conversations
@@ -130,6 +139,24 @@ io.on("connection", (socket) => {
           lastMessage: text,
           lastMessageTimestamp: new Date(),
         });
+
+        // Create notification for new message
+        const conversation = await Conversation.findById(conversationId);
+        const recipient = conversation.participants.find(
+          (p) => p.toString() !== sender
+        );
+
+        if (recipient) {
+          const notification = await notificationController.createNotification({
+            recipient,
+            sender,
+            type: "message",
+            content: "You have a new message",
+          });
+
+          // Emit notification to recipient
+          io.to(`user_${recipient}`).emit("notification", notification);
+        }
       }
 
       io.in(roomId).emit("receive_message", {

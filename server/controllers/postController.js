@@ -7,6 +7,7 @@ import Post from "../models/Post.js";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import config from "../config/config.js";
 import { v4 as uuidv4 } from "uuid";
+import notificationController from "../controllers/notificationController.js";
 
 /**
  * AWS S3 client instance for handling file uploads
@@ -168,20 +169,28 @@ const postController = {
   toggleLikePost: async (req, res) => {
     try {
       const post = await Post.findById(req.params.id);
-
       if (!post) {
         return res.status(404).json({ message: "Post not found" });
       }
 
-      const userId = req.user._id.toString();
+      const userId = req.user.id;
       const isLiked = post.likes.includes(userId);
 
       if (isLiked) {
-        // Unlike the post
         post.likes = post.likes.filter((id) => id.toString() !== userId);
       } else {
-        // Like the post
         post.likes.push(userId);
+
+        // Create notification for post like if the user is not liking their own post
+        if (post.user.toString() !== userId) {
+          await notificationController.createNotification({
+            recipient: post.user,
+            sender: userId,
+            type: "like",
+            content: "liked your post",
+            relatedPost: post._id,
+          });
+        }
       }
 
       const updatedPost = await post.save();
@@ -205,6 +214,7 @@ const postController = {
    * @param {Object} req.user - Authenticated user object
    * @param {Object} res - Express response object
    * @returns {Object} JSON response with updated post
+   * @throws {Error} If comment addition fails
    */
   addComment: async (req, res) => {
     try {
@@ -221,6 +231,17 @@ const postController = {
       });
 
       await post.save();
+
+      // Create notification for comment if the commenter is not the post owner
+      if (post.user.toString() !== req.user.id) {
+        await notificationController.createNotification({
+          recipient: post.user,
+          sender: req.user.id,
+          type: "comment",
+          content: "commented on your post",
+          relatedPost: post._id,
+        });
+      }
 
       // Populate the newly added comment's user information
       const populatedPost = await Post.findById(post._id)

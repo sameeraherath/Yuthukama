@@ -7,11 +7,12 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../features/auth/authSlice";
 import userReducer from "../features/auth/userSlice";
 import postsReducer from "../features/posts/postsSlice";
+import chatReducer from "../features/chat/chatSlice";
 import uiReducer, {
   loadingMiddleware,
   injectStore,
 } from "../features/ui/uiSlice";
-import chatReducer from "../features/chat/chatSlice";
+import notificationsReducer from "../features/notifications/notificationsSlice";
 
 /**
  * Configured Redux store instance
@@ -22,6 +23,7 @@ import chatReducer from "../features/chat/chatSlice";
  * @property {Function} reducer.posts - Posts state reducer
  * @property {Function} reducer.ui - UI state reducer
  * @property {Function} reducer.chat - Chat state reducer
+ * @property {Function} reducer.notifications - Notifications state reducer
  * @property {Function} middleware - Custom middleware configuration
  */
 export const store = configureStore({
@@ -29,8 +31,9 @@ export const store = configureStore({
     auth: authReducer,
     user: userReducer,
     posts: postsReducer,
-    ui: uiReducer,
     chat: chatReducer,
+    ui: uiReducer,
+    notifications: notificationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(loadingMiddleware),

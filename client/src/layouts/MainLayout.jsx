@@ -1,13 +1,15 @@
+import React from "react";
 import Navbar from "../components/Navbar";
-import GlobalLoadingSpinner from "../components/GlobalLoadingSpinner";
+import { useNotifications } from "../hooks/useNotifications";
 
 const MainLayout = ({ children }) => {
+  useNotifications(); // Initialize notifications system
+
   return (
-    <>
+    <div>
       <Navbar />
-      <GlobalLoadingSpinner />
-      <main style={{ paddingTop: "10px" }}>{children}</main>
-    </>
+      <div style={{ paddingTop: "20px" }}>{children}</div>
+    </div>
   );
 };
 

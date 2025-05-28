@@ -6,6 +6,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PostDialog from "./PostDialog";
 import LogoutDialog from "./LogoutDialog";
+import NotificationMenu from "./NotificationMenu";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { useSelector } from "react-redux";
@@ -113,7 +114,7 @@ const Navbar = () => {
             }}
           >
             Yuthukama
-          </Typography>{" "}
+          </Typography>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {isAdmin ? (
               <IconButton color="inherit" onClick={handleLogoutClick}>
@@ -124,6 +125,7 @@ const Navbar = () => {
                 <IconButton color="inherit" onClick={handleClickOpen}>
                   <PostAddIcon sx={{ fontSize: "32px", color: "#1DBF73" }} />
                 </IconButton>
+                <NotificationMenu />
                 <IconButton
                   color="inherit"
                   onClick={() => setShowAIChat((prev) => !prev)}
