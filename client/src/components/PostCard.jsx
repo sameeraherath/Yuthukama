@@ -15,7 +15,7 @@ import useAuth from "../hooks/useAuth";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import ShortTextIcon from "@mui/icons-material/ShortText";
 import MessageButton from "./MessageButton";
 import Comments from "./Comments";
 import { likePost } from "../features/posts/postsSlice";
@@ -165,7 +165,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
               aria-expanded={expanded}
               aria-label="show comments"
             >
-              <ChatBubbleOutlineIcon />
+              <ShortTextIcon />
             </IconButton>
             <Typography variant="body2" color="text.secondary">
               {commentsCount}
