@@ -102,3 +102,52 @@ export const likePost = async (postId) => {
   const response = await axios.put(`${API_BASE}/api/posts/${postId}/like`);
   return response.data;
 };
+
+/**
+ * Adds a comment to a post
+ */
+export const addComment = createAsyncThunk(
+  "posts/addComment",
+  async ({ postId, content }, thunkAPI) => {
+    try {
+      const { data } = await axios.post(
+        `${API_BASE}/api/posts/${postId}/comments`,
+        { content },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to add comment"
+      );
+    }
+  }
+);
+
+/**
+ * Deletes a comment from a post
+ */
+export const deleteComment = createAsyncThunk(
+  "posts/deleteComment",
+  async ({ postId, commentId }, thunkAPI) => {
+    try {
+      const { data } = await axios.delete(
+        `${API_BASE}/api/posts/${postId}/comments/${commentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to delete comment"
+      );
+    }
+  }
+);

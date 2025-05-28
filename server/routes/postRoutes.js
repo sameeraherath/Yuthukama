@@ -5,6 +5,8 @@ import {
   getUserPosts,
   deletePost,
   toggleLikePost,
+  addComment,
+  deleteComment,
 } from "../controllers/postController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -46,5 +48,19 @@ router.route("/user/:userId").get(protect, getUserPosts);
  */
 router.route("/:id").delete(protect, deletePost);
 router.put("/:id/like", protect, toggleLikePost);
+
+/**
+ * @route POST /api/posts/:id/comments
+ * @desc Add a comment to a post
+ * @access Private
+ */
+router.route("/:id/comments").post(protect, addComment);
+
+/**
+ * @route DELETE /api/posts/:id/comments/:commentId
+ * @desc Delete a comment from a post
+ * @access Private
+ */
+router.route("/:id/comments/:commentId").delete(protect, deleteComment);
 
 export default router;

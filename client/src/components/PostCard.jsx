@@ -7,6 +7,7 @@ import {
   Button,
   Box,
   IconButton,
+  Collapse,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { deletePost } from "../features/posts/postsAPI";
@@ -14,8 +15,11 @@ import useAuth from "../hooks/useAuth";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MessageButton from "./MessageButton";
+import Comments from "./Comments";
 import { likePost } from "../features/posts/postsSlice";
+import { useState } from "react";
 
 /**
  * Card component for displaying a post with image, title, and description
@@ -46,12 +50,13 @@ import { likePost } from "../features/posts/postsSlice";
 const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const dispatch = useDispatch();
   const { user } = useAuth();
+  const [expanded, setExpanded] = useState(false);
   const isOwner =
     (user?.id && post?.user?._id && user.id === post.user._id) ||
     (user?.id && post?.user && user.id === post.user);
-
   const isLiked = post.likes?.includes(user?.id);
   const likesCount = post.likes?.length || 0;
+  const commentsCount = post.comments?.length || 0;
 
   /**
    * Handles post deletion
@@ -67,6 +72,10 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
     if (user) {
       dispatch(likePost(post._id));
     }
+  };
+
+  const handleExpandClick = () => {
+    setExpanded(!expanded);
   };
 
   return (
@@ -137,17 +146,31 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           alignItems: "center",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton
-            onClick={handleLike}
-            color={isLiked ? "error" : "default"}
-            aria-label={isLiked ? "Unlike post" : "Like post"}
-          >
-            {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-          </IconButton>
-          <Typography variant="body2" color="text.secondary">
-            {likesCount} {likesCount === 1 ? "like" : "likes"}
-          </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <IconButton
+              onClick={handleLike}
+              color={isLiked ? "error" : "default"}
+              aria-label={isLiked ? "Unlike post" : "Like post"}
+            >
+              {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+            </IconButton>
+            <Typography variant="body2" color="text.secondary">
+              {likesCount}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <IconButton
+              onClick={handleExpandClick}
+              aria-expanded={expanded}
+              aria-label="show comments"
+            >
+              <ChatBubbleOutlineIcon />
+            </IconButton>
+            <Typography variant="body2" color="text.secondary">
+              {commentsCount}
+            </Typography>
+          </Box>
         </Box>
         <Box sx={{ display: "flex", gap: 1 }}>
           {!isOwner && <MessageButton user={post.user} />}
@@ -167,6 +190,11 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           )}
         </Box>
       </CardActions>
+      <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <CardContent>
+          <Comments postId={post._id} comments={post.comments} />
+        </CardContent>
+      </Collapse>
     </Card>
   );
 };

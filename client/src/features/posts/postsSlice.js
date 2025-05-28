@@ -1,6 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { fetchPosts, createPost, deletePost } from "./postsAPI";
+import {
+  fetchPosts,
+  createPost,
+  deletePost,
+  addComment,
+  deleteComment,
+} from "./postsAPI";
 
 const API_BASE = import.meta.env.VITE_SERVER_URL;
 
@@ -179,6 +185,54 @@ const postsSlice = createSlice({
         }
       })
       .addCase(likePost.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      // Handle addComment actions
+      .addCase(addComment.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(addComment.fulfilled, (state, action) => {
+        const updatedPost = action.payload;
+        // Update post in allPosts
+        const postIndex = state.allPosts.findIndex(
+          (p) => p._id === updatedPost._id
+        );
+        if (postIndex !== -1) {
+          state.allPosts[postIndex] = updatedPost;
+        }
+        // Update post in userPosts if it exists there
+        const userPostIndex = state.userPosts.findIndex(
+          (p) => p._id === updatedPost._id
+        );
+        if (userPostIndex !== -1) {
+          state.userPosts[userPostIndex] = updatedPost;
+        }
+      })
+      .addCase(addComment.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      // Handle deleteComment actions
+      .addCase(deleteComment.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(deleteComment.fulfilled, (state, action) => {
+        const updatedPost = action.payload;
+        // Update post in allPosts
+        const postIndex = state.allPosts.findIndex(
+          (p) => p._id === updatedPost._id
+        );
+        if (postIndex !== -1) {
+          state.allPosts[postIndex] = updatedPost;
+        }
+        // Update post in userPosts if it exists there
+        const userPostIndex = state.userPosts.findIndex(
+          (p) => p._id === updatedPost._id
+        );
+        if (userPostIndex !== -1) {
+          state.userPosts[userPostIndex] = updatedPost;
+        }
+      })
+      .addCase(deleteComment.rejected, (state, action) => {
         state.error = action.payload;
       });
   },
