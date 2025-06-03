@@ -42,10 +42,7 @@ const httpServer = createServer(app);
  */
 const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
 
-// **IMPORTANT: ADD YOUR VERCEL FRONTEND DOMAIN HERE**
-// Example: Assuming your Vercel frontend is `https://your-vercel-app.vercel.app`
-// Replace `https://your-vercel-app.vercel.app` with your actual Vercel domain.
-allowedOrigins.push("https://your-vercel-app.vercel.app");
+allowedOrigins.push("https://yuthukama.vercel.app");
 
 /**
  * Socket.IO server instance configuration
