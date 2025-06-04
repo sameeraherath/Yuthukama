@@ -44,6 +44,12 @@ const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 allowedOrigins.push("https://yuthukama.vercel.app");
 allowedOrigins.push(
+  "https://yuthukama-git-main-sameeraheraths-projects.vercel.app"
+);
+allowedOrigins.push(
+  "https://yuthukama-c090w1wi0-sameeraheraths-projects.vercel.app"
+);
+allowedOrigins.push(
   "https://yuthukama-8jc2f08wu-sameeraheraths-projects.vercel.app"
 );
 
