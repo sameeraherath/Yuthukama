@@ -12,6 +12,16 @@ export default defineConfig({
         secure: false,
       },
     },
-    historyApiFallback: true,
+  },
+  base: "./",
+  build: {
+    outDir: "dist",
+    assetsDir: "assets",
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
   },
 });
