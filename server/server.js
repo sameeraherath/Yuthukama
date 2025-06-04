@@ -52,6 +52,9 @@ allowedOrigins.push(
 allowedOrigins.push(
   "https://yuthukama-8jc2f08wu-sameeraheraths-projects.vercel.app"
 );
+allowedOrigins.push(
+  "https://yuthukama-2256qywdc-sameeraheraths-projects.vercel.app"
+);
 
 /**
  * Socket.IO server instance configuration
