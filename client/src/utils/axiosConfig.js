@@ -9,7 +9,7 @@ import axios from "axios";
  * Base URL for API requests
  * @type {string}
  */
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
 console.log("API URL:", API_URL); // Debug log
 
 axios.defaults.baseURL = API_URL;
