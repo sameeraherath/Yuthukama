@@ -6,6 +6,7 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import LoginPage from "./pages/auth/LoginPage";
 import LandingPage from "./pages/LandingPage";
 import ProfilePage from "./pages/ProfilePage";
+import ArticleDetailPage from "./pages/ArticleDetailPage";
 import MainLayout from "./layouts/MainLayout.jsx";
 import ChatPage from "./pages/ChatPage";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -45,6 +46,7 @@ const App = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/articles/:id" element={<ArticleDetailPage />} />
       {/* Admin Routes */}
       <Route
         path="/admin/dashboard"

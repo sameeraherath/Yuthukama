@@ -11,6 +11,7 @@ import {
   CardContent,
   Stack,
 } from "@mui/material";
+import ArticlesSection from "../components/articles/ArticlesSection";
 import HeroImage from "../assets/hero.png";
 import PeopleIcon from "@mui/icons-material/People";
 import ChatIcon from "@mui/icons-material/Chat";
@@ -21,26 +22,15 @@ import ForumIcon from "@mui/icons-material/Forum";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import EventIcon from "@mui/icons-material/Event";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import SchoolIcon from "@mui/icons-material/School";
 
 /**
- * Landing page component that showcases the platform's features and value proposition
- * @component
- * @returns {JSX.Element} Landing page with hero section, features, and call-to-action
- * @example
- * // In App.jsx
- * <Route path="/" element={<LandingPage />} />
+ * Landing page component showcasing platform features, mentorship, vision, and stats
  */
 function LandingPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  /**
-   * Platform features to showcase
-   * @type {Array<Object>}
-   * @property {JSX.Element} icon - Feature icon component
-   * @property {string} title - Feature title
-   * @property {string} description - Feature description
-   */
   const features = [
     {
       icon: <PeopleIcon sx={{ fontSize: 40, color: "#1DBF73" }} />,
@@ -55,16 +45,16 @@ function LandingPage() {
         "Engage in instant conversations with community members through our secure chat system.",
     },
     {
+      icon: <SchoolIcon sx={{ fontSize: 40, color: "#1DBF73" }} />,
+      title: "Mentorship Program",
+      description:
+        "Connect with experienced mentors for guidance, support, and personal growth.",
+    },
+    {
       icon: <PostAddIcon sx={{ fontSize: 40, color: "#1DBF73" }} />,
       title: "Share Knowledge",
       description:
         "Create and share posts to exchange knowledge, experiences, and resources with others.",
-    },
-    {
-      icon: <SecurityIcon sx={{ fontSize: 40, color: "#1DBF73" }} />,
-      title: "Safe Environment",
-      description:
-        "Enjoy a secure and moderated platform where everyone feels welcome and respected.",
     },
     {
       icon: <SmartToyIcon sx={{ fontSize: 40, color: "#1DBF73" }} />,
@@ -80,25 +70,16 @@ function LandingPage() {
     },
   ];
 
-  /**
-   * How to use the platform steps
-   * @type {Array<Object>}
-   * @property {JSX.Element} icon - Step icon component
-   * @property {string} title - Step title
-   * @property {string} description - Step description
-   */
   const howToUse = [
     {
       icon: <HowToRegIcon sx={{ fontSize: 40, color: "#1DBF73" }} />,
       title: "Create Account",
-      description:
-        "Sign up with your email and create your profile to get started.",
+      description: "Sign up with your email and create your profile to get started.",
     },
     {
       icon: <ForumIcon sx={{ fontSize: 40, color: "#1DBF73" }} />,
       title: "Join Discussions",
-      description:
-        "Participate in community discussions and share your thoughts.",
+      description: "Participate in community discussions and share your thoughts.",
     },
     {
       icon: <EmojiEventsIcon sx={{ fontSize: 40, color: "#1DBF73" }} />,
@@ -107,9 +88,17 @@ function LandingPage() {
     },
   ];
 
+  const stats = [
+    { label: "Mentors Joined", value: "120+" },
+    { label: "Children Supported", value: "500+" },
+    { label: "Community Events", value: "25+" },
+    { label: "Knowledge Posts", value: "300+" },
+  ];
+
   return (
     <Box sx={{ minHeight: "100vh" }}>
       <Container maxWidth="lg">
+        {/* Hero Section */}
         <Grid2
           container
           spacing={4}
@@ -162,8 +151,8 @@ function LandingPage() {
                 maxWidth: "500px",
               }}
             >
-              A platform where community members can seek support, share
-              knowledge, and build meaningful connections.
+              A platform where community members can seek support, share knowledge, 
+              and build meaningful connections while creating a positive impact.
             </Typography>
             <Box sx={{ display: "flex", gap: theme.spacing(2) }}>
               <Button
@@ -195,10 +184,7 @@ function LandingPage() {
                   borderRadius: "20px",
                   fontWeight: "bold",
                   textTransform: "none",
-                  "&:hover": {
-                    borderColor: "#1A8851",
-                    color: "#1A8851",
-                  },
+                  "&:hover": { borderColor: "#1A8851", color: "#1A8851" },
                 }}
               >
                 Join Community
@@ -282,10 +268,7 @@ function LandingPage() {
                     borderRadius: "20px",
                     boxShadow: theme.shadows[2],
                     transition: "transform 0.2s",
-                    "&:hover": {
-                      transform: "translateY(-5px)",
-                      boxShadow: theme.shadows[4],
-                    },
+                    "&:hover": { transform: "translateY(-5px)", boxShadow: theme.shadows[4] },
                   }}
                 >
                   <CardContent>
@@ -304,6 +287,125 @@ function LandingPage() {
               </Grid2>
             ))}
           </Grid2>
+        </Box>
+
+        {/* Mentorship Highlight Section */}
+        <Box
+          sx={{
+            py: 8,
+            backgroundColor: "#e8f5e9",
+            borderRadius: "30px",
+            mb: 8,
+          }}
+        >
+          <Container maxWidth="md">
+            <Typography
+              variant="h3"
+              align="center"
+              sx={{
+                color: "#1DBF73",
+                fontWeight: "bold",
+                mb: 4,
+                fontSize: isMobile ? "2rem" : "2.5rem",
+              }}
+            >
+              Mentorship Program
+            </Typography>
+            <Typography
+              variant="body1"
+              align="center"
+              sx={{ color: "#404145", mb: 6, fontSize: isMobile ? "1rem" : "1.2rem" }}
+            >
+              Our mentorship program connects experienced mentors with children and young adults who need guidance and support. Mentors help them grow, learn, and achieve their full potential.
+            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+              <Button
+                component={Link}
+                to="/register"
+                variant="contained"
+                size="large"
+                sx={{
+                  minWidth: "200px",
+                  fontWeight: "bold",
+                  textTransform: "none",
+                  borderRadius: "20px",
+                  backgroundColor: "#1DBF73",
+                  color: "#FFFFFF",
+                  "&:hover": { backgroundColor: "#1A8851" },
+                }}
+              >
+                Become a Mentor
+              </Button>
+            </Box>
+          </Container>
+        </Box>
+
+        {/* Vision / Impact Section */}
+        <Box
+          sx={{
+            py: 8,
+            borderRadius: "30px",
+            mb: 8,
+            backgroundColor: "#f0f9ff",
+          }}
+        >
+          <Container maxWidth="md">
+            <Typography
+              variant="h3"
+              align="center"
+              sx={{
+                color: "#1A73E8",
+                fontWeight: "bold",
+                mb: 4,
+                fontSize: isMobile ? "2rem" : "2.5rem",
+              }}
+            >
+              Our Vision
+            </Typography>
+            <Typography
+              variant="body1"
+              align="center"
+              sx={{ color: "#404145", mb: 6, fontSize: isMobile ? "1rem" : "1.2rem" }}
+            >
+              To create a holistic support platform that empowers underprivileged children
+              by connecting them with mentors, essential resources, and opportunities, 
+              fostering their personal, educational, and social growth.
+            </Typography>
+          </Container>
+        </Box>
+
+        {/* Stats Section */}
+        <Box
+          sx={{
+            py: 8,
+            backgroundColor: "#fff3e0",
+            borderRadius: "30px",
+            mb: 8,
+          }}
+        >
+          <Container maxWidth="md">
+            <Grid2 container spacing={4} justifyContent="center">
+              {stats.map((stat, index) => (
+                <Grid2
+                  item
+                  xs={6}
+                  sm={3}
+                  key={index}
+                  sx={{ textAlign: "center" }}
+                >
+                  <Typography
+                    variant="h4"
+                    sx={{ color: "#fb8c00", fontWeight: "bold", mb: 1 }}
+                  >
+                    {stat.value}
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: "#404145" }}>
+                    {stat.label}
+                  </Typography>
+                </Grid2>
+              ))}
+            </Grid2>
+          </Container>
         </Box>
 
         {/* How to Use Section */}
@@ -389,6 +491,9 @@ function LandingPage() {
             </Box>
           </Container>
         </Box>
+        
+        {/* Articles Section */}
+        <ArticlesSection />
       </Container>
     </Box>
   );
