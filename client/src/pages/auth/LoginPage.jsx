@@ -149,6 +149,14 @@ const LoginPage = () => {
                   borderColor: "#1DBF73",
                 },
                 "& .MuiInputLabel-root.Mui-focused": { color: "#1DBF73" },
+                "& input:-webkit-autofill": {
+                  WebkitBoxShadow: "0 0 0 100px white inset",
+                  WebkitTextFillColor: "#000",
+                },
+                "& input:-webkit-autofill:focus": {
+                  WebkitBoxShadow: "0 0 0 100px white inset",
+                  WebkitTextFillColor: "#000",
+                },
               }}
               InputProps={{
                 startAdornment: (
@@ -175,6 +183,14 @@ const LoginPage = () => {
                   borderColor: "#1DBF73",
                 },
                 "& .MuiInputLabel-root.Mui-focused": { color: "#1DBF73" },
+                "& input:-webkit-autofill": {
+                  WebkitBoxShadow: "0 0 0 100px white inset",
+                  WebkitTextFillColor: "#000",
+                },
+                "& input:-webkit-autofill:focus": {
+                  WebkitBoxShadow: "0 0 0 100px white inset",
+                  WebkitTextFillColor: "#000",
+                },
               }}
               InputProps={{
                 startAdornment: (
