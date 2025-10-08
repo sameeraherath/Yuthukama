@@ -17,6 +17,7 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import StarIcon from "@mui/icons-material/Star";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import EnhancedSkeleton from "./LoadingStates/EnhancedSkeleton";
 
 /**
  * RecommendedUsers component - Displays recommended users to connect with
@@ -43,7 +44,9 @@ const RecommendedUsers = ({ limit = 10 }) => {
         setError(null);
       } catch (err) {
         console.error("Error fetching recommended users:", err);
-        setError(err.response?.data?.message || "Failed to load recommended users");
+        setError(
+          err.response?.data?.message || "Failed to load recommended users"
+        );
       } finally {
         setLoading(false);
       }
@@ -58,8 +61,8 @@ const RecommendedUsers = ({ limit = 10 }) => {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-        <CircularProgress sx={{ color: "#1ac173" }} />
+      <Box sx={{ p: 2 }}>
+        <EnhancedSkeleton variant="list" count={limit} />
       </Box>
     );
   }
@@ -110,7 +113,8 @@ const RecommendedUsers = ({ limit = 10 }) => {
           <ListItem
             key={user._id}
             sx={{
-              borderBottom: index < users.length - 1 ? "1px solid #f0f0f0" : "none",
+              borderBottom:
+                index < users.length - 1 ? "1px solid #f0f0f0" : "none",
               flexDirection: "column",
               alignItems: "flex-start",
               gap: 1.5,
@@ -138,7 +142,7 @@ const RecommendedUsers = ({ limit = 10 }) => {
                   {user.username.charAt(0).toUpperCase()}
                 </Avatar>
               </ListItemAvatar>
-              
+
               <ListItemText
                 primary={
                   <Typography variant="body1" fontWeight="600">
@@ -154,9 +158,17 @@ const RecommendedUsers = ({ limit = 10 }) => {
                         height: 20,
                         fontSize: "0.75rem",
                         backgroundColor:
-                          user.role === "mentor" ? "#e3f2fd" : user.role === "mentee" ? "#fff3e0" : "#f5f5f5",
+                          user.role === "mentor"
+                            ? "#e3f2fd"
+                            : user.role === "mentee"
+                            ? "#fff3e0"
+                            : "#f5f5f5",
                         color:
-                          user.role === "mentor" ? "#1976d2" : user.role === "mentee" ? "#f57c00" : "inherit",
+                          user.role === "mentor"
+                            ? "#1976d2"
+                            : user.role === "mentee"
+                            ? "#f57c00"
+                            : "inherit",
                         fontWeight: 500,
                       }}
                     />
@@ -188,7 +200,7 @@ const RecommendedUsers = ({ limit = 10 }) => {
                   {user.bio}
                 </Typography>
               )}
-              
+
               <Button
                 size="small"
                 variant="outlined"

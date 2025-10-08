@@ -34,6 +34,7 @@ import DoneAllIcon from "@mui/icons-material/DoneAll";
 import MessageActions from "../components/MessageActions";
 import MessageAttachment from "../components/MessageAttachment";
 import ChatAPI from "../features/chat/chatAPI";
+import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
 
 /**
  * Chat page component for real-time messaging between users
@@ -203,7 +204,7 @@ const ChatPage = () => {
         return;
       }
       setSelectedFile(file);
-      
+
       // Generate preview for images
       if (file.type.startsWith("image/")) {
         const reader = new FileReader();
@@ -267,7 +268,9 @@ const ChatPage = () => {
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      setConnectionError(error.message || "Failed to send message. Please try again.");
+      setConnectionError(
+        error.message || "Failed to send message. Please try again."
+      );
     } finally {
       setIsSending(false);
     }
@@ -345,7 +348,7 @@ const ChatPage = () => {
   const renderMessage = (message, index) => {
     const currentUserId = userId;
     const isSentByCurrentUser = message.sender === currentUserId;
-    
+
     return (
       <Box
         key={message._id || index}
@@ -381,10 +384,10 @@ const ChatPage = () => {
               {message.attachment && (
                 <MessageAttachment attachment={message.attachment} />
               )}
-              
+
               {/* Message text */}
               {message.text && (
-                <Typography 
+                <Typography
                   variant="body1"
                   sx={{
                     fontStyle: message.deleted ? "italic" : "normal",
@@ -394,9 +397,16 @@ const ChatPage = () => {
                   {message.text}
                 </Typography>
               )}
-              
+
               {/* Message metadata */}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  mt: 0.5,
+                }}
+              >
                 <Typography variant="caption" sx={{ color: "text.secondary" }}>
                   {message.timestamp
                     ? new Date(message.timestamp).toLocaleTimeString([], {
@@ -405,7 +415,7 @@ const ChatPage = () => {
                       })
                     : ""}
                 </Typography>
-                
+
                 {/* Edited indicator */}
                 {message.edited && !message.deleted && (
                   <Chip
@@ -418,7 +428,7 @@ const ChatPage = () => {
                     }}
                   />
                 )}
-                
+
                 {/* Read receipt for sent messages */}
                 {isSentByCurrentUser && message.read && (
                   <DoneAllIcon
@@ -432,7 +442,7 @@ const ChatPage = () => {
             </>
           )}
         </Paper>
-        
+
         {/* Message actions (edit/delete) */}
         {isSentByCurrentUser && message.sender !== "system" && (
           <MessageActions
@@ -458,7 +468,7 @@ const ChatPage = () => {
           alignItems: "center",
         }}
       >
-        <CircularProgress sx={{ color: "#1ac173" }} />
+        <EnhancedSkeleton variant="chat" count={1} />
       </Box>
     );
   }

@@ -29,6 +29,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
 
 /**
  * Profile page component that displays user information and posts
@@ -178,19 +179,25 @@ const ProfilePage = () => {
           sx={{
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "60vh",
-            gap: 2,
+            gap: 3,
+            mt: 4,
           }}
           role="status"
           aria-live="polite"
           aria-label="Loading profile"
         >
-          <CircularProgress size={60} sx={{ color: "#1dbf73" }} />
-          <Typography variant="body1" color="text.secondary">
-            Loading your profile...
-          </Typography>
+          <EnhancedSkeleton variant="profile" count={1} />
+          <Box sx={{ 
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "1fr 1fr",
+              md: "repeat(2, 1fr)",
+            },
+            gap: 3,
+          }}>
+            <EnhancedSkeleton variant="post" count={4} />
+          </Box>
         </Box>
       </Container>
     );

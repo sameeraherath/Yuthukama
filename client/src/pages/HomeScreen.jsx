@@ -9,7 +9,7 @@ import AdvancedSearch from "../components/AdvancedSearch";
 import PostCard from "../components/PostCard";
 import TrendingPosts from "../components/TrendingPosts";
 import RecommendedUsers from "../components/RecommendedUsers";
-import { PostCardSkeleton } from "../components/LoadingStates/SkeletonLoader";
+import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 
@@ -67,85 +67,82 @@ const HomeScreen = () => {
           <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
           {error ? (
-        <Alert
-          severity="error"
-          icon={<ErrorOutlineIcon />}
-          sx={{
-            mt: 4,
-            borderRadius: 3,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Typography variant="body1" fontWeight={500}>
-            Error loading posts: {error}
-          </Typography>
-        </Alert>
-      ) : loading ? (
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "1fr 1fr",
-              md: "repeat(3, 1fr)",
-              lg: "repeat(3, 1fr)",
-            },
-            gap: 3,
-            mt: 3,
-          }}
-          role="status"
-          aria-label="Loading posts"
-        >
-          {Array.from({ length: 6 }).map((_, index) => (
-            <PostCardSkeleton key={index} />
-          ))}
-        </Box>
-      ) : filteredPosts.length === 0 ? (
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            py: 8,
-            gap: 2,
-          }}
-          role="status"
-        >
-          <SearchOffIcon sx={{ fontSize: 80, color: "text.disabled" }} />
-          <Typography variant="h6" color="text.secondary">
-            {searchTerm
-              ? "No posts found matching your search"
-              : "No posts available"}
-          </Typography>
-          <Typography variant="body2" color="text.disabled">
-            {searchTerm
-              ? "Try adjusting your search terms"
-              : "Be the first to create a post!"}
-          </Typography>
-        </Box>
-      ) : (
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "1fr 1fr",
-              md: "repeat(2, 1fr)",
-            },
-            gap: 3,
-            mt: 3,
-          }}
-          role="feed"
-          aria-label="Posts feed"
-        >
-          {filteredPosts.map((post) => (
-            <PostCard key={post._id} post={post} />
-          ))}
-        </Box>
-      )}
+            <Alert
+              severity="error"
+              icon={<ErrorOutlineIcon />}
+              sx={{
+                mt: 4,
+                borderRadius: 3,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography variant="body1" fontWeight={500}>
+                Error loading posts: {error}
+              </Typography>
+            </Alert>
+          ) : loading ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "1fr 1fr",
+                  md: "repeat(2, 1fr)",
+                },
+                gap: 3,
+                mt: 3,
+              }}
+              role="status"
+              aria-label="Loading posts"
+            >
+              <EnhancedSkeleton variant="post" count={6} />
+            </Box>
+          ) : filteredPosts.length === 0 ? (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                py: 8,
+                gap: 2,
+              }}
+              role="status"
+            >
+              <SearchOffIcon sx={{ fontSize: 80, color: "text.disabled" }} />
+              <Typography variant="h6" color="text.secondary">
+                {searchTerm
+                  ? "No posts found matching your search"
+                  : "No posts available"}
+              </Typography>
+              <Typography variant="body2" color="text.disabled">
+                {searchTerm
+                  ? "Try adjusting your search terms"
+                  : "Be the first to create a post!"}
+              </Typography>
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "1fr 1fr",
+                  md: "repeat(2, 1fr)",
+                },
+                gap: 3,
+                mt: 3,
+              }}
+              role="feed"
+              aria-label="Posts feed"
+            >
+              {filteredPosts.map((post) => (
+                <PostCard key={post._id} post={post} />
+              ))}
+            </Box>
+          )}
         </Grid>
 
         {/* Sidebar */}

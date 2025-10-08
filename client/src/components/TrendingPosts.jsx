@@ -10,6 +10,7 @@ import {
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import axios from "axios";
 import PostCard from "./PostCard";
+import EnhancedSkeleton from "./LoadingStates/EnhancedSkeleton";
 
 /**
  * TrendingPosts component - Displays trending posts based on engagement
@@ -36,7 +37,9 @@ const TrendingPosts = ({ limit = 5, days = 7 }) => {
         setError(null);
       } catch (err) {
         console.error("Error fetching trending posts:", err);
-        setError(err.response?.data?.message || "Failed to load trending posts");
+        setError(
+          err.response?.data?.message || "Failed to load trending posts"
+        );
       } finally {
         setLoading(false);
       }
@@ -47,8 +50,8 @@ const TrendingPosts = ({ limit = 5, days = 7 }) => {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-        <CircularProgress sx={{ color: "#1ac173" }} />
+      <Box sx={{ p: 2 }}>
+        <EnhancedSkeleton variant="post" count={limit} />
       </Box>
     );
   }
@@ -64,9 +67,7 @@ const TrendingPosts = ({ limit = 5, days = 7 }) => {
   if (posts.length === 0) {
     return (
       <Paper sx={{ p: 3, textAlign: "center" }}>
-        <Typography color="text.secondary">
-          No trending posts found
-        </Typography>
+        <Typography color="text.secondary">No trending posts found</Typography>
       </Paper>
     );
   }
