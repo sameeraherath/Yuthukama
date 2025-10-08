@@ -14,6 +14,9 @@ console.log("API URL:", API_URL); // Debug log
 
 axios.defaults.baseURL = API_URL;
 
+// Enable cookies for HTTP-only cookie authentication
+axios.defaults.withCredentials = true;
+
 // Add timeout configuration
 axios.defaults.timeout = 15000; // Increased to 15 seconds timeout
 
@@ -30,8 +33,13 @@ const RETRY_DELAY = 1000; // 1 second
  */
 axios.interceptors.request.use(
   (config) => {
+    // Enable credentials for all requests
+    config.withCredentials = true;
+    
     const token = localStorage.getItem("token");
 
+    // Keep Authorization header for backward compatibility
+    // Server will prioritize cookie over header
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
