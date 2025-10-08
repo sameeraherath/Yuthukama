@@ -6,6 +6,7 @@ import {
   checkAuth,
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
+import { validateRegister, validateLogin } from "../middleware/validationMiddleware.js";
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ const router = express.Router();
  * @param {string} req.body.password - User's password
  * @returns {Object} JSON response containing JWT token and user details
  */
-router.post("/register", registerUser);
+router.post("/register", validateRegister, registerUser);
 
 /**
  * @route POST /api/auth/login
@@ -30,7 +31,7 @@ router.post("/register", registerUser);
  * @param {string} req.body.password - User's password
  * @returns {Object} JSON response containing JWT token and user details
  */
-router.post("/login", loginUser);
+router.post("/login", validateLogin, loginUser);
 
 /**
  * @route POST /api/auth/logout
