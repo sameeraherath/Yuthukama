@@ -11,6 +11,7 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
+import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
 import { deletePost } from "../features/posts/postsAPI";
 import useAuth from "../hooks/useAuth";
@@ -31,6 +32,9 @@ import {
 } from "../utils/styleConstants";
 import { handleAsync, getErrorMessage, logError } from "../utils/errorHandler";
 import { showToast } from "../features/ui/uiSlice";
+
+// Create animated Card component
+const MotionCard = motion(Card);
 
 /**
  * Card component for displaying a post with image, title, and description
@@ -158,18 +162,41 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
     setExpanded(!expanded);
   };
 
+  // Animation variants for card entrance and hover
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    },
+    hover: {
+      y: -8,
+      boxShadow: "0 12px 24px rgba(0, 0, 0, 0.15)",
+      transition: {
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    }
+  };
+
   return (
-    <Card
+    <MotionCard
       key={post._id}
       component="article"
       role="article"
       aria-label={`Post: ${post.title}`}
+      initial="hidden"
+      animate="visible"
+      whileHover="hover"
+      variants={cardVariants}
       sx={{
         maxWidth: 420,
         borderRadius: BORDER_RADIUS.large,
         boxShadow: SHADOWS.card,
-        transition: `${TRANSITIONS.transform}, ${TRANSITIONS.shadow}`,
-        ...COMMON_STYLES.cardHoverEffect,
         overflow: "hidden",
         position: "relative",
       }}
@@ -184,22 +211,24 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
         </Alert>
       )}
 
-      <CardMedia
-        component="img"
-        height="240"
-        image={post.image}
-        alt={`Image for ${post.title}`}
-        loading="lazy"
-        sx={{
-          objectFit: "cover",
-          aspectRatio: "16/9",
-          width: "100%",
-          transition: TRANSITIONS.transform,
-          "&:hover": {
-            transform: "scale(1.05)",
-          },
-        }}
-      />
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+        style={{ overflow: "hidden" }}
+      >
+        <CardMedia
+          component="img"
+          height="240"
+          image={post.image}
+          alt={`Image for ${post.title}`}
+          loading="lazy"
+          sx={{
+            objectFit: "cover",
+            aspectRatio: "16/9",
+            width: "100%",
+          }}
+        />
+      </motion.div>
       <CardContent sx={{ p: 3 }}>
         <Typography
           variant="h5"
@@ -241,22 +270,32 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           aria-label="Post actions"
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <IconButton
-              onClick={handleLike}
-              disabled={isLiking}
-              color={isLiked ? "error" : "default"}
-              aria-label={isLiked ? "Unlike post" : "Like post"}
-              aria-pressed={isLiked}
-              size="medium"
+            <motion.div
+              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              {isLiking ? (
-                <CircularProgress size={24} />
-              ) : isLiked ? (
-                <FavoriteIcon />
-              ) : (
-                <FavoriteBorderIcon />
-              )}
-            </IconButton>
+              <IconButton
+                onClick={handleLike}
+                disabled={isLiking}
+                color={isLiked ? "error" : "default"}
+                aria-label={isLiked ? "Unlike post" : "Like post"}
+                aria-pressed={isLiked}
+                size="medium"
+              >
+                {isLiking ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  <motion.div
+                    initial={false}
+                    animate={isLiked ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                  </motion.div>
+                )}
+              </IconButton>
+            </motion.div>
             <Typography
               variant="body2"
               color="text.secondary"
@@ -313,7 +352,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           <Comments postId={post._id} comments={post.comments} />
         </CardContent>
       </Collapse>
-    </Card>
+    </MotionCard>
   );
 };
 
