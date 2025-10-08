@@ -8,6 +8,8 @@ import {
   toggleLikePost,
   addComment,
   deleteComment,
+  searchPosts,
+  getTrendingPosts,
 } from "../controllers/postController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import {
@@ -80,5 +82,27 @@ router.route("/:id/comments").post(protect, validateComment, addComment);
  * @access Private
  */
 router.route("/:id/comments/:commentId").delete(protect, deleteComment);
+
+/**
+ * @route GET /api/posts/search
+ * @desc Search posts by title, description, or category
+ * @access Private
+ * @param {string} req.query.query - Search query
+ * @param {string} [req.query.category] - Filter by category
+ * @param {string} [req.query.sortBy] - Sort by field (createdAt, likes)
+ * @param {number} [req.query.limit] - Limit results
+ * @returns {Object} JSON response containing matching posts
+ */
+router.get("/search", protect, searchPosts);
+
+/**
+ * @route GET /api/posts/trending
+ * @desc Get trending/popular posts
+ * @access Private
+ * @param {number} [req.query.limit] - Limit results
+ * @param {number} [req.query.days] - Consider posts from last N days
+ * @returns {Object} JSON response containing trending posts
+ */
+router.get("/trending", protect, getTrendingPosts);
 
 export default router;

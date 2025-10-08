@@ -9,6 +9,9 @@ import {
   getUserProfile,
   updateUsername,
   updateProfilePicture,
+  searchUsers,
+  getRecommendedUsers,
+  getUserStats,
 } from "../controllers/userController.js";
 import multer from "multer";
 
@@ -57,5 +60,34 @@ router.put(
   upload.single("profilePic"),
   updateProfilePicture
 );
+
+/**
+ * @route GET /api/users/search
+ * @desc Search for users by username or email
+ * @access Private
+ * @param {string} req.query.query - Search query
+ * @param {string} [req.query.role] - Filter by role
+ * @param {number} [req.query.limit] - Limit results
+ * @returns {Object} JSON response containing matching users
+ */
+router.get("/search", protect, searchUsers);
+
+/**
+ * @route GET /api/users/recommended
+ * @desc Get recommended users for the authenticated user
+ * @access Private
+ * @param {number} [req.query.limit] - Limit results
+ * @returns {Object} JSON response containing recommended users
+ */
+router.get("/recommended", protect, getRecommendedUsers);
+
+/**
+ * @route GET /api/users/:id/stats
+ * @desc Get user statistics (posts, likes, comments)
+ * @access Private
+ * @param {string} req.params.id - User ID
+ * @returns {Object} JSON response containing user statistics
+ */
+router.get("/:id/stats", protect, getUserStats);
 
 export default router;

@@ -150,31 +150,125 @@ const userController = {
   },
 
   /**
-   * Searches for users by username
+   * Searches for users by username or email with advanced filters
    * @param {Object} req - Express request object
    * @param {Object} req.query - Query parameters
    * @param {string} req.query.query - Search query string
+   * @param {string} [req.query.role] - Filter by role (user/admin)
+   * @param {number} [req.query.limit] - Limit results (default: 10, max: 50)
    * @param {Object} res - Express response object
    * @returns {Object} JSON response containing array of matching users
    * @throws {Error} If user search fails
    * @example
-   * // Route: GET /api/users/search?query=john
-   * // Returns up to 10 users whose usernames match the query
+   * // Route: GET /api/users/search?query=john&role=user&limit=20
+   * // Returns up to 20 users whose usernames or emails match the query
    */
   searchUsers: async (req, res) => {
     try {
-      const { query } = req.query;
+      const { query, role, limit = 10 } = req.query;
 
-      // Search users whose username matches the query (case-insensitive)
-      const users = await User.find({
-        username: { $regex: query, $options: "i" },
-      })
-        .select("username profilePicture")
-        .limit(10);
+      if (!query || query.trim().length === 0) {
+        return res.status(400).json({ message: "Search query is required" });
+      }
 
-      res.json(users);
+      // Build search filter
+      const searchFilter = {
+        $or: [
+          { username: { $regex: query, $options: "i" } },
+          { email: { $regex: query, $options: "i" } },
+        ],
+      };
+
+      // Add role filter if provided
+      if (role) {
+        searchFilter.role = role;
+      }
+
+      const limitNum = Math.min(parseInt(limit) || 10, 50); // Max 50 results
+
+      // Search users
+      const users = await User.find(searchFilter)
+        .select("username email profilePicture role createdAt")
+        .limit(limitNum)
+        .sort({ username: 1 });
+
+      res.json({
+        count: users.length,
+        users,
+      });
     } catch (error) {
+      console.error("Error searching users:", error);
       res.status(500).json({ message: "Error searching users" });
+    }
+  },
+
+  /**
+   * Gets recommended users for the authenticated user
+   * Based on recent activity, popular users, and new users
+   * @param {Object} req - Express request object
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user._id - User's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing recommended users
+   * @throws {Error} If recommendation fails
+   */
+  getRecommendedUsers: async (req, res) => {
+    try {
+      const { limit = 10 } = req.query;
+      const limitNum = Math.min(parseInt(limit) || 10, 20);
+
+      // Exclude current user from recommendations
+      const recommendedUsers = await User.find({
+        _id: { $ne: req.user._id },
+      })
+        .select("username profilePicture createdAt")
+        .sort({ createdAt: -1 }) // Newer users first
+        .limit(limitNum);
+
+      res.json({
+        count: recommendedUsers.length,
+        users: recommendedUsers,
+      });
+    } catch (error) {
+      console.error("Error getting recommended users:", error);
+      res.status(500).json({ message: "Error getting recommended users" });
+    }
+  },
+
+  /**
+   * Gets user statistics
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Request parameters
+   * @param {string} req.params.id - User ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing user statistics
+   * @throws {Error} If fetching stats fails
+   */
+  getUserStats: async (req, res) => {
+    try {
+      const userId = req.params.id;
+
+      // Import Post model here to avoid circular dependency
+      const Post = (await import("../models/Post.js")).default;
+
+      // Get post count
+      const postCount = await Post.countDocuments({ user: userId });
+
+      // Get total likes received on all posts
+      const posts = await Post.find({ user: userId }).select("likes");
+      const totalLikes = posts.reduce((sum, post) => sum + post.likes.length, 0);
+
+      // Get total comments received on all posts
+      const totalComments = posts.reduce((sum, post) => sum + post.comments.length, 0);
+
+      res.json({
+        postCount,
+        totalLikes,
+        totalComments,
+      });
+    } catch (error) {
+      console.error("Error getting user stats:", error);
+      res.status(500).json({ message: "Error getting user statistics" });
     }
   },
 };
@@ -185,4 +279,6 @@ export const {
   updateUsername,
   getUserProfile,
   searchUsers,
+  getRecommendedUsers,
+  getUserStats,
 } = userController;

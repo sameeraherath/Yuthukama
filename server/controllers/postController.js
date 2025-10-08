@@ -374,6 +374,170 @@ const postController = {
   },
 };
 
+  /**
+   * Searches posts by title, description, or category
+   * @param {Object} req - Express request object
+   * @param {Object} req.query - Query parameters
+   * @param {string} req.query.query - Search query string
+   * @param {string} [req.query.category] - Filter by category
+   * @param {string} [req.query.sortBy] - Sort by field (createdAt, likes)
+   * @param {number} [req.query.limit] - Limit results
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing matching posts
+   * @throws {Error} If search fails
+   */
+  searchPosts: async (req, res) => {
+    try {
+      const { query, category, sortBy = "createdAt", limit = 20 } = req.query;
+
+      if (!query || query.trim().length === 0) {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+
+      // Build search filter
+      const searchFilter = {
+        $or: [
+          { title: { $regex: query, $options: "i" } },
+          { description: { $regex: query, $options: "i" } },
+        ],
+      };
+
+      // Add category filter if provided
+      if (category) {
+        searchFilter.category = category;
+      }
+
+      const limitNum = Math.min(parseInt(limit) || 20, 50); // Max 50 results
+
+      // Determine sort order
+      let sortOptions = {};
+      if (sortBy === "likes") {
+        // Sort by number of likes (descending)
+        sortOptions = { likesCount: -1, createdAt: -1 };
+      } else {
+        sortOptions = { createdAt: -1 };
+      }
+
+      // Search posts
+      const posts = await Post.aggregate([
+        { $match: searchFilter },
+        {
+          $addFields: {
+            likesCount: { $size: "$likes" },
+          },
+        },
+        { $sort: sortOptions },
+        { $limit: limitNum },
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: "$user" },
+        {
+          $project: {
+            title: 1,
+            description: 1,
+            image: 1,
+            category: 1,
+            likes: 1,
+            comments: 1,
+            createdAt: 1,
+            "user.username": 1,
+            "user.profilePicture": 1,
+            "user._id": 1,
+          },
+        },
+      ]);
+
+      res.json({
+        count: posts.length,
+        posts,
+      });
+    } catch (error) {
+      console.error("Error searching posts:", error);
+      res.status(500).json({ message: "Error searching posts" });
+    }
+  },
+
+  /**
+   * Gets trending/popular posts based on likes and comments
+   * @param {Object} req - Express request object
+   * @param {Object} req.query - Query parameters
+   * @param {number} [req.query.limit] - Limit results (default: 10)
+   * @param {number} [req.query.days] - Consider posts from last N days (default: 7)
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing trending posts
+   * @throws {Error} If fetching trending posts fails
+   */
+  getTrendingPosts: async (req, res) => {
+    try {
+      const { limit = 10, days = 7 } = req.query;
+      const limitNum = Math.min(parseInt(limit) || 10, 20);
+      const daysNum = parseInt(days) || 7;
+
+      // Calculate date threshold
+      const dateThreshold = new Date();
+      dateThreshold.setDate(dateThreshold.getDate() - daysNum);
+
+      const trendingPosts = await Post.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: dateThreshold },
+          },
+        },
+        {
+          $addFields: {
+            engagementScore: {
+              $add: [
+                { $size: "$likes" },
+                { $multiply: [{ $size: "$comments" }, 2] }, // Comments worth 2x likes
+              ],
+            },
+          },
+        },
+        { $sort: { engagementScore: -1 } },
+        { $limit: limitNum },
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: "$user" },
+        {
+          $project: {
+            title: 1,
+            description: 1,
+            image: 1,
+            category: 1,
+            likes: 1,
+            comments: 1,
+            createdAt: 1,
+            engagementScore: 1,
+            "user.username": 1,
+            "user.profilePicture": 1,
+            "user._id": 1,
+          },
+        },
+      ]);
+
+      res.json({
+        count: trendingPosts.length,
+        posts: trendingPosts,
+      });
+    } catch (error) {
+      console.error("Error fetching trending posts:", error);
+      res.status(500).json({ message: "Error fetching trending posts" });
+    }
+  },
+};
+
 export { postController as default, postController };
 export const {
   getPosts,
@@ -384,4 +548,6 @@ export const {
   toggleLikePost,
   addComment,
   deleteComment,
+  searchPosts,
+  getTrendingPosts,
 } = postController;
