@@ -8,9 +8,11 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
 import connectDb from "./config/db.js";
 import postRoutes from "./routes/postRoutes.js";
-import { errorHandler } from "./utils/errorHandler.js"; // <-- You'll need to check this file if the issue persists
+import { errorHandler } from "./utils/errorHandler.js";
 import authRoutes from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/userRoutes.js";
@@ -23,11 +25,7 @@ import Message from "./models/Message.js";
 import Conversation from "./models/Conversation.js";
 import mongoose from "mongoose";
 import adminRoutes from "./routes/adminRoutes.js";
-
-// Import notificationController (if not already imported globally or in a route)
-// Based on your socket.io code, it looks like notificationController might be missing
-// or incorrectly imported. Add this line if notificationController is a separate module.
-// import * as notificationController from './controllers/notificationController.js'; // Adjust path if needed
+import * as notificationController from "./controllers/notificationController.js";
 
 dotenv.config();
 connectDb();
@@ -79,7 +77,32 @@ const io = new Server(httpServer, {
  */
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Middleware setup
+/**
+ * Rate limiter for general API endpoints
+ * Limits: 100 requests per 15 minutes per IP
+ */
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again later.",
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+/**
+ * Strict rate limiter for authentication endpoints
+ * Limits: 5 requests per 15 minutes per IP to prevent brute force attacks
+ */
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 requests per windowMs
+  message: "Too many authentication attempts, please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Security Middleware
+app.use(helmet()); // Sets various HTTP headers for security
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -96,22 +119,22 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: "10mb" })); // Limit request body size
 app.use(cookieParser());
 
-// **ADD THIS HEALTH CHECK/ROOT ROUTE**
+// Health check route
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Backend server is running and healthy!" });
 });
 
-// Route setup
-app.use("/api/auth", authRoutes);
-app.use("/api/posts", upload.single("image"), postRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/chat", chatRoutes);
-app.use("/api/chat", aiChatRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/notifications", notificationRoutes);
+// Apply rate limiters to routes
+app.use("/api/auth", authLimiter, authRoutes); // Strict rate limit for auth
+app.use("/api/posts", generalLimiter, upload.single("image"), postRoutes);
+app.use("/api/users", generalLimiter, userRoutes);
+app.use("/api/chat", generalLimiter, chatRoutes);
+app.use("/api/chat", generalLimiter, aiChatRoutes);
+app.use("/api/admin", generalLimiter, adminRoutes);
+app.use("/api/notifications", generalLimiter, notificationRoutes);
 
 // **IMPORTANT: Make sure your errorHandler is robust**
 // If it's still sending `{"stack":null}` even after adding the root route
