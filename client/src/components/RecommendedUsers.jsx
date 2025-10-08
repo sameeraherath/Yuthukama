@@ -18,6 +18,7 @@ import StarIcon from "@mui/icons-material/Star";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import EnhancedSkeleton from "./LoadingStates/EnhancedSkeleton";
+import EmptyState from "./EmptyState";
 
 /**
  * RecommendedUsers component - Displays recommended users to connect with
@@ -76,13 +77,7 @@ const RecommendedUsers = ({ limit = 10 }) => {
   }
 
   if (users.length === 0) {
-    return (
-      <Paper sx={{ p: 3, textAlign: "center" }}>
-        <Typography color="text.secondary">
-          No recommendations available
-        </Typography>
-      </Paper>
-    );
+    return <EmptyState variant="no-users" />;
   }
 
   return (

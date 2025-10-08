@@ -10,6 +10,7 @@ import PostCard from "../components/PostCard";
 import TrendingPosts from "../components/TrendingPosts";
 import RecommendedUsers from "../components/RecommendedUsers";
 import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
+import EmptyState from "../components/EmptyState";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 
@@ -100,29 +101,15 @@ const HomeScreen = () => {
               <EnhancedSkeleton variant="post" count={6} />
             </Box>
           ) : filteredPosts.length === 0 ? (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                py: 8,
-                gap: 2,
-              }}
-              role="status"
-            >
-              <SearchOffIcon sx={{ fontSize: 80, color: "text.disabled" }} />
-              <Typography variant="h6" color="text.secondary">
-                {searchTerm
-                  ? "No posts found matching your search"
-                  : "No posts available"}
-              </Typography>
-              <Typography variant="body2" color="text.disabled">
-                {searchTerm
-                  ? "Try adjusting your search terms"
-                  : "Be the first to create a post!"}
-              </Typography>
-            </Box>
+            <EmptyState
+              variant={searchTerm ? "no-search-results" : "no-posts"}
+              searchTerm={searchTerm}
+              onAction={
+                searchTerm
+                  ? () => setSearchTerm("")
+                  : () => navigate("/create-post")
+              }
+            />
           ) : (
             <Box
               sx={{

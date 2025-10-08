@@ -11,6 +11,7 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import axios from "axios";
 import PostCard from "./PostCard";
 import EnhancedSkeleton from "./LoadingStates/EnhancedSkeleton";
+import EmptyState from "./EmptyState";
 
 /**
  * TrendingPosts component - Displays trending posts based on engagement
@@ -65,11 +66,7 @@ const TrendingPosts = ({ limit = 5, days = 7 }) => {
   }
 
   if (posts.length === 0) {
-    return (
-      <Paper sx={{ p: 3, textAlign: "center" }}>
-        <Typography color="text.secondary">No trending posts found</Typography>
-      </Paper>
-    );
+    return <EmptyState variant="no-trending" />;
   }
 
   return (

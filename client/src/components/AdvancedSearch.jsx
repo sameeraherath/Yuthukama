@@ -22,6 +22,7 @@ import ArticleIcon from "@mui/icons-material/Article";
 import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import EmptyState from "./EmptyState";
 
 /**
  * AdvancedSearch component - Search for users and posts
@@ -70,7 +71,7 @@ const AdvancedSearch = () => {
   const handleQueryChange = (e) => {
     const value = e.target.value;
     setQuery(value);
-    
+
     // Debounced search
     const timeoutId = setTimeout(() => {
       handleSearch(value);
@@ -214,11 +215,11 @@ const AdvancedSearch = () => {
               <CircularProgress sx={{ color: "#1ac173" }} />
             </Box>
           ) : results.length === 0 ? (
-            <Box sx={{ p: 3, textAlign: "center" }}>
-              <Typography color="text.secondary">
-                No {searchType} found
-              </Typography>
-            </Box>
+            <EmptyState
+              variant={searchType === "users" ? "no-users" : "no-search-results"}
+              searchTerm={query}
+              onAction={() => setQuery("")}
+            />
           ) : (
             <List>
               {searchType === "users"
@@ -252,11 +253,16 @@ const AdvancedSearch = () => {
                                     ? "#e3f2fd"
                                     : "#f5f5f5",
                                 color:
-                                  user.role === "mentor" ? "#1976d2" : "inherit",
+                                  user.role === "mentor"
+                                    ? "#1976d2"
+                                    : "inherit",
                               }}
                             />
                             {user.email && (
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
                                 {user.email}
                               </Typography>
                             )}
@@ -301,7 +307,10 @@ const AdvancedSearch = () => {
                                   sx={{ height: 20 }}
                                 />
                               )}
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
                                 by {post.author?.username || "Unknown"}
                               </Typography>
                             </Box>
