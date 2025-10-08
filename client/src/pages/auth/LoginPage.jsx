@@ -8,9 +8,11 @@ import {
   Paper,
   InputAdornment,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { Visibility, VisibilityOff, Email, Lock } from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../../hooks/useAuth";
 import GlobalLoadingSpinner from "../../components/GlobalLoadingSpinner";
 
@@ -101,6 +103,10 @@ const LoginPage = () => {
       <GlobalLoadingSpinner actions={["auth/loginUser"]} />
 
       <Paper
+        component={motion.div}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
         sx={{
           width: "100%",
           maxWidth: "450px",
@@ -113,27 +119,56 @@ const LoginPage = () => {
       >
         <Box sx={{ textAlign: "center", mb: 2 }}>
           <Typography
+            component={motion.h1}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
             variant="h4"
-            component="h1"
             fontWeight="bold"
             sx={{ color: "#333" }}
           >
             Welcome Back
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+          <Typography
+            component={motion.p}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            variant="body1"
+            color="text.secondary"
+            sx={{ mt: 1 }}
+          >
             Log in to your account to continue
           </Typography>
         </Box>
 
-        {loginError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {loginError}
-          </Alert>
-        )}
+        <AnimatePresence mode="wait">
+          {loginError && (
+            <Alert
+              component={motion.div}
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.3 }}
+              severity="error"
+            >
+              {loginError}
+            </Alert>
+          )}
+        </AnimatePresence>
 
         <form onSubmit={handleSubmit}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+          <Box
+            component={motion.div}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}
+          >
             <TextField
+              component={motion.div}
+              animate={errors.email ? { x: [-10, 10, -10, 10, 0] } : {}}
+              transition={{ duration: 0.4 }}
               fullWidth
               label="Email"
               type="email"
@@ -144,7 +179,10 @@ const LoginPage = () => {
               error={!!errors.email}
               helperText={errors.email}
               sx={{
-                "& .MuiOutlinedInput-root": { borderRadius: "25px" },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "25px",
+                  transition: "all 0.3s ease",
+                },
                 "& .MuiOutlinedInput-root.Mui-focused fieldset": {
                   borderColor: "#1DBF73",
                 },
@@ -168,6 +206,9 @@ const LoginPage = () => {
             />
 
             <TextField
+              component={motion.div}
+              animate={errors.password ? { x: [-10, 10, -10, 10, 0] } : {}}
+              transition={{ duration: 0.4 }}
               fullWidth
               label="Password"
               type={showPassword ? "text" : "password"}
@@ -178,7 +219,10 @@ const LoginPage = () => {
               error={!!errors.password}
               helperText={errors.password}
               sx={{
-                "& .MuiOutlinedInput-root": { borderRadius: "25px" },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "25px",
+                  transition: "all 0.3s ease",
+                },
                 "& .MuiOutlinedInput-root.Mui-focused fieldset": {
                   borderColor: "#1DBF73",
                 },
@@ -232,6 +276,9 @@ const LoginPage = () => {
             </Box>
 
             <Button
+              component={motion.button}
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
               type="submit"
               variant="contained"
               fullWidth
@@ -247,9 +294,17 @@ const LoginPage = () => {
                 "&:hover": {
                   backgroundColor: "#19a666",
                 },
+                transition: "background-color 0.3s ease",
               }}
             >
-              Log In
+              {loading ? (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <CircularProgress size={20} sx={{ color: "white" }} />
+                  <span>Logging in...</span>
+                </Box>
+              ) : (
+                "Log In"
+              )}
             </Button>
           </Box>
         </form>

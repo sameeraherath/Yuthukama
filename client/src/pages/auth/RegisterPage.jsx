@@ -8,6 +8,7 @@ import {
   Paper,
   InputAdornment,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -17,6 +18,7 @@ import {
   Lock,
   Person,
 } from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../../hooks/useAuth";
 import GlobalLoadingSpinner from "../../components/GlobalLoadingSpinner";
 
@@ -102,6 +104,10 @@ const RegisterPage = () => {
     >
       <GlobalLoadingSpinner actions={["auth/register"]} />
       <Paper
+        component={motion.div}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
         sx={{
           width: "100%",
           maxWidth: "450px",
@@ -113,23 +119,56 @@ const RegisterPage = () => {
         }}
       >
         <Box sx={{ textAlign: "center", mb: 2 }}>
-          <Typography variant="h4" fontWeight="bold" sx={{ color: "#333" }}>
+          <Typography
+            component={motion.h1}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            variant="h4"
+            fontWeight="bold"
+            sx={{ color: "#333" }}
+          >
             Create an Account
           </Typography>
-          <Typography variant="body1" sx={{ color: "#666", mt: 1 }}>
+          <Typography
+            component={motion.p}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            variant="body1"
+            sx={{ color: "#666", mt: 1 }}
+          >
             Sign up to get started
           </Typography>
         </Box>
 
-        {registerError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {registerError}
-          </Alert>
-        )}
+        <AnimatePresence mode="wait">
+          {registerError && (
+            <Alert
+              component={motion.div}
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.3 }}
+              severity="error"
+            >
+              {registerError}
+            </Alert>
+          )}
+        </AnimatePresence>
 
         <form onSubmit={handleSubmit}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+          <Box
+            component={motion.div}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}
+          >
             <TextField
+              component={motion.div}
+              animate={errors.username ? { x: [-10, 10, -10, 10, 0] } : {}}
+              transition={{ duration: 0.4 }}
               fullWidth
               label="Username"
               value={formData.username}
@@ -139,7 +178,10 @@ const RegisterPage = () => {
               error={!!errors.username}
               helperText={errors.username}
               sx={{
-                "& .MuiOutlinedInput-root": { borderRadius: "25px" },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "25px",
+                  transition: "all 0.3s ease",
+                },
                 "& .MuiOutlinedInput-root.Mui-focused fieldset": {
                   borderColor: "#1DBF73",
                 },
@@ -163,6 +205,9 @@ const RegisterPage = () => {
             />
 
             <TextField
+              component={motion.div}
+              animate={errors.email ? { x: [-10, 10, -10, 10, 0] } : {}}
+              transition={{ duration: 0.4 }}
               fullWidth
               label="Email"
               type="email"
@@ -173,7 +218,10 @@ const RegisterPage = () => {
               error={!!errors.email}
               helperText={errors.email}
               sx={{
-                "& .MuiOutlinedInput-root": { borderRadius: "25px" },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "25px",
+                  transition: "all 0.3s ease",
+                },
                 "& .MuiOutlinedInput-root.Mui-focused fieldset": {
                   borderColor: "#1DBF73",
                 },
@@ -197,6 +245,9 @@ const RegisterPage = () => {
             />
 
             <TextField
+              component={motion.div}
+              animate={errors.password ? { x: [-10, 10, -10, 10, 0] } : {}}
+              transition={{ duration: 0.4 }}
               fullWidth
               label="Password"
               type={showPassword ? "text" : "password"}
@@ -207,7 +258,10 @@ const RegisterPage = () => {
               error={!!errors.password}
               helperText={errors.password}
               sx={{
-                "& .MuiOutlinedInput-root": { borderRadius: "25px" },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "25px",
+                  transition: "all 0.3s ease",
+                },
                 "& .MuiOutlinedInput-root.Mui-focused fieldset": {
                   borderColor: "#1DBF73",
                 },
@@ -238,6 +292,9 @@ const RegisterPage = () => {
             />
 
             <Button
+              component={motion.button}
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
               type="submit"
               variant="contained"
               fullWidth
@@ -251,9 +308,17 @@ const RegisterPage = () => {
                 fontSize: "1rem",
                 backgroundColor: "#1DBF73",
                 "&:hover": { backgroundColor: "#19a666" },
+                transition: "background-color 0.3s ease",
               }}
             >
-              Sign Up
+              {loading ? (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <CircularProgress size={20} sx={{ color: "white" }} />
+                  <span>Creating account...</span>
+                </Box>
+              ) : (
+                "Sign Up"
+              )}
             </Button>
 
             <Typography variant="body2" sx={{ textAlign: "center" }}>
