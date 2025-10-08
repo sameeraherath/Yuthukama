@@ -4,6 +4,7 @@ import {
   createPost,
   getUserPosts,
   deletePost,
+  updatePost,
   toggleLikePost,
   addComment,
   deleteComment,
@@ -11,6 +12,7 @@ import {
 import { protect } from "../middleware/authMiddleware.js";
 import {
   validateCreatePost,
+  validateUpdatePost,
   validateComment,
   validateMongoId,
 } from "../middleware/validationMiddleware.js";
@@ -45,13 +47,24 @@ router.route("/").get(protect, getPosts).post(protect, validateCreatePost, creat
 router.route("/user/:userId").get(protect, getUserPosts);
 
 /**
+ * @route PUT /api/posts/:id
+ * @desc Update a post
+ * @access Private
+ * @param {string} req.params.id - ID of the post to update
+ * @param {Object} req.body - Updated post data
+ * @returns {Object} JSON response containing updated post
+ */
+/**
  * @route DELETE /api/posts/:id
  * @desc Delete a post
  * @access Private
  * @param {string} req.params.id - ID of the post to delete
  * @returns {Object} JSON response confirming successful deletion
  */
-router.route("/:id").delete(protect, validateMongoId, deletePost);
+router.route("/:id")
+  .put(protect, validateUpdatePost, updatePost)
+  .delete(protect, validateMongoId, deletePost);
+
 router.put("/:id/like", protect, validateMongoId, toggleLikePost);
 
 /**

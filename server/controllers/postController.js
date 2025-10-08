@@ -160,6 +160,75 @@ const postController = {
       res.status(500).json({ message: "Error deleting post" });
     }
   },
+
+  /**
+   * Updates a post if the user is authorized
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Request parameters
+   * @param {string} req.params.id - ID of the post to update
+   * @param {Object} req.body - Request body containing updated post details
+   * @param {string} [req.body.title] - Updated post title
+   * @param {string} [req.body.description] - Updated post description
+   * @param {Object} [req.file] - New uploaded image file (optional)
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user.id - User's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing updated post
+   * @throws {Error} If post update fails or user is not authorized
+   */
+  updatePost: async (req, res) => {
+    try {
+      const post = await Post.findById(req.params.id);
+
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      // Check authorization
+      if (post.user.toString() !== req.user.id) {
+        return res
+          .status(403)
+          .json({ message: "Not authorized to update this post" });
+      }
+
+      const { title, description } = req.body;
+
+      // Update fields if provided
+      if (title) post.title = title;
+      if (description) post.description = description;
+
+      // Handle image upload if new image provided
+      if (req.file) {
+        const fileKey = `posts/${uuidv4()}-${req.file.originalname}`;
+
+        const params = {
+          Bucket: config.aws.bucket,
+          Key: fileKey,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype,
+        };
+
+        const command = new PutObjectCommand(params);
+        await s3Client.send(command);
+
+        post.image = `https://${config.aws.bucket}.s3.${config.aws.region}.amazonaws.com/${fileKey}`;
+      }
+
+      const updatedPost = await post.save();
+      const populatedPost = await Post.findById(updatedPost._id).populate(
+        "user",
+        "username profilePicture"
+      );
+
+      res.json(populatedPost);
+    } catch (error) {
+      console.error("Error updating post:", error);
+      res
+        .status(500)
+        .json({ message: "Error updating post", error: error.message });
+    }
+  },
+
   /**
    * Toggle like on a post
    * @param {Object} req - Express request object
@@ -311,6 +380,7 @@ export const {
   createPost,
   getUserPosts,
   deletePost,
+  updatePost,
   toggleLikePost,
   addComment,
   deleteComment,
