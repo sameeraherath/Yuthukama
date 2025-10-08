@@ -9,7 +9,6 @@ import {
   editMessage,
   deleteMessage,
   markMessagesAsRead,
-  getUnreadCount,
 } from "../features/chat/chatSlice";
 import useAuth from "../hooks/useAuth";
 import useChat from "../hooks/useChat";
@@ -111,7 +110,7 @@ const ChatPage = () => {
 
   // Initialize chat with proper user ID handling
   const userId = user?._id || user?.id;
-  const { isConnected, sendMessage, startTyping, stopTyping } = useChat(
+  const { isConnected, startTyping, stopTyping } = useChat(
     userId,
     receiverId,
     currentConversation?._id
