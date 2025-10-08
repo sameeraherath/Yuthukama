@@ -30,19 +30,53 @@ const messageSchema = mongoose.Schema(
     },
     text: {
       type: String,
-      required: true,
+      required: function() {
+        // Text is required only if there's no attachment
+        return !this.attachment;
+      },
+    },
+    attachment: {
+      url: String,
+      type: {
+        type: String,
+        enum: ['image', 'file', 'video', 'audio'],
+      },
+      filename: String,
+      size: Number,
     },
     read: {
       type: Boolean,
       default: false,
     },
+    readAt: {
+      type: Date,
+    },
     messageId: {
       type: String,
       index: true, // Add index for faster lookups
     },
+    deleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+    },
+    edited: {
+      type: Boolean,
+      default: false,
+    },
+    editedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
+
+// Indexes for performance optimization
+messageSchema.index({ conversationId: 1, createdAt: -1 });
+messageSchema.index({ sender: 1 });
+messageSchema.index({ read: 1, sender: 1 });
 
 /**
  * Message model
