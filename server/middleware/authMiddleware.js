@@ -9,10 +9,12 @@ import config from "../config/config.js";
 
 /**
  * Middleware to protect routes that require authentication
- * Verifies JWT token and attaches user object to request
+ * Verifies JWT token from HTTP-only cookie or Authorization header
  * @param {Object} req - Express request object
  * @param {Object} req.headers - Request headers
  * @param {string} req.headers.authorization - Bearer token in format 'Bearer <token>'
+ * @param {Object} req.cookies - Request cookies
+ * @param {string} req.cookies.token - JWT token in HTTP-only cookie
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  * @returns {void}
@@ -30,21 +32,31 @@ export const protect = async (req, res, next) => {
     "Auth Headers:",
     req.headers.authorization ? "Present" : "Missing"
   );
+  console.log("Auth Cookie:", req.cookies.token ? "Present" : "Missing");
 
-  // Check if Authorization header is present and starts with 'Bearer'
-  if (
-    !req.headers.authorization ||
-    !req.headers.authorization.startsWith("Bearer")
+  // Check for token in HTTP-only cookie first (more secure)
+  if (req.cookies.token) {
+    token = req.cookies.token;
+    console.log("Token extracted from cookie");
+  }
+  // Fallback to Authorization header for backward compatibility
+  else if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
   ) {
-    console.log("No valid authorization header found");
+    token = req.headers.authorization.split(" ")[1];
+    console.log("Token extracted from Authorization header");
+  }
+
+  // If no token found in either location
+  if (!token) {
+    console.log("No valid token found");
     return res
       .status(401)
       .json({ message: "Not authorized, no token provided" });
   }
 
   try {
-    // Extract token from Authorization header
-    token = req.headers.authorization.split(" ")[1];
     console.log("Token extracted successfully");
 
     // Verify token and extract user ID

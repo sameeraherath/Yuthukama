@@ -15,7 +15,7 @@ const authController = {
    * @param {string} req.body.email - Email address of the new user
    * @param {string} req.body.password - Password for the new user
    * @param {Object} res - Express response object
-   * @returns {Object} JSON response containing JWT token and user details
+   * @returns {Object} JSON response containing user details and sets HTTP-only cookie
    * @throws {Error} If user registration fails
    */
   registerUser: async (req, res) => {
@@ -36,8 +36,17 @@ const authController = {
       const token = jwt.sign({ id: user._id }, config.jwtSecret, {
         expiresIn: "30d",
       });
+
+      // Set HTTP-only cookie for enhanced security
+      res.cookie("token", token, {
+        httpOnly: true, // Prevents XSS attacks
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        sameSite: "strict", // CSRF protection
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
       res.status(201).json({
-        token,
+        token, // Keep for backward compatibility temporarily
         user: {
           id: user._id,
           username: user.username,
@@ -56,7 +65,7 @@ const authController = {
    * @param {string} req.body.email - User's email address
    * @param {string} req.body.password - User's password
    * @param {Object} res - Express response object
-   * @returns {Object} JSON response containing JWT token and user details
+   * @returns {Object} JSON response containing user details and sets HTTP-only cookie
    * @throws {Error} If login fails or credentials are invalid
    */
   loginUser: async (req, res) => {
@@ -75,8 +84,16 @@ const authController = {
         expiresIn: "30d",
       });
 
+      // Set HTTP-only cookie for enhanced security
+      res.cookie("token", token, {
+        httpOnly: true, // Prevents XSS attacks
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        sameSite: "strict", // CSRF protection
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
       res.json({
-        token,
+        token, // Keep for backward compatibility temporarily
         user: {
           id: user._id,
           username: user.username,
@@ -98,6 +115,12 @@ const authController = {
    */
   logoutUser: (req, res) => {
     try {
+      // Clear the HTTP-only cookie
+      res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
       res.json({ message: "Logged out successfully" });
     } catch (error) {
       res.status(500).json({ message: "Error logging out" });
