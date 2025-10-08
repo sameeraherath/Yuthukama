@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, Alert, Container } from "@mui/material";
+import { Box, Typography, Alert, Container, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import useAuth from "../hooks/useAuth";
 import usePosts from "../hooks/usePosts";
 import SearchBar from "../components/SearchBar";
+import AdvancedSearch from "../components/AdvancedSearch";
 import PostCard from "../components/PostCard";
+import TrendingPosts from "../components/TrendingPosts";
+import RecommendedUsers from "../components/RecommendedUsers";
 import { PostCardSkeleton } from "../components/LoadingStates/SkeletonLoader";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
@@ -52,9 +55,18 @@ const HomeScreen = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
-      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      {/* Advanced search */}
+      <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+        <AdvancedSearch />
+      </Box>
 
-      {error ? (
+      {/* Main content with sidebar */}
+      <Grid container spacing={3}>
+        {/* Main posts feed */}
+        <Grid item xs={12} lg={8}>
+          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+
+          {error ? (
         <Alert
           severity="error"
           icon={<ErrorOutlineIcon />}
@@ -121,8 +133,7 @@ const HomeScreen = () => {
             gridTemplateColumns: {
               xs: "1fr",
               sm: "1fr 1fr",
-              md: "repeat(3, 1fr)",
-              lg: "repeat(3, 1fr)",
+              md: "repeat(2, 1fr)",
             },
             gap: 3,
             mt: 3,
@@ -135,6 +146,16 @@ const HomeScreen = () => {
           ))}
         </Box>
       )}
+        </Grid>
+
+        {/* Sidebar */}
+        <Grid item xs={12} lg={4}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <RecommendedUsers limit={5} />
+            <TrendingPosts limit={5} days={7} />
+          </Box>
+        </Grid>
+      </Grid>
     </Container>
   );
 };
