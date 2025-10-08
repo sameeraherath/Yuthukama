@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import config from "../config/config.js";
 
 /**
@@ -152,8 +153,142 @@ const authController = {
       res.status(500).json({ message: "Error checking session" });
     }
   },
+
+  /**
+   * Initiates password reset process
+   * @param {Object} req - Express request object
+   * @param {Object} req.body - Request body
+   * @param {string} req.body.email - User's email address
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with reset token (in production, send via email)
+   * @throws {Error} If password reset initiation fails
+   */
+  forgotPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      const user = await User.findOne({ email });
+      if (!user) {
+        // Don't reveal if user exists for security
+        return res.json({ 
+          message: "If an account with that email exists, a password reset link has been sent." 
+        });
+      }
+
+      // Generate reset token
+      const resetToken = user.getResetPasswordToken();
+      await user.save();
+
+      // TODO: In production, send this via email service (SendGrid, AWS SES, etc.)
+      // For now, return it in response (ONLY FOR DEVELOPMENT)
+      const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+      
+      res.json({
+        message: "Password reset link has been sent to your email",
+        // Remove resetToken from response in production!
+        resetToken: process.env.NODE_ENV === "development" ? resetToken : undefined,
+        resetUrl: process.env.NODE_ENV === "development" ? resetUrl : undefined,
+      });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "Error processing password reset request" });
+    }
+  },
+
+  /**
+   * Resets user password using reset token
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Request parameters
+   * @param {string} req.params.resetToken - Password reset token
+   * @param {Object} req.body - Request body
+   * @param {string} req.body.password - New password
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response confirming password reset
+   * @throws {Error} If password reset fails
+   */
+  resetPassword: async (req, res) => {
+    try {
+      const { resetToken } = req.params;
+      const { password } = req.body;
+
+      // Find users with non-expired reset tokens
+      const users = await User.find({
+        resetPasswordExpire: { $gt: Date.now() },
+      });
+
+      // Find user with matching token
+      let user = null;
+      for (const u of users) {
+        if (u.resetPasswordToken && bcrypt.compareSync(resetToken, u.resetPasswordToken)) {
+          user = u;
+          break;
+        }
+      }
+
+      if (!user) {
+        return res.status(400).json({ 
+          message: "Invalid or expired password reset token" 
+        });
+      }
+
+      // Set new password (will be hashed by pre-save middleware)
+      user.password = password;
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save();
+
+      res.json({ message: "Password has been reset successfully" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "Error resetting password" });
+    }
+  },
+
+  /**
+   * Changes user password (requires current password)
+   * @param {Object} req - Express request object
+   * @param {Object} req.user - Authenticated user from middleware
+   * @param {Object} req.body - Request body
+   * @param {string} req.body.currentPassword - Current password
+   * @param {string} req.body.newPassword - New password
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response confirming password change
+   * @throws {Error} If password change fails
+   */
+  changePassword: async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Verify current password
+      const isMatch = await user.matchPassword(currentPassword);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      // Set new password (will be hashed by pre-save middleware)
+      user.password = newPassword;
+      await user.save();
+
+      res.json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Change password error:", error);
+      res.status(500).json({ message: "Error changing password" });
+    }
+  },
 };
 
 export { authController as default };
-export const { registerUser, loginUser, logoutUser, checkAuth } =
-  authController;
+export const { 
+  registerUser, 
+  loginUser, 
+  logoutUser, 
+  checkAuth,
+  forgotPassword,
+  resetPassword,
+  changePassword,
+} = authController;

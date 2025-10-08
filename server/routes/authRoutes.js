@@ -4,9 +4,18 @@ import {
   loginUser,
   logoutUser,
   checkAuth,
+  forgotPassword,
+  resetPassword,
+  changePassword,
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
-import { validateRegister, validateLogin } from "../middleware/validationMiddleware.js";
+import { 
+  validateRegister, 
+  validateLogin,
+  validateForgotPassword,
+  validateResetPassword,
+  validatePasswordChange,
+} from "../middleware/validationMiddleware.js";
 
 const router = express.Router();
 
@@ -48,5 +57,39 @@ router.post("/logout", logoutUser);
  * @returns {Object} JSON response containing user details if authenticated
  */
 router.get("/check", protect, checkAuth);
+
+/**
+ * @route POST /api/auth/forgot-password
+ * @desc Request password reset
+ * @access Public
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.email - User's email address
+ * @returns {Object} JSON response confirming reset email sent
+ */
+router.post("/forgot-password", validateForgotPassword, forgotPassword);
+
+/**
+ * @route POST /api/auth/reset-password/:resetToken
+ * @desc Reset password using token
+ * @access Public
+ * @param {string} req.params.resetToken - Password reset token
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.password - New password
+ * @param {string} req.body.confirmPassword - Password confirmation
+ * @returns {Object} JSON response confirming password reset
+ */
+router.post("/reset-password/:resetToken", validateResetPassword, resetPassword);
+
+/**
+ * @route PUT /api/auth/change-password
+ * @desc Change password for authenticated user
+ * @access Private
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.currentPassword - Current password
+ * @param {string} req.body.newPassword - New password
+ * @param {string} req.body.confirmPassword - Password confirmation
+ * @returns {Object} JSON response confirming password change
+ */
+router.put("/change-password", protect, validatePasswordChange, changePassword);
 
 export default router;

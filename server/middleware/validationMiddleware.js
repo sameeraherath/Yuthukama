@@ -207,6 +207,39 @@ export const validatePasswordChange = [
 ];
 
 /**
+ * Validation rules for forgot password
+ * @type {Array}
+ */
+export const validateForgotPassword = [
+  body("email")
+    .trim()
+    .isEmail()
+    .withMessage("Please provide a valid email address")
+    .normalizeEmail()
+    .toLowerCase(),
+  handleValidationErrors,
+];
+
+/**
+ * Validation rules for reset password
+ * @type {Array}
+ */
+export const validateResetPassword = [
+  param("resetToken")
+    .notEmpty()
+    .withMessage("Reset token is required"),
+  body("password")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters long")
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage("Password must contain at least one uppercase letter, one lowercase letter, and one number"),
+  body("confirmPassword")
+    .custom((value, { req }) => value === req.body.password)
+    .withMessage("Password confirmation does not match"),
+  handleValidationErrors,
+];
+
+/**
  * Validation rules for sending a message
  * @type {Array}
  */
