@@ -4,9 +4,16 @@ import { createSlice } from "@reduxjs/toolkit";
  * Initial state for the UI slice
  * @type {Object}
  * @property {Object} loading - Map of action types to their loading states
+ * @property {Object} toast - Toast notification state
  */
 const initialState = {
   loading: {},
+  toast: {
+    open: false,
+    message: "",
+    severity: "info", // 'success' | 'error' | 'warning' | 'info'
+    duration: 6000,
+  },
 };
 
 /**
@@ -43,10 +50,37 @@ const uiSlice = createSlice({
     resetLoading: (state) => {
       state.loading = {};
     },
+    /**
+     * Shows a toast notification
+     * @param {Object} state - Current state
+     * @param {Object} action - Action object
+     * @param {string} action.payload.message - Toast message
+     * @param {string} action.payload.severity - Toast severity
+     * @param {number} action.payload.duration - Display duration
+     */
+    showToast: (state, action) => {
+      state.toast = {
+        open: true,
+        message: action.payload.message || "",
+        severity: action.payload.severity || "info",
+        duration: action.payload.duration || 6000,
+      };
+    },
+    /**
+     * Clears the toast notification
+     * @param {Object} state - Current state
+     */
+    clearToast: (state) => {
+      state.toast = {
+        ...state.toast,
+        open: false,
+      };
+    },
   },
 });
 
-export const { setLoading, clearLoading, resetLoading } = uiSlice.actions;
+export const { setLoading, clearLoading, resetLoading, showToast, clearToast } =
+  uiSlice.actions;
 export default uiSlice.reducer;
 
 /**

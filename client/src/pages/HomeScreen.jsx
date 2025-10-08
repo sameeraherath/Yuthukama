@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Alert, Container } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import useAuth from "../hooks/useAuth";
 import usePosts from "../hooks/usePosts";
 import SearchBar from "../components/SearchBar";
 import PostCard from "../components/PostCard";
-import GlobalLoadingSpinner from "../components/GlobalLoadingSpinner";
+import { PostCardSkeleton } from "../components/LoadingStates/SkeletonLoader";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import SearchOffIcon from "@mui/icons-material/SearchOff";
 
 /**
  * Home screen component that displays a grid of posts with search functionality
@@ -34,7 +36,7 @@ const HomeScreen = () => {
   }, [isAuthenticated, navigate]);
 
   const token = localStorage.getItem("token");
-  const { posts, error } = usePosts(token);
+  const { posts, error, loading } = usePosts(token);
 
   /**
    * Filters posts based on search term
@@ -49,13 +51,69 @@ const HomeScreen = () => {
   );
 
   return (
-    <>
+    <Container maxWidth="xl" sx={{ py: 3 }}>
       <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      <GlobalLoadingSpinner actions={["posts/fetchPosts"]} />
+
       {error ? (
-        <Typography color="error" align="center" sx={{ mt: 4 }}>
-          Error loading posts: {error}
-        </Typography>
+        <Alert
+          severity="error"
+          icon={<ErrorOutlineIcon />}
+          sx={{
+            mt: 4,
+            borderRadius: 3,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Typography variant="body1" fontWeight={500}>
+            Error loading posts: {error}
+          </Typography>
+        </Alert>
+      ) : loading ? (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "1fr 1fr",
+              md: "repeat(3, 1fr)",
+              lg: "repeat(3, 1fr)",
+            },
+            gap: 3,
+            mt: 3,
+          }}
+          role="status"
+          aria-label="Loading posts"
+        >
+          {Array.from({ length: 6 }).map((_, index) => (
+            <PostCardSkeleton key={index} />
+          ))}
+        </Box>
+      ) : filteredPosts.length === 0 ? (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            py: 8,
+            gap: 2,
+          }}
+          role="status"
+        >
+          <SearchOffIcon sx={{ fontSize: 80, color: "text.disabled" }} />
+          <Typography variant="h6" color="text.secondary">
+            {searchTerm
+              ? "No posts found matching your search"
+              : "No posts available"}
+          </Typography>
+          <Typography variant="body2" color="text.disabled">
+            {searchTerm
+              ? "Try adjusting your search terms"
+              : "Be the first to create a post!"}
+          </Typography>
+        </Box>
       ) : (
         <Box
           sx={{
@@ -67,16 +125,17 @@ const HomeScreen = () => {
               lg: "repeat(3, 1fr)",
             },
             gap: 3,
-            padding: 3,
-            px: { lg: 10 },
+            mt: 3,
           }}
+          role="feed"
+          aria-label="Posts feed"
         >
           {filteredPosts.map((post) => (
             <PostCard key={post._id} post={post} />
           ))}
         </Box>
       )}
-    </>
+    </Container>
   );
 };
 

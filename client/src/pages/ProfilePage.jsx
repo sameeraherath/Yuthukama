@@ -173,9 +173,26 @@ const ProfilePage = () => {
 
   if (postsLoading || userLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
-        <CircularProgress />
-      </Box>
+      <Container maxWidth="md">
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "60vh",
+            gap: 2,
+          }}
+          role="status"
+          aria-live="polite"
+          aria-label="Loading profile"
+        >
+          <CircularProgress size={60} sx={{ color: "#1dbf73" }} />
+          <Typography variant="body1" color="text.secondary">
+            Loading your profile...
+          </Typography>
+        </Box>
+      </Container>
     );
   }
 

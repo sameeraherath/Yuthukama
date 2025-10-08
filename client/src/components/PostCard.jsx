@@ -8,6 +8,8 @@ import {
   Box,
   IconButton,
   Collapse,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { deletePost } from "../features/posts/postsAPI";
@@ -20,6 +22,15 @@ import MessageButton from "./MessageButton";
 import Comments from "./Comments";
 import { likePost } from "../features/posts/postsSlice";
 import { useState } from "react";
+import {
+  COLORS,
+  BORDER_RADIUS,
+  COMMON_STYLES,
+  SHADOWS,
+  TRANSITIONS,
+} from "../utils/styleConstants";
+import { handleAsync, getErrorMessage, logError } from "../utils/errorHandler";
+import { showToast } from "../features/ui/uiSlice";
 
 /**
  * Card component for displaying a post with image, title, and description
@@ -51,6 +62,10 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const dispatch = useDispatch();
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
+  const [error, setError] = useState(null);
+
   const isOwner =
     (user?.id && post?.user?._id && user.id === post.user._id) ||
     (user?.id && post?.user && user.id === post.user);
@@ -59,21 +74,86 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const commentsCount = post.comments?.length || 0;
 
   /**
-   * Handles post deletion
+   * Handles post deletion with error handling
    * @async
    * @function
    */
   const handleDelete = async () => {
-    await dispatch(deletePost(post._id));
-    if (onDelete) onDelete(post._id);
-  };
+    if (isDeleting) return;
 
-  const handleLike = () => {
-    if (user) {
-      dispatch(likePost(post._id));
+    setIsDeleting(true);
+    setError(null);
+
+    const [err] = await handleAsync(async () => {
+      await dispatch(deletePost(post._id)).unwrap();
+      dispatch(
+        showToast({
+          message: "Post deleted successfully",
+          severity: "success",
+        })
+      );
+      if (onDelete) onDelete(post._id);
+    }, "PostCard.handleDelete");
+
+    if (err) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      dispatch(
+        showToast({
+          message: errorMessage,
+          severity: "error",
+        })
+      );
+      logError(err, "PostCard.handleDelete");
     }
+
+    setIsDeleting(false);
   };
 
+  /**
+   * Handles post like/unlike with error handling
+   * @async
+   * @function
+   */
+  const handleLike = async () => {
+    if (!user) {
+      dispatch(
+        showToast({
+          message: "Please login to like posts",
+          severity: "warning",
+        })
+      );
+      return;
+    }
+
+    if (isLiking) return;
+
+    setIsLiking(true);
+    setError(null);
+
+    const [err] = await handleAsync(async () => {
+      await dispatch(likePost(post._id)).unwrap();
+    }, "PostCard.handleLike");
+
+    if (err) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      dispatch(
+        showToast({
+          message: "Failed to update like",
+          severity: "error",
+        })
+      );
+      logError(err, "PostCard.handleLike");
+    }
+
+    setIsLiking(false);
+  };
+
+  /**
+   * Handles comment section expand/collapse
+   * @function
+   */
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
@@ -81,29 +161,40 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   return (
     <Card
       key={post._id}
+      component="article"
+      role="article"
+      aria-label={`Post: ${post.title}`}
       sx={{
         maxWidth: 420,
-        borderRadius: 3,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-        transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-        "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-        },
+        borderRadius: BORDER_RADIUS.large,
+        boxShadow: SHADOWS.card,
+        transition: `${TRANSITIONS.transform}, ${TRANSITIONS.shadow}`,
+        ...COMMON_STYLES.cardHoverEffect,
         overflow: "hidden",
         position: "relative",
       }}
     >
+      {error && (
+        <Alert
+          severity="error"
+          onClose={() => setError(null)}
+          sx={{ m: 2, borderRadius: BORDER_RADIUS.medium }}
+        >
+          {error}
+        </Alert>
+      )}
+
       <CardMedia
         component="img"
         height="240"
         image={post.image}
-        alt={post.title}
+        alt={`Image for ${post.title}`}
+        loading="lazy"
         sx={{
           objectFit: "cover",
           aspectRatio: "16/9",
           width: "100%",
-          transition: "transform 0.3s ease-in-out",
+          transition: TRANSITIONS.transform,
           "&:hover": {
             transform: "scale(1.05)",
           },
@@ -112,10 +203,11 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
       <CardContent sx={{ p: 3 }}>
         <Typography
           variant="h5"
+          component="h2"
           gutterBottom
           sx={{
             fontWeight: 600,
-            color: "#2c3e50",
+            color: COLORS.text.primary,
             mb: 2,
           }}
         >
@@ -124,14 +216,11 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
         <Typography
           variant="body1"
           color="text.secondary"
+          component="p"
           sx={{
             lineHeight: 1.6,
-            color: "#666",
-            display: "-webkit-box",
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
+            color: COLORS.text.secondary,
+            ...COMMON_STYLES.textEllipsis(3),
           }}
         >
           {post.description}
@@ -146,16 +235,33 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           alignItems: "center",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Box
+          sx={{ display: "flex", alignItems: "center", gap: 2 }}
+          role="group"
+          aria-label="Post actions"
+        >
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <IconButton
               onClick={handleLike}
+              disabled={isLiking}
               color={isLiked ? "error" : "default"}
               aria-label={isLiked ? "Unlike post" : "Like post"}
+              aria-pressed={isLiked}
+              size="medium"
             >
-              {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+              {isLiking ? (
+                <CircularProgress size={24} />
+              ) : isLiked ? (
+                <FavoriteIcon />
+              ) : (
+                <FavoriteBorderIcon />
+              )}
             </IconButton>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              aria-label={`${likesCount} likes`}
+            >
               {likesCount}
             </Typography>
           </Box>
@@ -163,11 +269,16 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
             <IconButton
               onClick={handleExpandClick}
               aria-expanded={expanded}
-              aria-label="show comments"
+              aria-label={expanded ? "Hide comments" : "Show comments"}
+              size="medium"
             >
               <ShortTextIcon />
             </IconButton>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              aria-label={`${commentsCount} comments`}
+            >
               {commentsCount}
             </Typography>
           </Box>
@@ -175,18 +286,25 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
         <Box sx={{ display: "flex", gap: 1 }}>
           {!isOwner && <MessageButton user={post.user} />}
           {isOwner && showDeleteButton && (
-            <Button
+            <IconButton
               size="small"
-              variant="outlined"
               color="error"
-              startIcon={<DeleteIcon style={{ fontSize: "28px" }} />}
               onClick={handleDelete}
+              disabled={isDeleting}
+              aria-label="Delete post"
               sx={{
-                border: "none",
-                padding: "5px 15px",
-                color: "#B0B0B0",
+                color: COLORS.text.disabled,
+                "&:hover": {
+                  color: COLORS.error,
+                },
               }}
-            />
+            >
+              {isDeleting ? (
+                <CircularProgress size={24} color="error" />
+              ) : (
+                <DeleteIcon />
+              )}
+            </IconButton>
           )}
         </Box>
       </CardActions>

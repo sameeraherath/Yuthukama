@@ -7,12 +7,20 @@ import {
   Button,
   Typography,
   Box,
+  CircularProgress,
+  Alert,
+  LinearProgress,
 } from "@mui/material";
 import { Formik, Field, Form } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { addPost } from "../features/posts/postsSlice";
+import { COLORS, BORDER_RADIUS, COMMON_STYLES } from "../utils/styleConstants";
+import { handleAsync, getErrorMessage, logError } from "../utils/errorHandler";
+import { showToast } from "../features/ui/uiSlice";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { useState } from "react";
 
 /**
  * Form validation schema for post creation
@@ -45,10 +53,11 @@ const validationSchema = Yup.object().shape({
  */
 const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
   const dispatch = useDispatch();
-  const ACCENT_COLOR = "#1DBF73";
+  const [submitError, setSubmitError] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   /**
-   * Handles post submission and file upload
+   * Handles post submission and file upload with error handling
    * @async
    * @function
    * @param {Object} values - Form values
@@ -58,12 +67,15 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
    * @param {Object} actions - Formik form actions
    */
   const handlePostSubmit = async (values, actions) => {
+    setSubmitError(null);
+    setUploadProgress(0);
+
     const formData = new FormData();
     formData.append("title", values.title);
     formData.append("description", values.description);
     formData.append("image", values.image);
 
-    try {
+    const [error, data] = await handleAsync(async () => {
       const response = await axios.post(
         `${import.meta.env.VITE_SERVER_URL}/api/posts`,
         formData,
@@ -71,42 +83,102 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setUploadProgress(percentCompleted);
+          },
         }
       );
-      console.log("Post created:", response.data);
+      return response.data;
+    }, "PostDialog.handlePostSubmit");
 
-      dispatch(addPost(response.data));
-
-      parentSubmit?.(values, actions);
-      actions.resetForm();
-      handleClose();
-    } catch (error) {
-      console.error(
-        "Error creating post:",
-        error.response?.data?.message || error.message
+    if (error) {
+      const errorMessage = getErrorMessage(error);
+      setSubmitError(errorMessage);
+      dispatch(
+        showToast({
+          message: errorMessage,
+          severity: "error",
+        })
       );
+      logError(error, "PostDialog.handlePostSubmit");
       actions.setSubmitting(false);
+      return;
     }
+
+    dispatch(addPost(data));
+    dispatch(
+      showToast({
+        message: "Post created successfully!",
+        severity: "success",
+      })
+    );
+
+    parentSubmit?.(values, actions);
+    actions.resetForm();
+    setUploadProgress(0);
+    handleClose();
   };
 
   return (
     <Dialog
       open={open}
       onClose={handleClose}
-      PaperProps={{ sx: { borderRadius: 4, p: 2, minWidth: 400 } }}
+      maxWidth="sm"
+      fullWidth
+      aria-labelledby="post-dialog-title"
+      PaperProps={{
+        sx: {
+          borderRadius: BORDER_RADIUS.large,
+          p: 2,
+          minWidth: { xs: "90%", sm: 400 },
+        },
+      }}
     >
       <DialogTitle
-        sx={{ fontWeight: 700, color: ACCENT_COLOR, fontSize: "1.5rem" }}
+        id="post-dialog-title"
+        sx={{ fontWeight: 700, color: COLORS.primary, fontSize: "1.5rem" }}
       >
         Create a New Post
       </DialogTitle>
       <DialogContent>
+        {submitError && (
+          <Alert
+            severity="error"
+            onClose={() => setSubmitError(null)}
+            sx={{ mb: 2, borderRadius: BORDER_RADIUS.medium }}
+          >
+            {submitError}
+          </Alert>
+        )}
+
+        {uploadProgress > 0 && uploadProgress < 100 && (
+          <Box sx={{ width: "100%", mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Uploading... {uploadProgress}%
+            </Typography>
+            <LinearProgress
+              variant="determinate"
+              value={uploadProgress}
+              sx={{
+                borderRadius: BORDER_RADIUS.medium,
+                height: 8,
+                "& .MuiLinearProgress-bar": {
+                  backgroundColor: COLORS.primary,
+                },
+              }}
+            />
+          </Box>
+        )}
+
         <Formik
           initialValues={{ title: "", description: "", image: null }}
           validationSchema={validationSchema}
           onSubmit={handlePostSubmit}
         >
-          {({ setFieldValue, errors, touched, values }) => (
+          {({ setFieldValue, errors, touched, values, isSubmitting }) => (
             <Form>
               <Field
                 name="title"
@@ -115,13 +187,17 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
                 label="Title"
                 fullWidth
                 variant="outlined"
+                disabled={isSubmitting}
+                inputProps={{
+                  "aria-label": "Post title",
+                  maxLength: 100,
+                }}
                 sx={{
                   mt: 2,
-                  "& .MuiOutlinedInput-root": { borderRadius: 3 },
-                  "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                    borderColor: ACCENT_COLOR,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: BORDER_RADIUS.medium,
                   },
-                  "& .MuiInputLabel-root.Mui-focused": { color: ACCENT_COLOR },
+                  ...COMMON_STYLES.focusedInput,
                 }}
                 error={touched.title && !!errors.title}
                 helperText={touched.title && errors.title}
@@ -135,13 +211,17 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
                 variant="outlined"
                 multiline
                 rows={4}
+                disabled={isSubmitting}
+                inputProps={{
+                  "aria-label": "Post description",
+                  maxLength: 1000,
+                }}
                 sx={{
                   mt: 2,
-                  "& .MuiOutlinedInput-root": { borderRadius: 3 },
-                  "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                    borderColor: ACCENT_COLOR,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: BORDER_RADIUS.medium,
                   },
-                  "& .MuiInputLabel-root.Mui-focused": { color: ACCENT_COLOR },
+                  ...COMMON_STYLES.focusedInput,
                 }}
                 error={touched.description && !!errors.description}
                 helperText={touched.description && errors.description}
@@ -150,23 +230,42 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
                 <label htmlFor="post-image-upload">
                   <input
                     id="post-image-upload"
+                    name="image"
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/jpg,image/webp"
                     style={{ display: "none" }}
-                    onChange={(e) =>
-                      setFieldValue("image", e.currentTarget.files[0])
-                    }
+                    disabled={isSubmitting}
+                    onChange={(e) => {
+                      const file = e.currentTarget.files[0];
+                      if (file) {
+                        // Validate file size (5MB max)
+                        if (file.size > 5 * 1024 * 1024) {
+                          dispatch(
+                            showToast({
+                              message: "Image size must be less than 5MB",
+                              severity: "error",
+                            })
+                          );
+                          return;
+                        }
+                        setFieldValue("image", file);
+                      }
+                    }}
+                    aria-label="Upload post image"
                   />
                   <Button
                     variant="outlined"
                     component="span"
+                    disabled={isSubmitting}
+                    startIcon={<CloudUploadIcon />}
                     sx={{
-                      borderRadius: 3,
-                      borderColor: ACCENT_COLOR,
-                      color: ACCENT_COLOR,
-                      fontWeight: 600,
-                      textTransform: "none",
-                      px: 3,
+                      ...COMMON_STYLES.roundedButton,
+                      borderColor: COLORS.primary,
+                      color: COLORS.primary,
+                      "&:hover": {
+                        borderColor: COLORS.primaryHover,
+                        backgroundColor: `${COLORS.primary}10`,
+                      },
                     }}
                   >
                     Choose Image
@@ -174,48 +273,58 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
                   {values.image && (
                     <Typography
                       variant="body2"
-                      sx={{ ml: 2, display: "inline" }}
+                      sx={{
+                        ml: 2,
+                        display: "inline",
+                        color: COLORS.text.secondary,
+                      }}
+                      component="span"
                     >
                       {values.image.name}
                     </Typography>
                   )}
                 </label>
                 {touched.image && errors.image && (
-                  <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                  <Typography
+                    color="error"
+                    variant="body2"
+                    sx={{ mt: 1 }}
+                    role="alert"
+                  >
                     {errors.image}
                   </Typography>
                 )}
               </Box>
-              <DialogActions sx={{ mt: 2, justifyContent: "flex-end" }}>
+              <DialogActions sx={{ mt: 2, justifyContent: "flex-end", gap: 1 }}>
                 <Button
                   onClick={handleClose}
                   variant="outlined"
                   color="inherit"
+                  disabled={isSubmitting}
                   sx={{
-                    borderRadius: 3,
-                    textTransform: "none",
-                    fontWeight: 600,
-                    px: 3,
+                    ...COMMON_STYLES.roundedButton,
+                    borderColor: COLORS.border,
                   }}
+                  aria-label="Cancel post creation"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   variant="contained"
+                  disabled={isSubmitting || uploadProgress > 0}
                   sx={{
-                    backgroundColor: ACCENT_COLOR,
-                    color: "white",
-                    borderRadius: 3,
-                    fontWeight: 600,
-                    textTransform: "none",
-                    px: 3,
-                    ml: 1,
-                    boxShadow: 1,
-                    "&:hover": { backgroundColor: "#179e5c" },
+                    ...COMMON_STYLES.roundedButton,
+                    ...COMMON_STYLES.primaryButton,
+                    minWidth: 100,
                   }}
+                  aria-label="Submit post"
                 >
-                  Post
+                  {isSubmitting ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Post"
+                  )}
                 </Button>
               </DialogActions>
             </Form>
