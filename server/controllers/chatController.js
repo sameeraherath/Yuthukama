@@ -182,7 +182,9 @@ export const sendMessage = async (req, res) => {
 
     // Handle file attachment if present
     if (req.file) {
-      const fileKey = `chat-attachments/${conversationId}/${uuidv4()}-${req.file.originalname}`;
+      const fileKey = `chat-attachments/${conversationId}/${uuidv4()}-${
+        req.file.originalname
+      }`;
 
       const params = {
         Bucket: config.aws.bucket,
@@ -197,13 +199,13 @@ export const sendMessage = async (req, res) => {
       const fileUrl = `https://${config.aws.bucket}.s3.${config.aws.region}.amazonaws.com/${fileKey}`;
 
       // Determine file type based on mimetype
-      let fileType = 'file';
-      if (req.file.mimetype.startsWith('image/')) {
-        fileType = 'image';
-      } else if (req.file.mimetype.startsWith('video/')) {
-        fileType = 'video';
-      } else if (req.file.mimetype.startsWith('audio/')) {
-        fileType = 'audio';
+      let fileType = "file";
+      if (req.file.mimetype.startsWith("image/")) {
+        fileType = "image";
+      } else if (req.file.mimetype.startsWith("video/")) {
+        fileType = "video";
+      } else if (req.file.mimetype.startsWith("audio/")) {
+        fileType = "audio";
       }
 
       messageData.attachment = {
@@ -216,19 +218,22 @@ export const sendMessage = async (req, res) => {
 
     // Validate that either text or attachment is provided
     if (!messageData.text && !messageData.attachment) {
-      return res.status(400).json({ message: "Message must contain text or an attachment" });
+      return res
+        .status(400)
+        .json({ message: "Message must contain text or an attachment" });
     }
 
     const message = new Message(messageData);
     await message.save();
 
     // Update conversation with last message
-    conversation.lastMessage = messageData.text || `Sent ${messageData.attachment.type}`;
+    conversation.lastMessage =
+      messageData.text || `Sent ${messageData.attachment.type}`;
     conversation.lastMessageTimestamp = new Date();
     await conversation.save();
 
     // Populate sender details
-    await message.populate('sender', 'username profilePicture');
+    await message.populate("sender", "username profilePicture");
 
     res.status(201).json(message);
   } catch (error) {
@@ -264,7 +269,9 @@ export const deleteMessage = async (req, res) => {
 
     // Only sender can delete their message
     if (message.sender.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to delete this message" });
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this message" });
     }
 
     // Soft delete
@@ -315,7 +322,9 @@ export const editMessage = async (req, res) => {
 
     // Only sender can edit their message
     if (message.sender.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to edit this message" });
+      return res
+        .status(403)
+        .json({ message: "Not authorized to edit this message" });
     }
 
     // Can't edit deleted messages
@@ -328,7 +337,7 @@ export const editMessage = async (req, res) => {
     message.editedAt = new Date();
     await message.save();
 
-    await message.populate('sender', 'username profilePicture');
+    await message.populate("sender", "username profilePicture");
 
     res.json(message);
   } catch (error) {
@@ -362,13 +371,13 @@ export const markMessagesAsRead = async (req, res) => {
         sender: { $ne: req.user._id },
         read: false,
       },
-      { 
+      {
         read: true,
         readAt: new Date(),
       }
     );
 
-    res.json({ 
+    res.json({
       message: "Messages marked as read",
       modifiedCount: result.modifiedCount,
     });

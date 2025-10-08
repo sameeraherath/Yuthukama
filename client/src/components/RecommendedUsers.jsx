@@ -41,7 +41,11 @@ const RecommendedUsers = ({ limit = 10 }) => {
           params: { limit },
           withCredentials: true,
         });
-        setUsers(response.data);
+        // Handle both response.data and response.data.users formats
+        const usersData = Array.isArray(response.data) 
+          ? response.data 
+          : response.data?.users || [];
+        setUsers(usersData);
         setError(null);
       } catch (err) {
         console.error("Error fetching recommended users:", err);
@@ -76,7 +80,7 @@ const RecommendedUsers = ({ limit = 10 }) => {
     );
   }
 
-  if (users.length === 0) {
+  if (!Array.isArray(users) || users.length === 0) {
     return <EmptyState variant="no-users" />;
   }
 

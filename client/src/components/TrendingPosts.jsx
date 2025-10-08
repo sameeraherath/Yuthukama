@@ -34,7 +34,11 @@ const TrendingPosts = ({ limit = 5, days = 7 }) => {
           params: { limit, days },
           withCredentials: true,
         });
-        setPosts(response.data);
+        // Handle both response.data and response.data.posts formats
+        const postsData = Array.isArray(response.data)
+          ? response.data
+          : response.data?.posts || [];
+        setPosts(postsData);
         setError(null);
       } catch (err) {
         console.error("Error fetching trending posts:", err);
@@ -65,7 +69,7 @@ const TrendingPosts = ({ limit = 5, days = 7 }) => {
     );
   }
 
-  if (posts.length === 0) {
+  if (!Array.isArray(posts) || posts.length === 0) {
     return <EmptyState variant="no-trending" />;
   }
 

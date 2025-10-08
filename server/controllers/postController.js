@@ -372,7 +372,6 @@ const postController = {
       res.status(500).json({ message: "Error deleting comment" });
     }
   },
-};
 
   /**
    * Searches posts by title, description, or category

@@ -90,7 +90,9 @@ const ChatAPI = {
       );
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: "Failed to mark messages as read" };
+      throw (
+        error.response?.data || { message: "Failed to mark messages as read" }
+      );
     }
   },
 

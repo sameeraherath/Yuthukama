@@ -51,13 +51,21 @@ const AdvancedSearch = () => {
           params: { query: searchQuery },
           withCredentials: true,
         });
-        setResults(response.data);
+        // Handle both array and object with users property
+        const usersData = Array.isArray(response.data)
+          ? response.data
+          : response.data?.users || [];
+        setResults(usersData);
       } else {
         const response = await axios.get("/api/posts/search", {
           params: { query: searchQuery },
           withCredentials: true,
         });
-        setResults(response.data);
+        // Handle both array and object with posts property
+        const postsData = Array.isArray(response.data)
+          ? response.data
+          : response.data?.posts || [];
+        setResults(postsData);
       }
       setShowResults(true);
     } catch (error) {
@@ -214,9 +222,11 @@ const AdvancedSearch = () => {
             <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
               <CircularProgress sx={{ color: "#1ac173" }} />
             </Box>
-          ) : results.length === 0 ? (
+          ) : !Array.isArray(results) || results.length === 0 ? (
             <EmptyState
-              variant={searchType === "users" ? "no-users" : "no-search-results"}
+              variant={
+                searchType === "users" ? "no-users" : "no-search-results"
+              }
               searchTerm={query}
               onAction={() => setQuery("")}
             />

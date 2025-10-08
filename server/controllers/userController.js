@@ -256,10 +256,16 @@ const userController = {
 
       // Get total likes received on all posts
       const posts = await Post.find({ user: userId }).select("likes");
-      const totalLikes = posts.reduce((sum, post) => sum + post.likes.length, 0);
+      const totalLikes = posts.reduce(
+        (sum, post) => sum + post.likes.length,
+        0
+      );
 
       // Get total comments received on all posts
-      const totalComments = posts.reduce((sum, post) => sum + post.comments.length, 0);
+      const totalComments = posts.reduce(
+        (sum, post) => sum + post.comments.length,
+        0
+      );
 
       res.json({
         postCount,

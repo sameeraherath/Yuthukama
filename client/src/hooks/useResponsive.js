@@ -1,5 +1,5 @@
-import { useTheme } from '@mui/material/styles';
-import { useMediaQuery } from '@mui/material';
+import { useTheme } from "@mui/material/styles";
+import { useMediaQuery } from "@mui/material";
 
 /**
  * Custom hook for responsive breakpoints
@@ -20,13 +20,13 @@ import { useMediaQuery } from '@mui/material';
  */
 export const useResponsive = () => {
   const theme = useTheme();
-  
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
-  const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
-  const isXLargeScreen = useMediaQuery(theme.breakpoints.up('xl'));
-  
+
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+  const isLargeScreen = useMediaQuery(theme.breakpoints.up("lg"));
+  const isXLargeScreen = useMediaQuery(theme.breakpoints.up("xl"));
+
   return {
     isMobile,
     isTablet,

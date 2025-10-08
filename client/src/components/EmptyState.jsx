@@ -81,8 +81,7 @@ const EmptyState = ({
         return {
           icon: ChatBubbleOutlineIcon,
           defaultTitle: "No messages yet",
-          defaultDescription:
-            "Start a conversation and connect with others!",
+          defaultDescription: "Start a conversation and connect with others!",
           defaultActionLabel: "Find Users",
           color: "#29B6F6",
         };
@@ -106,8 +105,7 @@ const EmptyState = ({
         return {
           icon: TrendingUpIcon,
           defaultTitle: "No trending posts",
-          defaultDescription:
-            "Be the first to create engaging content!",
+          defaultDescription: "Be the first to create engaging content!",
           defaultActionLabel: "Create Post",
           color: "#1DBF73",
         };
@@ -126,11 +124,7 @@ const EmptyState = ({
   const Icon = content.icon;
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <motion.div variants={containerVariants} initial="hidden" animate="visible">
       <Box
         sx={{
           display: "flex",
@@ -194,10 +188,7 @@ const EmptyState = ({
 
         {/* Action Button */}
         {(actionLabel || content.defaultActionLabel) && onAction && (
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               variant="contained"
               size="large"

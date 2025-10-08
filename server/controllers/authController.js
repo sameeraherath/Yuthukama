@@ -166,12 +166,13 @@ const authController = {
   forgotPassword: async (req, res) => {
     try {
       const { email } = req.body;
-      
+
       const user = await User.findOne({ email });
       if (!user) {
         // Don't reveal if user exists for security
-        return res.json({ 
-          message: "If an account with that email exists, a password reset link has been sent." 
+        return res.json({
+          message:
+            "If an account with that email exists, a password reset link has been sent.",
         });
       }
 
@@ -181,17 +182,22 @@ const authController = {
 
       // TODO: In production, send this via email service (SendGrid, AWS SES, etc.)
       // For now, return it in response (ONLY FOR DEVELOPMENT)
-      const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
-      
+      const resetUrl = `${
+        process.env.CLIENT_URL || "http://localhost:5173"
+      }/reset-password/${resetToken}`;
+
       res.json({
         message: "Password reset link has been sent to your email",
         // Remove resetToken from response in production!
-        resetToken: process.env.NODE_ENV === "development" ? resetToken : undefined,
+        resetToken:
+          process.env.NODE_ENV === "development" ? resetToken : undefined,
         resetUrl: process.env.NODE_ENV === "development" ? resetUrl : undefined,
       });
     } catch (error) {
       console.error("Forgot password error:", error);
-      res.status(500).json({ message: "Error processing password reset request" });
+      res
+        .status(500)
+        .json({ message: "Error processing password reset request" });
     }
   },
 
@@ -219,15 +225,18 @@ const authController = {
       // Find user with matching token
       let user = null;
       for (const u of users) {
-        if (u.resetPasswordToken && bcrypt.compareSync(resetToken, u.resetPasswordToken)) {
+        if (
+          u.resetPasswordToken &&
+          bcrypt.compareSync(resetToken, u.resetPasswordToken)
+        ) {
           user = u;
           break;
         }
       }
 
       if (!user) {
-        return res.status(400).json({ 
-          message: "Invalid or expired password reset token" 
+        return res.status(400).json({
+          message: "Invalid or expired password reset token",
         });
       }
 
@@ -258,7 +267,7 @@ const authController = {
   changePassword: async (req, res) => {
     try {
       const { currentPassword, newPassword } = req.body;
-      
+
       const user = await User.findById(req.user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -267,7 +276,9 @@ const authController = {
       // Verify current password
       const isMatch = await user.matchPassword(currentPassword);
       if (!isMatch) {
-        return res.status(400).json({ message: "Current password is incorrect" });
+        return res
+          .status(400)
+          .json({ message: "Current password is incorrect" });
       }
 
       // Set new password (will be hashed by pre-save middleware)
@@ -283,10 +294,10 @@ const authController = {
 };
 
 export { authController as default };
-export const { 
-  registerUser, 
-  loginUser, 
-  logoutUser, 
+export const {
+  registerUser,
+  loginUser,
+  logoutUser,
   checkAuth,
   forgotPassword,
   resetPassword,

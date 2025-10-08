@@ -125,11 +125,15 @@ app.use(express.json({ limit: "10mb" })); // Limit request body size
 app.use(cookieParser());
 
 // API Documentation
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  explorer: true,
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: "Yuthukama API Documentation",
-}));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "Yuthukama API Documentation",
+  })
+);
 
 // Swagger JSON endpoint
 app.get("/api-docs.json", (req, res) => {
@@ -139,7 +143,7 @@ app.get("/api-docs.json", (req, res) => {
 
 // Health check route
 app.get("/", (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     message: "Backend server is running and healthy!",
     documentation: "/api-docs",
   });

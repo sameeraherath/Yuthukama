@@ -101,15 +101,16 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
  */
 UserSchema.methods.getResetPasswordToken = function () {
   // Generate random token
-  const resetToken = Math.random().toString(36).substring(2, 15) + 
-                     Math.random().toString(36).substring(2, 15);
-  
+  const resetToken =
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15);
+
   // Hash token and set to resetPasswordToken field
   this.resetPasswordToken = bcrypt.hashSync(resetToken, 10);
-  
+
   // Set expire time (10 minutes)
   this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
-  
+
   return resetToken;
 };
 
@@ -124,15 +125,16 @@ UserSchema.methods.getResetPasswordToken = function () {
  */
 UserSchema.methods.getEmailVerificationToken = function () {
   // Generate random token
-  const verifyToken = Math.random().toString(36).substring(2, 15) + 
-                      Math.random().toString(36).substring(2, 15);
-  
+  const verifyToken =
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15);
+
   // Hash token and set to emailVerificationToken field
   this.emailVerificationToken = bcrypt.hashSync(verifyToken, 10);
-  
+
   // Set expire time (24 hours)
   this.emailVerificationExpire = Date.now() + 24 * 60 * 60 * 1000;
-  
+
   return verifyToken;
 };
 

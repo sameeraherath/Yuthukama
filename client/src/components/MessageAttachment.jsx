@@ -130,11 +130,7 @@ const MessageAttachment = ({ attachment }) => {
     }
   };
 
-  return (
-    <Box sx={{ mt: 1, mb: 0.5 }}>
-      {renderAttachment()}
-    </Box>
-  );
+  return <Box sx={{ mt: 1, mb: 0.5 }}>{renderAttachment()}</Box>;
 };
 
 export default MessageAttachment;

@@ -30,7 +30,7 @@ const messageSchema = mongoose.Schema(
     },
     text: {
       type: String,
-      required: function() {
+      required: function () {
         // Text is required only if there's no attachment
         return !this.attachment;
       },
@@ -39,7 +39,7 @@ const messageSchema = mongoose.Schema(
       url: String,
       type: {
         type: String,
-        enum: ['image', 'file', 'video', 'audio'],
+        enum: ["image", "file", "video", "audio"],
       },
       filename: String,
       size: Number,

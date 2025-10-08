@@ -35,7 +35,7 @@ axios.interceptors.request.use(
   (config) => {
     // Enable credentials for all requests
     config.withCredentials = true;
-    
+
     const token = localStorage.getItem("token");
 
     // Keep Authorization header for backward compatibility

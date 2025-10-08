@@ -187,15 +187,17 @@ const ProfilePage = () => {
           aria-label="Loading profile"
         >
           <EnhancedSkeleton variant="profile" count={1} />
-          <Box sx={{ 
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "1fr 1fr",
-              md: "repeat(2, 1fr)",
-            },
-            gap: 3,
-          }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "1fr 1fr",
+                md: "repeat(2, 1fr)",
+              },
+              gap: 3,
+            }}
+          >
             <EnhancedSkeleton variant="post" count={4} />
           </Box>
         </Box>

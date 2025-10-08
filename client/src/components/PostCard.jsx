@@ -165,22 +165,22 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   // Animation variants for card entrance and hover
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: {
         duration: 0.4,
-        ease: [0.4, 0, 0.2, 1]
-      }
+        ease: [0.4, 0, 0.2, 1],
+      },
     },
     hover: {
       y: -8,
       boxShadow: "0 12px 24px rgba(0, 0, 0, 0.15)",
       transition: {
         duration: 0.3,
-        ease: [0.4, 0, 0.2, 1]
-      }
-    }
+        ease: [0.4, 0, 0.2, 1],
+      },
+    },
   };
 
   return (

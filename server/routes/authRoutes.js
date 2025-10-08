@@ -9,8 +9,8 @@ import {
   changePassword,
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
-import { 
-  validateRegister, 
+import {
+  validateRegister,
   validateLogin,
   validateForgotPassword,
   validateResetPassword,
@@ -78,7 +78,11 @@ router.post("/forgot-password", validateForgotPassword, forgotPassword);
  * @param {string} req.body.confirmPassword - Password confirmation
  * @returns {Object} JSON response confirming password reset
  */
-router.post("/reset-password/:resetToken", validateResetPassword, resetPassword);
+router.post(
+  "/reset-password/:resetToken",
+  validateResetPassword,
+  resetPassword
+);
 
 /**
  * @route PUT /api/auth/change-password

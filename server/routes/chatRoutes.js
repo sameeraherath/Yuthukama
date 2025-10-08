@@ -17,13 +17,16 @@ import {
   getUnreadCount,
 } from "../controllers/chatController.js";
 import { getAIMessage } from "../controllers/aiChatController.js";
-import { validateMessage, validateMongoId } from "../middleware/validationMiddleware.js";
+import {
+  validateMessage,
+  validateMongoId,
+} from "../middleware/validationMiddleware.js";
 
 /**
  * Multer instance for handling file uploads in chat
  * @type {multer.Multer}
  */
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
@@ -95,7 +98,12 @@ router.delete("/messages/:messageId", protect, validateMongoId, deleteMessage);
  * @access Private
  * @param {string} conversationId - ID of the conversation
  */
-router.put("/:conversationId/read", protect, validateMongoId, markMessagesAsRead);
+router.put(
+  "/:conversationId/read",
+  protect,
+  validateMongoId,
+  markMessagesAsRead
+);
 
 /**
  * @route GET /api/chat/:conversationId/unread-count
@@ -103,6 +111,11 @@ router.put("/:conversationId/read", protect, validateMongoId, markMessagesAsRead
  * @access Private
  * @param {string} conversationId - ID of the conversation
  */
-router.get("/:conversationId/unread-count", protect, validateMongoId, getUnreadCount);
+router.get(
+  "/:conversationId/unread-count",
+  protect,
+  validateMongoId,
+  getUnreadCount
+);
 
 export default router;

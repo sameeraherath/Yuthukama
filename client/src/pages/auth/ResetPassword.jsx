@@ -34,7 +34,7 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -107,7 +107,8 @@ const ResetPassword = () => {
         {success ? (
           <Box sx={{ textAlign: "center" }}>
             <Alert severity="success" sx={{ mb: 3 }}>
-              Your password has been successfully reset. You can now log in with your new password.
+              Your password has been successfully reset. You can now log in with
+              your new password.
             </Alert>
             <Button
               variant="contained"
@@ -186,7 +187,9 @@ const ResetPassword = () => {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       edge="end"
                     >
                       {showConfirmPassword ? <VisibilityOff /> : <Visibility />}

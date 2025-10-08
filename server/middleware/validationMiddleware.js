@@ -36,7 +36,9 @@ export const validateRegister = [
     .isLength({ min: 3, max: 30 })
     .withMessage("Username must be between 3 and 30 characters")
     .matches(/^[a-zA-Z0-9_-]+$/)
-    .withMessage("Username can only contain letters, numbers, underscores, and hyphens")
+    .withMessage(
+      "Username can only contain letters, numbers, underscores, and hyphens"
+    )
     .escape(),
   body("email")
     .trim()
@@ -48,7 +50,9 @@ export const validateRegister = [
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters long")
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage("Password must contain at least one uppercase letter, one lowercase letter, and one number"),
+    .withMessage(
+      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+    ),
   handleValidationErrors,
 ];
 
@@ -63,9 +67,7 @@ export const validateLogin = [
     .withMessage("Please provide a valid email address")
     .normalizeEmail()
     .toLowerCase(),
-  body("password")
-    .notEmpty()
-    .withMessage("Password is required"),
+  body("password").notEmpty().withMessage("Password is required"),
   handleValidationErrors,
 ];
 
@@ -98,9 +100,7 @@ export const validateCreatePost = [
  * @type {Array}
  */
 export const validateUpdatePost = [
-  param("id")
-    .isMongoId()
-    .withMessage("Invalid post ID"),
+  param("id").isMongoId().withMessage("Invalid post ID"),
   body("title")
     .optional()
     .trim()
@@ -127,9 +127,7 @@ export const validateUpdatePost = [
  * @type {Array}
  */
 export const validateComment = [
-  param("postId")
-    .isMongoId()
-    .withMessage("Invalid post ID"),
+  param("postId").isMongoId().withMessage("Invalid post ID"),
   body("text")
     .trim()
     .isLength({ min: 1, max: 1000 })
@@ -143,9 +141,7 @@ export const validateComment = [
  * @type {Array}
  */
 export const validateMongoId = [
-  param("id")
-    .isMongoId()
-    .withMessage("Invalid ID format"),
+  param("id").isMongoId().withMessage("Invalid ID format"),
   handleValidationErrors,
 ];
 
@@ -160,7 +156,9 @@ export const validateUpdateProfile = [
     .isLength({ min: 3, max: 30 })
     .withMessage("Username must be between 3 and 30 characters")
     .matches(/^[a-zA-Z0-9_-]+$/)
-    .withMessage("Username can only contain letters, numbers, underscores, and hyphens")
+    .withMessage(
+      "Username can only contain letters, numbers, underscores, and hyphens"
+    )
     .escape(),
   body("bio")
     .optional()
@@ -174,10 +172,7 @@ export const validateUpdateProfile = [
     .isLength({ max: 100 })
     .withMessage("Location must not exceed 100 characters")
     .escape(),
-  body("skills")
-    .optional()
-    .isArray()
-    .withMessage("Skills must be an array"),
+  body("skills").optional().isArray().withMessage("Skills must be an array"),
   body("skills.*")
     .optional()
     .trim()
@@ -199,7 +194,9 @@ export const validatePasswordChange = [
     .isLength({ min: 8 })
     .withMessage("New password must be at least 8 characters long")
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage("New password must contain at least one uppercase letter, one lowercase letter, and one number"),
+    .withMessage(
+      "New password must contain at least one uppercase letter, one lowercase letter, and one number"
+    ),
   body("confirmPassword")
     .custom((value, { req }) => value === req.body.newPassword)
     .withMessage("Password confirmation does not match"),
@@ -225,14 +222,14 @@ export const validateForgotPassword = [
  * @type {Array}
  */
 export const validateResetPassword = [
-  param("resetToken")
-    .notEmpty()
-    .withMessage("Reset token is required"),
+  param("resetToken").notEmpty().withMessage("Reset token is required"),
   body("password")
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters long")
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage("Password must contain at least one uppercase letter, one lowercase letter, and one number"),
+    .withMessage(
+      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+    ),
   body("confirmPassword")
     .custom((value, { req }) => value === req.body.password)
     .withMessage("Password confirmation does not match"),
@@ -249,9 +246,6 @@ export const validateMessage = [
     .isLength({ min: 1, max: 2000 })
     .withMessage("Message must be between 1 and 2000 characters")
     .escape(),
-  body("recipient")
-    .optional()
-    .isMongoId()
-    .withMessage("Invalid recipient ID"),
+  body("recipient").optional().isMongoId().withMessage("Invalid recipient ID"),
   handleValidationErrors,
 ];

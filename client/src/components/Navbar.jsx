@@ -193,7 +193,13 @@ const Navbar = () => {
           </Typography>
 
           {/* Desktop Navigation */}
-          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1 }}>
+          <Box
+            sx={{
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
             {isAdmin ? (
               <IconButton
                 color="inherit"
@@ -425,7 +431,9 @@ const Navbar = () => {
           <List>
             {isAdmin ? (
               <ListItem disablePadding>
-                <ListItemButton onClick={() => handleMobileNavigation("/admin/dashboard")}>
+                <ListItemButton
+                  onClick={() => handleMobileNavigation("/admin/dashboard")}
+                >
                   <ListItemIcon>
                     <DashboardIcon sx={{ color: "#1DBF73" }} />
                   </ListItemIcon>
@@ -435,7 +443,9 @@ const Navbar = () => {
             ) : (
               <>
                 <ListItem disablePadding>
-                  <ListItemButton onClick={() => handleMobileNavigation("/home")}>
+                  <ListItemButton
+                    onClick={() => handleMobileNavigation("/home")}
+                  >
                     <ListItemIcon>
                       <HomeIcon sx={{ color: "#1DBF73" }} />
                     </ListItemIcon>
@@ -444,7 +454,9 @@ const Navbar = () => {
                 </ListItem>
 
                 <ListItem disablePadding>
-                  <ListItemButton onClick={() => handleMobileNavigation("/profile")}>
+                  <ListItemButton
+                    onClick={() => handleMobileNavigation("/profile")}
+                  >
                     <ListItemIcon>
                       <AccountCircleIcon sx={{ color: "#1DBF73" }} />
                     </ListItemIcon>
@@ -453,7 +465,9 @@ const Navbar = () => {
                 </ListItem>
 
                 <ListItem disablePadding>
-                  <ListItemButton onClick={() => handleMobileNavigation("/chat")}>
+                  <ListItemButton
+                    onClick={() => handleMobileNavigation("/chat")}
+                  >
                     <ListItemIcon>
                       <ChatIcon sx={{ color: "#1DBF73" }} />
                     </ListItemIcon>
@@ -492,7 +506,9 @@ const Navbar = () => {
                 <Divider sx={{ my: 1 }} />
 
                 <ListItem disablePadding>
-                  <ListItemButton onClick={() => handleMobileNavigation("/settings")}>
+                  <ListItemButton
+                    onClick={() => handleMobileNavigation("/settings")}
+                  >
                     <ListItemIcon>
                       <SettingsIcon sx={{ color: "#1DBF73" }} />
                     </ListItemIcon>

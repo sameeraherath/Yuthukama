@@ -11,7 +11,8 @@ const options = {
     info: {
       title: "Yuthukama API Documentation",
       version: "1.0.0",
-      description: "Comprehensive API documentation for Yuthukama - A mentorship and community platform",
+      description:
+        "Comprehensive API documentation for Yuthukama - A mentorship and community platform",
       contact: {
         name: "Yuthukama Team",
         email: "support@yuthukama.com",

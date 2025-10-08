@@ -37,7 +37,10 @@ const router = express.Router();
  * @param {string} req.body.image - Post image URL
  * @returns {Object} JSON response containing the created post
  */
-router.route("/").get(protect, getPosts).post(protect, validateCreatePost, createPost);
+router
+  .route("/")
+  .get(protect, getPosts)
+  .post(protect, validateCreatePost, createPost);
 
 /**
  * @route GET /api/posts/user/:userId
@@ -63,7 +66,8 @@ router.route("/user/:userId").get(protect, getUserPosts);
  * @param {string} req.params.id - ID of the post to delete
  * @returns {Object} JSON response confirming successful deletion
  */
-router.route("/:id")
+router
+  .route("/:id")
   .put(protect, validateUpdatePost, updatePost)
   .delete(protect, validateMongoId, deletePost);
 

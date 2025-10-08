@@ -1,4 +1,5 @@
 import { Skeleton, Card, CardContent, Box, Stack } from "@mui/material";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { BORDER_RADIUS, SHADOWS } from "../../utils/styleConstants";
 
@@ -63,14 +64,29 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
           />
           <Skeleton variant="text" animation="wave" width="100%" />
           <Skeleton variant="text" animation="wave" width="95%" />
-          <Skeleton variant="text" animation="wave" width="80%" sx={{ mb: 2 }} />
+          <Skeleton
+            variant="text"
+            animation="wave"
+            width="80%"
+            sx={{ mb: 2 }}
+          />
           <Box sx={{ display: "flex", gap: 2, alignItems: "center", mt: 3 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Skeleton variant="circular" width={40} height={40} animation="wave" />
+              <Skeleton
+                variant="circular"
+                width={40}
+                height={40}
+                animation="wave"
+              />
               <Skeleton variant="text" width={30} animation="wave" />
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Skeleton variant="circular" width={40} height={40} animation="wave" />
+              <Skeleton
+                variant="circular"
+                width={40}
+                height={40}
+                animation="wave"
+              />
               <Skeleton variant="text" width={30} animation="wave" />
             </Box>
           </Box>
@@ -92,9 +108,19 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-          <Skeleton variant="circular" width={80} height={80} animation="wave" />
+          <Skeleton
+            variant="circular"
+            width={80}
+            height={80}
+            animation="wave"
+          />
           <Box sx={{ flex: 1 }}>
-            <Skeleton variant="text" sx={{ fontSize: "1.5rem" }} width="60%" animation="wave" />
+            <Skeleton
+              variant="text"
+              sx={{ fontSize: "1.5rem" }}
+              width="60%"
+              animation="wave"
+            />
             <Skeleton variant="text" width="40%" animation="wave" />
           </Box>
         </Box>
@@ -104,8 +130,18 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
           <Skeleton variant="text" width="95%" animation="wave" />
         </Stack>
         <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-          <Skeleton variant="rounded" width={100} height={36} animation="wave" />
-          <Skeleton variant="rounded" width={100} height={36} animation="wave" />
+          <Skeleton
+            variant="rounded"
+            width={100}
+            height={36}
+            animation="wave"
+          />
+          <Skeleton
+            variant="rounded"
+            width={100}
+            height={36}
+            animation="wave"
+          />
         </Box>
       </Card>
     </motion.div>
@@ -127,7 +163,12 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
               flexDirection: idx % 2 === 0 ? "row" : "row-reverse",
             }}
           >
-            <Skeleton variant="circular" width={40} height={40} animation="wave" />
+            <Skeleton
+              variant="circular"
+              width={40}
+              height={40}
+              animation="wave"
+            />
             <Box sx={{ flex: 1, maxWidth: "70%" }}>
               <Skeleton
                 variant="rounded"
@@ -166,7 +207,12 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
       <Box sx={{ display: "flex", gap: 2, alignItems: "center", p: 2 }}>
         <Skeleton variant="circular" width={48} height={48} animation="wave" />
         <Box sx={{ flex: 1 }}>
-          <Skeleton variant="text" sx={{ fontSize: "1rem" }} width="40%" animation="wave" />
+          <Skeleton
+            variant="text"
+            sx={{ fontSize: "1rem" }}
+            width="40%"
+            animation="wave"
+          />
           <Skeleton variant="text" width="60%" animation="wave" />
         </Box>
         <Skeleton variant="rounded" width={60} height={30} animation="wave" />
@@ -193,10 +239,27 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
           sx={{ bgcolor: "grey.100" }}
         />
         <CardContent sx={{ p: 2 }}>
-          <Skeleton variant="text" sx={{ fontSize: "1.25rem" }} width="85%" animation="wave" />
+          <Skeleton
+            variant="text"
+            sx={{ fontSize: "1.25rem" }}
+            width="85%"
+            animation="wave"
+          />
           <Skeleton variant="text" width="100%" animation="wave" />
-          <Skeleton variant="text" width="70%" animation="wave" sx={{ mb: 1 }} />
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
+          <Skeleton
+            variant="text"
+            width="70%"
+            animation="wave"
+            sx={{ mb: 1 }}
+          />
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mt: 2,
+            }}
+          >
             <Skeleton variant="text" width="30%" animation="wave" />
             <Skeleton variant="text" width="20%" animation="wave" />
           </Box>
@@ -226,11 +289,7 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
   };
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <motion.div variants={containerVariants} initial="hidden" animate="visible">
       {[...Array(count)].map((_, index) => (
         <Box key={index} sx={{ mb: count > 1 ? 2 : 0 }}>
           {getSkeletonComponent()}

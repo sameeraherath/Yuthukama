@@ -108,7 +108,12 @@ const MessageActions = ({ message, onEdit, onDelete, isSentByCurrentUser }) => {
         </MenuItem>
       </Menu>
 
-      <Dialog open={editDialogOpen} onClose={handleEditCancel} maxWidth="sm" fullWidth>
+      <Dialog
+        open={editDialogOpen}
+        onClose={handleEditCancel}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Edit Message</DialogTitle>
         <DialogContent>
           <TextField
