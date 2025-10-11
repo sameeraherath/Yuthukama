@@ -31,18 +31,26 @@ const ModernChatPage = () => {
     if (!authLoading && !isAuthenticated) {
       navigate("/login", {
         state: {
-          from: "/chat",
-          message: "Please log in to access chat",
+          from: "/messages",
+          message: "Please log in to access messages",
         },
       });
     }
   }, [isAuthenticated, authLoading, navigate]);
+
+  // Handle URL changes - clear selected conversation when no conversationId
+  useEffect(() => {
+    if (!conversationId) {
+      setSelectedConversation(null);
+    }
+  }, [conversationId]);
 
   /**
    * Handle conversation selection
    */
   const handleSelectConversation = (conversation) => {
     setSelectedConversation(conversation);
+    navigate(`/messages/${conversation._id}`);
   };
 
   // Show loading state
@@ -80,92 +88,98 @@ const ModernChatPage = () => {
   return (
     <Box
       sx={{
-        height: "100%",
+        height: "100vh",
         width: "100%",
         overflow: "hidden",
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "white",
+        display: "flex",
       }}
     >
-      <Grid container sx={{ height: "100%" }}>
-        {/* Conversation List - Left Side */}
-        <Grid
-          item
-          xs={12}
-          md={4}
-          lg={3}
-          sx={{
-            height: "100%",
-            borderRight: "1px solid #e0e0e0",
-            display: { xs: conversationId ? "none" : "block", md: "block" },
-          }}
-        >
-          <ConversationList onSelectConversation={handleSelectConversation} />
-        </Grid>
+      {/* Conversation List - Left Side */}
+      <Box
+        sx={{
+          width: { xs: "100%", md: "350px", lg: "400px" },
+          height: "100%",
+          display: { xs: conversationId ? "none" : "flex", md: "flex" },
+          flexDirection: "column",
+        }}
+      >
+        <ConversationList onSelectConversation={handleSelectConversation} />
+      </Box>
 
-        {/* Chat Window - Right Side */}
-        <Grid
-          item
-          xs={12}
-          md={8}
-          lg={9}
-          sx={{
-            height: "100%",
-            display: { xs: conversationId ? "block" : "none", md: "block" },
-          }}
-        >
-          {conversationId ? (
-            <ChatPage selectedConversation={selectedConversation} />
-          ) : (
+      {/* Chat Window - Right Side */}
+      <Box
+        sx={{
+          flex: 1,
+          height: "100%",
+          display: { xs: conversationId ? "flex" : "none", md: "flex" },
+          flexDirection: "column",
+          backgroundColor: "white",
+        }}
+      >
+        {conversationId ? (
+          <ChatPage selectedConversation={selectedConversation} />
+        ) : (
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "white",
+            }}
+          >
             <Box
               sx={{
-                height: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: "white",
+                textAlign: "center",
+                maxWidth: 400,
+                p: 4,
               }}
             >
-              <Paper
-                elevation={0}
+              <Typography
+                variant="h5"
+                fontWeight="bold"
                 sx={{
-                  p: 4,
-                  textAlign: "center",
-                  maxWidth: 400,
+                  color: "#050505",
+                  fontSize: "1.5rem",
+                  mb: 2,
                 }}
               >
-                <Typography
-                  variant="h5"
-                  fontWeight="bold"
-                  color="text.secondary"
-                  gutterBottom
-                >
-                  Welcome to Messages
-                </Typography>
-                <Typography
-                  variant="body1"
-                  color="text.secondary"
-                  sx={{ mt: 2 }}
-                >
-                  Select a conversation from the list to start chatting
-                </Typography>
-                <Box
+                Welcome to Messages
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: "#65676b",
+                  fontSize: "0.9375rem",
+                  mb: 4,
+                }}
+              >
+                Select a conversation from the list to start chatting
+              </Typography>
+              <Box
+                sx={{
+                  p: 3,
+                  backgroundColor: "#f0f2f5",
+                  borderRadius: 2,
+                  border: "1px solid #e4e6eb",
+                }}
+              >
+                <Typography 
+                  variant="body2" 
                   sx={{
-                    mt: 4,
-                    p: 3,
-                    backgroundColor: "#f0f9f4",
-                    borderRadius: 2,
+                    color: "#65676b",
+                    fontSize: "0.8125rem",
                   }}
                 >
-                  <Typography variant="body2" color="text.secondary">
-                    💡 <strong>Tip:</strong> Click on any conversation to view
-                    and send messages
-                  </Typography>
-                </Box>
-              </Paper>
+                  💡 <strong>Tip:</strong> Click on any conversation to view
+                  and send messages
+                </Typography>
+              </Box>
             </Box>
-          )}
-        </Grid>
-      </Grid>
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };

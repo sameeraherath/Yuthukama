@@ -260,11 +260,11 @@ const AdvancedSearch = () => {
                                 height: 20,
                                 backgroundColor:
                                   user.role === "mentor"
-                                    ? "#e3f2fd"
+                                    ? "#e8f5e9"
                                     : "#f5f5f5",
                                 color:
                                   user.role === "mentor"
-                                    ? "#1976d2"
+                                    ? "#1DBF73"
                                     : "inherit",
                               }}
                             />

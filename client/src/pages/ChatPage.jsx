@@ -424,7 +424,7 @@ const ChatPage = () => {
             elevation={0}
             sx={{
               p: message.attachment ? 0.5 : 1.5,
-              backgroundColor: isSentByCurrentUser ? "#1ac173" : "white",
+              backgroundColor: isSentByCurrentUser ? "#1DBF73" : "white",
               color: isSentByCurrentUser ? "white" : "#050505",
               borderRadius: message.attachment ? 3 : "18px",
               position: "relative",
@@ -432,6 +432,7 @@ const ChatPage = () => {
               boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
               wordWrap: "break-word",
               border: isSentByCurrentUser ? "none" : "1px solid #e4e6eb",
+              maxWidth: "70%",
             }}
           >
             {message.sender === "system" ? (
@@ -483,12 +484,13 @@ const ChatPage = () => {
                 alignItems: "center",
                 gap: 0.5,
                 px: 1.5,
+                justifyContent: isSentByCurrentUser ? "flex-end" : "flex-start",
               }}
             >
               <Typography
                 variant="caption"
                 sx={{
-                  color: "text.secondary",
+                  color: "#65676b",
                   fontSize: "0.75rem",
                 }}
               >
@@ -505,7 +507,7 @@ const ChatPage = () => {
                 <Typography
                   variant="caption"
                   sx={{
-                    color: "text.secondary",
+                    color: "#65676b",
                     fontSize: "0.7rem",
                   }}
                 >
@@ -518,7 +520,7 @@ const ChatPage = () => {
                 <DoneAllIcon
                   sx={{
                     fontSize: 12,
-                    color: "#1ac173",
+                    color: "#1DBF73",
                   }}
                 />
               )}
@@ -661,50 +663,56 @@ const ChatPage = () => {
         >
           <Avatar
             src={otherParticipant?.profilePicture || postOwner?.profilePicture}
-            sx={{ width: 40, height: 40 }}
+            sx={{ 
+              width: 40, 
+              height: 40,
+              backgroundColor: "#e0e0e0",
+            }}
           >
             {displayName.charAt(0).toUpperCase()}
           </Avatar>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="subtitle1" fontWeight={600}>
-              {displayName}
-            </Typography>
-            {!isConnected ? (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <CircleIcon sx={{ fontSize: 8, color: "#95999e" }} />
-                <Typography variant="caption" color="text.secondary">
-                  {connectionError || "Connecting..."}
-                </Typography>
-              </Box>
-            ) : (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <CircleIcon sx={{ fontSize: 8, color: "#1ac173" }} />
-                <Typography variant="caption" sx={{ color: "#1ac173" }}>
-                  Online
-                </Typography>
-              </Box>
-            )}
-          </Box>
-
-          {/* Show upgrade notice only when used as standalone page */}
-          {location.pathname.startsWith("/chat") && (
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => navigate("/messages")}
+            <Typography 
+              variant="subtitle1" 
+              fontWeight={600}
               sx={{
-                borderColor: "#1ac173",
-                color: "#1ac173",
-                textTransform: "none",
-                "&:hover": {
-                  borderColor: "#17a061",
-                  backgroundColor: "rgba(26, 193, 115, 0.04)",
-                },
+                fontSize: "1rem",
+                color: "#050505",
+                mb: 0.5,
               }}
             >
-              Try New Chat
-            </Button>
-          )}
+              {displayName}
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: "#65676b",
+                  fontSize: "0.75rem",
+                }}
+              >
+                Authorised Dealer
+              </Typography>
+              <Box
+                sx={{
+                  width: 12,
+                  height: 12,
+                  backgroundColor: "#9c27b0",
+                  borderRadius: "50%",
+                  ml: 0.5,
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Menu Icon */}
+          <IconButton size="small" sx={{ color: "#65676b" }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+              <Box sx={{ width: 4, height: 4, backgroundColor: "#65676b", borderRadius: "50%" }} />
+              <Box sx={{ width: 4, height: 4, backgroundColor: "#65676b", borderRadius: "50%" }} />
+              <Box sx={{ width: 4, height: 4, backgroundColor: "#65676b", borderRadius: "50%" }} />
+            </Box>
+          </IconButton>
         </Box>
 
         {/* Messages Area */}
@@ -716,15 +724,7 @@ const ChatPage = () => {
             display: "flex",
             flexDirection: "column",
             gap: 1,
-            backgroundColor: "#f0f2f5",
-            backgroundImage: `
-              linear-gradient(45deg, rgba(26, 193, 115, 0.02) 25%, transparent 25%),
-              linear-gradient(-45deg, rgba(26, 193, 115, 0.02) 25%, transparent 25%),
-              linear-gradient(45deg, transparent 75%, rgba(26, 193, 115, 0.02) 75%),
-              linear-gradient(-45deg, transparent 75%, rgba(26, 193, 115, 0.02) 75%)
-            `,
-            backgroundSize: "20px 20px",
-            backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
+            backgroundColor: "white",
           }}
         >
           {/* Connection Error Alert */}
@@ -916,9 +916,9 @@ const ChatPage = () => {
               onClick={() => fileInputRef.current?.click()}
               disabled={isSending}
               sx={{
-                color: "#1ac173",
+                color: "#1DBF73",
                 "&:hover": {
-                  backgroundColor: "rgba(26, 193, 115, 0.08)",
+                  backgroundColor: "rgba(29, 191, 115, 0.08)",
                 },
                 "&:disabled": {
                   color: "#bcc0c4",
@@ -954,7 +954,7 @@ const ChatPage = () => {
                     borderColor: "transparent",
                   },
                   "&.Mui-focused fieldset": {
-                    borderColor: "#1ac173",
+                    borderColor: "#1DBF73",
                     borderWidth: 1,
                   },
                   "& .MuiOutlinedInput-input": {
@@ -972,12 +972,12 @@ const ChatPage = () => {
                 (!isConnected && !selectedFile)
               }
               sx={{
-                backgroundColor: "#1ac173",
+                backgroundColor: "#1DBF73",
                 color: "white",
                 width: 36,
                 height: 36,
                 "&:hover": {
-                  backgroundColor: "#17a061",
+                  backgroundColor: "#18a364",
                 },
                 "&:disabled": {
                   backgroundColor: "#e4e6eb",

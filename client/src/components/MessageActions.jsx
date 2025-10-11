@@ -134,9 +134,9 @@ const MessageActions = ({ message, onEdit, onDelete, isSentByCurrentUser }) => {
             variant="contained"
             disabled={!editedText.trim() || editedText === message.text}
             sx={{
-              backgroundColor: "#1ac173",
+              backgroundColor: "#1DBF73",
               "&:hover": {
-                backgroundColor: "#158f5e",
+                backgroundColor: "#18a364",
               },
             }}
           >

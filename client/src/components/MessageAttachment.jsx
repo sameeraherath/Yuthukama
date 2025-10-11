@@ -72,7 +72,7 @@ const MessageAttachment = ({ attachment }) => {
       case "audio":
         return (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1 }}>
-            <AudioIcon sx={{ color: "#1ac173" }} />
+            <AudioIcon sx={{ color: "#1DBF73" }} />
             <Box component="audio" controls src={url} sx={{ flexGrow: 1 }}>
               Your browser does not support the audio tag.
             </Box>
@@ -93,7 +93,7 @@ const MessageAttachment = ({ attachment }) => {
               maxWidth: 300,
             }}
           >
-            <FileIcon sx={{ color: "#1ac173", fontSize: 32 }} />
+            <FileIcon sx={{ color: "#1DBF73", fontSize: 32 }} />
             <Box sx={{ flexGrow: 1, minWidth: 0 }}>
               <Typography
                 variant="body2"
@@ -117,9 +117,9 @@ const MessageAttachment = ({ attachment }) => {
               download={filename}
               target="_blank"
               sx={{
-                color: "#1ac173",
+                color: "#1DBF73",
                 "&:hover": {
-                  backgroundColor: "rgba(26, 193, 115, 0.1)",
+                  backgroundColor: "rgba(29, 191, 115, 0.1)",
                 },
               }}
             >

@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import CircleIcon from "@mui/icons-material/Circle";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchConversations } from "../../features/chat/chatSlice";
 import useAuth from "../../hooks/useAuth";
@@ -84,7 +85,6 @@ const ConversationList = ({ onSelectConversation }) => {
     if (onSelectConversation) {
       onSelectConversation(conversation);
     }
-    navigate(`/messages/${conversation._id}`);
   };
 
   /**
@@ -150,63 +150,45 @@ const ConversationList = ({ onSelectConversation }) => {
   };
 
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        borderRight: "1px solid #e0e0e0",
-        backgroundColor: "#fafafa",
+        backgroundColor: "white",
+        borderRight: "1px solid #e4e6eb",
       }}
     >
       {/* Header */}
-      <Box sx={{ p: 2, backgroundColor: "white" }}>
-        <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
-          Messages
-        </Typography>
-
-        {/* Search Bar */}
-        <TextField
-          fullWidth
-          size="small"
-          placeholder="Search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              borderRadius: 3,
-              backgroundColor: "#f5f5f5",
-              "& fieldset": {
-                borderColor: "transparent",
-              },
-              "&:hover fieldset": {
-                borderColor: "transparent",
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: "#1ac173",
-                borderWidth: 1,
-              },
-            },
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: "text.secondary" }} />
-              </InputAdornment>
-            ),
-          }}
-        />
+      <Box 
+        sx={{ 
+          p: 2, 
+          backgroundColor: "white",
+          borderBottom: "1px solid #e4e6eb",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+          <Typography 
+            variant="h5" 
+            fontWeight="bold" 
+            sx={{ 
+              fontSize: "1.5rem",
+              color: "#050505",
+            }}
+          >
+            Messages
+          </Typography>
+          <IconButton size="small" sx={{ color: "#65676b" }}>
+            <SearchIcon />
+          </IconButton>
+        </Box>
       </Box>
 
-      <Divider />
-
       {/* Conversation List */}
-      <List
+      <Box
         sx={{
           flex: 1,
           overflowY: "auto",
-          p: 0,
           backgroundColor: "white",
         }}
       >
@@ -231,133 +213,98 @@ const ConversationList = ({ onSelectConversation }) => {
             const unreadCount = getUnreadCount(conversation);
 
             return (
-              <ListItem
+              <Box
                 key={conversation._id}
-                disablePadding
+                onClick={() => handleSelectConversation(conversation)}
                 sx={{
-                  backgroundColor: isSelected ? "#f0f9f4" : "transparent",
-                  borderLeft: isSelected
-                    ? "4px solid #1ac173"
-                    : "4px solid transparent",
+                  display: "flex",
+                  alignItems: "center",
+                  p: 2,
+                  cursor: "pointer",
+                  backgroundColor: isSelected ? "#e8f5e9" : "transparent",
+                  borderLeft: isSelected ? "3px solid #1DBF73" : "3px solid transparent",
                   "&:hover": {
-                    backgroundColor: isSelected ? "#f0f9f4" : "#f5f5f5",
+                    backgroundColor: isSelected ? "#e8f5e9" : "#f5f5f5",
                   },
+                  transition: "all 0.2s ease",
                 }}
               >
-                <ListItemButton
-                  onClick={() => handleSelectConversation(conversation)}
-                  sx={{ py: 1.5, px: 2 }}
+                {/* Avatar */}
+                <Avatar
+                  src={otherUser.profilePicture}
+                  alt={otherUser.username}
+                  sx={{ 
+                    width: 48, 
+                    height: 48,
+                    mr: 2,
+                    backgroundColor: "#e0e0e0",
+                  }}
                 >
-                  {/* Avatar with online status */}
-                  <ListItemAvatar>
-                    <Badge
-                      overlap="circular"
-                      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                      badgeContent={
-                        otherUser.isOnline ? (
-                          <CircleIcon
-                            sx={{
-                              width: 12,
-                              height: 12,
-                              color: "#1ac173",
-                              backgroundColor: "white",
-                              borderRadius: "50%",
-                            }}
-                          />
-                        ) : null
-                      }
-                    >
-                      <Avatar
-                        src={otherUser.profilePicture}
-                        alt={otherUser.username}
-                        sx={{ width: 48, height: 48 }}
-                      >
-                        {otherUser.username?.charAt(0).toUpperCase()}
-                      </Avatar>
-                    </Badge>
-                  </ListItemAvatar>
+                  {otherUser.username?.charAt(0).toUpperCase()}
+                </Avatar>
 
-                  {/* Conversation details */}
-                  <ListItemText
-                    sx={{ ml: 1 }}
-                    primary={
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          mb: 0.5,
-                        }}
-                      >
-                        <Typography
-                          variant="body1"
-                          fontWeight={unreadCount > 0 ? 600 : 400}
-                          sx={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {otherUser.username}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color={unreadCount > 0 ? "#1ac173" : "text.secondary"}
-                          fontWeight={unreadCount > 0 ? 600 : 400}
-                        >
-                          {formatTime(conversation.lastMessageTimestamp)}
-                        </Typography>
-                      </Box>
-                    }
-                    secondary={
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          fontWeight={unreadCount > 0 ? 500 : 400}
-                          sx={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            maxWidth:
-                              unreadCount > 0 ? "calc(100% - 30px)" : "100%",
-                          }}
-                        >
-                          {conversation.lastMessage || "No messages yet"}
-                        </Typography>
-                        {unreadCount > 0 && (
-                          <Chip
-                            label={unreadCount}
-                            size="small"
-                            sx={{
-                              height: 20,
-                              minWidth: 20,
-                              fontSize: "0.75rem",
-                              fontWeight: 600,
-                              backgroundColor: "#1ac173",
-                              color: "white",
-                              "& .MuiChip-label": {
-                                px: 0.75,
-                              },
-                            }}
-                          />
-                        )}
-                      </Box>
-                    }
-                  />
-                </ListItemButton>
-              </ListItem>
+                {/* Conversation Details */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  {/* Name and Time */}
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
+                    <Typography
+                      variant="body1"
+                      fontWeight={unreadCount > 0 ? 600 : 500}
+                      sx={{
+                        fontSize: "0.9375rem",
+                        color: "#050505",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {otherUser.username}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: "0.75rem",
+                        color: "#65676b",
+                        fontWeight: 400,
+                      }}
+                    >
+                      {formatTime(conversation.lastMessageTimestamp)}
+                    </Typography>
+                  </Box>
+
+                  {/* Message Preview and Read Receipt */}
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontSize: "0.8125rem",
+                        color: "#65676b",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        flex: 1,
+                        mr: 1,
+                      }}
+                    >
+                      {conversation.lastMessage || "No messages yet"}
+                    </Typography>
+                    
+                    {/* Read Receipt */}
+                    <DoneAllIcon
+                      sx={{
+                        fontSize: 16,
+                        color: "#1DBF73",
+                        opacity: 0.7,
+                      }}
+                    />
+                  </Box>
+                </Box>
+              </Box>
             );
           })
         )}
-      </List>
-    </Paper>
+      </Box>
+    </Box>
   );
 };
 

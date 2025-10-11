@@ -82,6 +82,15 @@ router.get("/search", protect, searchUsers);
 router.get("/recommended", protect, getRecommendedUsers);
 
 /**
+ * @route GET /api/users/:id
+ * @desc Get user profile by ID
+ * @access Private
+ * @param {string} req.params.id - User ID
+ * @returns {Object} JSON response containing user profile
+ */
+router.get("/:id", protect, getUserProfile);
+
+/**
  * @route GET /api/users/:id/stats
  * @desc Get user statistics (posts, likes, comments)
  * @access Private

@@ -126,7 +126,7 @@ const HomeScreen = () => {
     { icon: <HomeIcon />, label: "Home", path: "/home", active: true },
     { icon: <ExploreIcon />, label: "Explore", path: "/explore" },
     { icon: <NotificationsIcon />, label: "Notifications", component: "notification" },
-    { icon: <ChatIcon />, label: "Messages", path: "/chat" },
+    { icon: <ChatIcon />, label: "Messages", path: "/messages" },
     { icon: <BookmarkIcon />, label: "Saved", path: "/saved" },
     { icon: <PersonIcon />, label: "Profile", path: "/profile" },
     { icon: <SettingsIcon />, label: "Settings", path: "/settings" },
@@ -179,6 +179,7 @@ const HomeScreen = () => {
           top: 64, // Account for navbar height
           zIndex: 100,
           overflowY: "auto",
+          borderRadius: 0,
           "&::-webkit-scrollbar": {
             width: "6px",
           },
@@ -231,19 +232,6 @@ const HomeScreen = () => {
               >
                 {user?.username}
               </Typography>
-              <Typography 
-                variant="caption" 
-                color="text.secondary"
-                sx={{
-                  fontSize: "0.8rem",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  display: "block",
-                }}
-              >
-                {user?.email}
-              </Typography>
             </Box>
           </Box>
         </Box>
@@ -280,10 +268,13 @@ const HomeScreen = () => {
                       color: item.active ? "#1DBF73" : "#6b7280",
                       minWidth: 40,
                       transition: "color 0.2s ease-in-out",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     {item.component === "notification" ? (
-                      <NotificationMenu />
+                      <NotificationsIcon />
                     ) : (
                       item.icon
                     )}
@@ -321,6 +312,9 @@ const HomeScreen = () => {
                     color: "#6b7280",
                     minWidth: 40,
                     transition: "color 0.2s ease-in-out",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
                   <SmartToyIcon />
@@ -416,8 +410,8 @@ const HomeScreen = () => {
                 color="#1DBF73"
                 sx={{ fontSize: "1.25rem" }}
               >
-                Yuthukama
-              </Typography>
+              Yuthukama
+            </Typography>
               <IconButton 
                 onClick={() => setMobileDrawerOpen(false)}
                 sx={{
@@ -428,8 +422,8 @@ const HomeScreen = () => {
                   },
                 }}
               >
-                <CloseIcon />
-              </IconButton>
+              <CloseIcon />
+            </IconButton>
             </Box>
           </Box>
           
@@ -440,9 +434,9 @@ const HomeScreen = () => {
             backgroundColor: "#f9fafb",
           }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Avatar
-                src={user?.profilePicture}
-                alt={user?.username}
+            <Avatar
+              src={user?.profilePicture}
+              alt={user?.username}
                 sx={{ 
                   width: 48, 
                   height: 48, 
@@ -454,9 +448,9 @@ const HomeScreen = () => {
                     boxShadow: "0 4px 12px rgba(29, 191, 115, 0.3)",
                   },
                 }}
-              >
-                {user?.username?.charAt(0).toUpperCase()}
-              </Avatar>
+            >
+              {user?.username?.charAt(0).toUpperCase()}
+            </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography 
                   variant="subtitle1" 
@@ -468,21 +462,8 @@ const HomeScreen = () => {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {user?.username}
-                </Typography>
-                <Typography 
-                  variant="caption" 
-                  color="text.secondary"
-                  sx={{
-                    fontSize: "0.8rem",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    display: "block",
-                  }}
-                >
-                  {user?.email}
-                </Typography>
+                {user?.username}
+              </Typography>
               </Box>
             </Box>
           </Box>
@@ -490,90 +471,96 @@ const HomeScreen = () => {
           {/* Navigation */}
           <Box sx={{ flex: 1, p: 1 }}>
             <List sx={{ px: 1 }}>
-              {navigationItems.map((item, index) => (
-                <ListItem key={index} disablePadding sx={{ mb: 0.5 }}>
-                  <ListItemButton
-                    onClick={() => {
-                      if (item.component === "notification") {
-                        // Handle notification click
-                        return;
-                      }
-                      navigate(item.path);
-                      setMobileDrawerOpen(false);
-                    }}
-                    sx={{
-                      borderRadius: 2,
-                      backgroundColor: item.active ? "#f0fdf4" : "transparent",
-                      color: item.active ? "#1DBF73" : "#374151",
-                      py: 1.5,
-                      px: 2,
-                      transition: "all 0.2s ease-in-out",
-                      "&:hover": {
-                        backgroundColor: "#f0fdf4",
-                        color: "#1DBF73",
-                        transform: "translateX(4px)",
-                      },
-                    }}
-                  >
-                    <ListItemIcon sx={{ 
-                      color: item.active ? "#1DBF73" : "#6b7280", 
-                      minWidth: 40,
-                      transition: "color 0.2s ease-in-out",
-                    }}>
-                      {item.component === "notification" ? (
-                        <NotificationMenu />
-                      ) : (
-                        item.icon
-                      )}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={item.label}
-                      primaryTypographyProps={{
-                        fontWeight: item.active ? 600 : 500,
-                        fontSize: "0.9rem",
-                      }}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-              
-              {/* AI Chatbot Button */}
-              <ListItem disablePadding sx={{ mb: 0.5 }}>
+            {navigationItems.map((item, index) => (
+              <ListItem key={index} disablePadding sx={{ mb: 0.5 }}>
                 <ListItemButton
                   onClick={() => {
-                    setShowAIChat(true);
+                    if (item.component === "notification") {
+                      // Handle notification click
+                      return;
+                    }
+                    navigate(item.path);
                     setMobileDrawerOpen(false);
                   }}
                   sx={{
                     borderRadius: 2,
-                    color: "#374151",
-                    py: 1.5,
-                    px: 2,
-                    transition: "all 0.2s ease-in-out",
+                    backgroundColor: item.active ? "#f0fdf4" : "transparent",
+                    color: item.active ? "#1DBF73" : "#374151",
+                      py: 1.5,
+                      px: 2,
+                      transition: "all 0.2s ease-in-out",
                     "&:hover": {
                       backgroundColor: "#f0fdf4",
                       color: "#1DBF73",
-                      transform: "translateX(4px)",
+                        transform: "translateX(4px)",
                     },
                   }}
                 >
-                  <ListItemIcon sx={{ 
-                    color: "#6b7280", 
-                    minWidth: 40,
-                    transition: "color 0.2s ease-in-out",
-                  }}>
-                    <SmartToyIcon />
+                    <ListItemIcon sx={{ 
+                      color: item.active ? "#1DBF73" : "#6b7280", 
+                      minWidth: 40,
+                      transition: "color 0.2s ease-in-out",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}>
+                    {item.component === "notification" ? (
+                        <NotificationsIcon />
+                    ) : (
+                      item.icon
+                    )}
                   </ListItemIcon>
                   <ListItemText
-                    primary="AI Assistant"
+                    primary={item.label}
                     primaryTypographyProps={{
-                      fontWeight: 500,
-                      fontSize: "0.9rem",
+                      fontWeight: item.active ? 600 : 500,
+                        fontSize: "0.9rem",
                     }}
                   />
                 </ListItemButton>
               </ListItem>
-            </List>
+            ))}
+            
+            {/* AI Chatbot Button */}
+            <ListItem disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                onClick={() => {
+                  setShowAIChat(true);
+                  setMobileDrawerOpen(false);
+                }}
+                sx={{
+                  borderRadius: 2,
+                  color: "#374151",
+                    py: 1.5,
+                    px: 2,
+                    transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    backgroundColor: "#f0fdf4",
+                    color: "#1DBF73",
+                      transform: "translateX(4px)",
+                  },
+                }}
+              >
+                  <ListItemIcon sx={{ 
+                    color: "#6b7280", 
+                    minWidth: 40,
+                    transition: "color 0.2s ease-in-out",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                  <SmartToyIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary="AI Assistant"
+                  primaryTypographyProps={{
+                    fontWeight: 500,
+                      fontSize: "0.9rem",
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          </List>
           </Box>
 
           {/* Create Post Button */}
@@ -623,17 +610,17 @@ const HomeScreen = () => {
         }}
       >
         {/* Mobile Header */}
-        <Box
-          sx={{
+            <Box
+              sx={{
             display: { xs: "flex", md: "none" },
             alignItems: "center",
             justifyContent: "space-between",
             p: { xs: 1.5, sm: 2 },
             backgroundColor: "white",
             borderBottom: "1px solid #e5e7eb",
-            position: "sticky",
-            top: 64,
-            zIndex: 10,
+                position: "sticky",
+                top: 64,
+                zIndex: 10,
             boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
           }}
         >
@@ -741,17 +728,17 @@ const HomeScreen = () => {
 
             {/* Posts Feed */}
             {error ? (
-              <Alert
-                severity="error"
-                icon={<ErrorOutlineIcon />}
+                <Alert
+                  severity="error"
+                  icon={<ErrorOutlineIcon />}
                 sx={{ 
                   borderRadius: 2, 
                   mb: 2,
                   mx: { xs: 1, sm: 0 }
                 }}
-              >
-                <Typography variant="body2">{error}</Typography>
-              </Alert>
+                >
+                  <Typography variant="body2">{error}</Typography>
+                </Alert>
             ) : loading ? (
               <Box sx={{ 
                 display: "flex", 
@@ -765,15 +752,15 @@ const HomeScreen = () => {
               </Box>
             ) : filteredPosts.length === 0 ? (
               <Box sx={{ px: { xs: 1, sm: 0 } }}>
-                <EmptyState
-                  variant={searchTerm ? "no-search-results" : "no-posts"}
-                  searchTerm={searchTerm}
-                  onAction={
-                    searchTerm
-                      ? () => setSearchTerm("")
-                      : () => navigate("/create-post")
-                  }
-                />
+                  <EmptyState
+                    variant={searchTerm ? "no-search-results" : "no-posts"}
+                    searchTerm={searchTerm}
+                    onAction={
+                      searchTerm
+                        ? () => setSearchTerm("")
+                        : () => navigate("/create-post")
+                    }
+                  />
               </Box>
             ) : (
               <motion.div
@@ -813,8 +800,8 @@ const HomeScreen = () => {
       </Box>
 
       {/* Right Sidebar - Desktop Only */}
-      <Box
-        sx={{
+              <Box
+                sx={{
           width: { xs: 0, lg: 320 },
           display: { xs: "none", lg: "block" },
           position: "fixed",
@@ -828,7 +815,7 @@ const HomeScreen = () => {
             width: "6px",
           },
           "&::-webkit-scrollbar-track": {
-            backgroundColor: "transparent",
+          backgroundColor: "transparent",
           },
           "&::-webkit-scrollbar-thumb": {
             backgroundColor: "#e5e7eb",
@@ -845,10 +832,9 @@ const HomeScreen = () => {
           gap: { lg: 2.5, xl: 3 },
           maxWidth: 280,
         }}>
-          <RecommendedUsers limit={5} />
-          <TrendingPosts limit={5} days={7} />
-        </Box>
-      </Box>
+                    <RecommendedUsers limit={5} />
+                  </Box>
+              </Box>
 
       {/* Scroll to Top Button */}
       <Zoom in={showScrollTop}>

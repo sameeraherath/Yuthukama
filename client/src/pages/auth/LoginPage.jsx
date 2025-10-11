@@ -297,7 +297,7 @@ const LoginPage = () => {
                 display: "flex",
                 justifyContent: "flex-end",
                 mt: -1,
-                color: "#1976d2",
+                color: "#1DBF73",
               }}
             >
               <Link

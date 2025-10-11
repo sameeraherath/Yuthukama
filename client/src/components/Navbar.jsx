@@ -134,17 +134,13 @@ const Navbar = () => {
           {/* Logo */}
           <Typography
             variant="h6"
-            onClick={() => navigate(isAdmin ? "/admin/dashboard" : "/home")}
+            onClick={() => navigate("/home")}
             sx={{
               flexGrow: 1,
               color: "#1DBF73",
               fontWeight: "bold",
               fontSize: { xs: "1.3rem", sm: "1.7rem" },
               cursor: "pointer",
-              transition: "transform 0.2s ease-in-out",
-              "&:hover": {
-                transform: "scale(1.05)",
-              },
             }}
           >
             Yuthukama
@@ -294,7 +290,7 @@ const Navbar = () => {
 
                 <ListItem disablePadding>
                   <ListItemButton
-                    onClick={() => handleMobileNavigation("/chat")}
+                    onClick={() => handleMobileNavigation("/messages")}
                   >
                     <ListItemIcon>
                       <ChatIcon sx={{ color: "#1DBF73" }} />

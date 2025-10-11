@@ -280,11 +280,6 @@ const RecommendedUsers = ({ limit = 10 }) => {
                   gap: 1.5,
                   p: 1.2,
                   borderRadius: 2,
-                  transition: "all 0.2s",
-                  cursor: "pointer",
-                  "&:hover": {
-                    bgcolor: "#f9fafb",
-                  },
                 }}
               >
                 {/* Avatar */}

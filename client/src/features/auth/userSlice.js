@@ -86,6 +86,39 @@ export const updateUsername = createAsyncThunk(
 );
 
 /**
+ * Async thunk for fetching user profile by ID
+ * @async
+ * @function fetchUserById
+ * @param {string} userId - ID of the user to fetch
+ * @param {Object} thunkAPI - Redux Thunk API object
+ * @returns {Promise<Object>} User profile data
+ * @throws {Error} If user profile fetch fails
+ * @example
+ * // In a component
+ * await dispatch(fetchUserById('user123'));
+ */
+export const fetchUserById = createAsyncThunk(
+  "user/fetchUserById",
+  async (userId, thunkAPI) => {
+    try {
+      const { data } = await axios.get(
+        `${API_BASE}/api/users/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch user profile"
+      );
+    }
+  }
+);
+
+/**
  * Redux slice for user state management
  * @type {Object}
  * @property {string} name - Slice name
@@ -101,11 +134,13 @@ const userSlice = createSlice({
    * @property {boolean} loading - Loading state for user operations
    * @property {string|null} error - Error message if any
    * @property {string} message - Success message
+   * @property {Object|null} profileUser - User profile data for viewing other users
    */
   initialState: {
     loading: false,
     error: null,
     message: "",
+    profileUser: null,
   },
   reducers: {
     /**
@@ -158,6 +193,20 @@ const userSlice = createSlice({
       .addCase(updateUsername.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Fetch User By ID Cases
+      .addCase(fetchUserById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profileUser = action.payload;
+      })
+      .addCase(fetchUserById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.profileUser = null;
       });
   },
 });

@@ -28,6 +28,7 @@ import MessageButton from "./MessageButton";
 import Comments from "./Comments";
 import { likePost } from "../features/posts/postsSlice";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   COLORS,
   BORDER_RADIUS,
@@ -69,6 +70,7 @@ const MotionCard = motion(Card);
  */
 const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -182,6 +184,17 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
     setExpanded(!expanded);
   };
 
+  /**
+   * Handles navigation to user profile
+   * @function
+   */
+  const handleProfileClick = () => {
+    const userId = post.user?._id || post.user;
+    if (userId) {
+      navigate(`/profile/${userId}`);
+    }
+  };
+
   // Animation variants for card entrance
   const cardVariants = {
     hidden: { opacity: 0, y: 30, scale: 0.95 },
@@ -262,6 +275,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
             <Avatar
               src={post.user?.avatar || post.user?.profilePicture}
               alt={post.user?.name || post.user?.username || "User"}
+              onClick={handleProfileClick}
               sx={{ 
                 width: { xs: 40, sm: 48 }, 
                 height: { xs: 40, sm: 48 },
@@ -277,6 +291,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography
                 variant="subtitle1"
+                onClick={handleProfileClick}
                 sx={{
                   fontWeight: 600,
                   color: "#1a1a1a",
@@ -285,6 +300,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
+                  transition: "color 0.2s ease-in-out",
                   "&:hover": {
                     color: "#1DBF73",
                   },

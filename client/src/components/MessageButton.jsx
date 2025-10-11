@@ -38,14 +38,14 @@ const MessageButton = ({ user }) => {
       sx={{
         borderRadius: 3,
         textTransform: "none",
-        borderColor: "#1ac173",
-        color: "#1ac173",
+        borderColor: "#1DBF73",
+        color: "#1DBF73",
         width: "132px",
         height: "48px",
         fontSize: "16px",
         "&:hover": {
-          borderColor: "#17a061",
-          backgroundColor: "rgba(26, 193, 115, 0.04)",
+          borderColor: "#18a364",
+          backgroundColor: "rgba(29, 191, 115, 0.04)",
         },
       }}
     >
