@@ -12,6 +12,15 @@ import {
   Alert,
   Avatar,
   Chip,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
@@ -24,6 +33,7 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import MessageButton from "./MessageButton";
 import Comments from "./Comments";
 import { likePost } from "../features/posts/postsSlice";
@@ -78,6 +88,8 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [error, setError] = useState(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const isOwner =
     (user?.id && post?.user?._id && user.id === post.user._id) ||
@@ -101,6 +113,39 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   };
 
   /**
+   * Handles menu open
+   * @function
+   */
+  const handleMenuOpen = (event) => {
+    setMenuAnchorEl(event.currentTarget);
+  };
+
+  /**
+   * Handles menu close
+   * @function
+   */
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+  };
+
+  /**
+   * Handles delete confirmation dialog open
+   * @function
+   */
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+    handleMenuClose();
+  };
+
+  /**
+   * Handles delete confirmation dialog close
+   * @function
+   */
+  const handleDeleteDialogClose = () => {
+    setDeleteDialogOpen(false);
+  };
+
+  /**
    * Handles post deletion with error handling
    * @async
    * @function
@@ -110,6 +155,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
 
     setIsDeleting(true);
     setError(null);
+    setDeleteDialogOpen(false);
 
     const [err] = await handleAsync(async () => {
       await dispatch(deletePost(post._id)).unwrap();
@@ -361,6 +407,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           {/* More options button */}
           <IconButton
             size="small"
+            onClick={handleMenuOpen}
             sx={{
               color: "#9ca3af",
               p: { xs: 0.5, sm: 1 },
@@ -370,7 +417,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
               },
             }}
           >
-            <Typography sx={{ fontSize: { xs: "1rem", sm: "1.2rem" }, fontWeight: 600 }}>⋯</Typography>
+            <MoreVertIcon sx={{ fontSize: { xs: "1rem", sm: "1.2rem" } }} />
           </IconButton>
         </Box>
       </Box>
@@ -600,6 +647,111 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           <Comments postId={post._id} comments={post.comments} />
         </CardContent>
       </Collapse>
+
+      {/* More options menu */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #e5e7eb',
+            minWidth: 160,
+          },
+        }}
+      >
+        {isOwner && (
+          <MenuItem
+            onClick={handleDeleteClick}
+            sx={{
+              color: '#ef4444',
+              '&:hover': {
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              },
+            }}
+          >
+            <ListItemIcon>
+              <DeleteIcon sx={{ color: '#ef4444' }} />
+            </ListItemIcon>
+            <ListItemText primary="Delete Post" />
+          </MenuItem>
+        )}
+      </Menu>
+
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteDialogClose}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+          },
+        }}
+      >
+        <DialogTitle id="delete-dialog-title" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
+          Delete Post
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description" sx={{ color: '#6b7280' }}>
+            Are you sure you want to delete this post? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={handleDeleteDialogClose}
+            variant="outlined"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+              borderColor: '#e5e7eb',
+              color: '#6b7280',
+              '&:hover': {
+                borderColor: '#d1d5db',
+                backgroundColor: '#f9fafb',
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            variant="contained"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+              backgroundColor: '#ef4444',
+              '&:hover': {
+                backgroundColor: '#dc2626',
+              },
+              '&:disabled': {
+                backgroundColor: '#fca5a5',
+              },
+            }}
+          >
+            {isDeleting ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : (
+              'Delete'
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </MotionCard>
   );
 };
