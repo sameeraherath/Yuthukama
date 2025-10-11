@@ -62,6 +62,28 @@ const postSchema = mongoose.Schema(
       ref: "User",
       required: true,
     },
+    reports: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        reason: {
+          type: String,
+          required: true,
+          enum: ['spam', 'inappropriate', 'harassment', 'hate_speech', 'violence', 'false_information', 'copyright', 'other'],
+        },
+        description: {
+          type: String,
+          maxlength: 500,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

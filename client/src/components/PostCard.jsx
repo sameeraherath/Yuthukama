@@ -21,10 +21,15 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  FormControl,
+  FormControlLabel,
+  RadioGroup,
+  Radio,
+  TextField,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
-import { deletePost, toggleSavePost } from "../features/posts/postsAPI";
+import { deletePost, toggleSavePost, reportPost } from "../features/posts/postsAPI";
 import useAuth from "../hooks/useAuth";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -34,6 +39,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ReportIcon from "@mui/icons-material/Report";
 import MessageButton from "./MessageButton";
 import Comments from "./Comments";
 import { likePost } from "../features/posts/postsSlice";
@@ -90,6 +96,10 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const [error, setError] = useState(null);
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [isReporting, setIsReporting] = useState(false);
 
   const isOwner =
     (user?.id && post?.user?._id && user.id === post.user._id) ||
@@ -98,6 +108,18 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const likesCount = post.likes?.length || 0;
   const commentsCount = post.comments?.length || 0;
   const viewsCount = post.views || 0;
+
+  // Report reason options
+  const reportReasons = [
+    { value: 'spam', label: 'Spam' },
+    { value: 'inappropriate', label: 'Inappropriate Content' },
+    { value: 'harassment', label: 'Harassment' },
+    { value: 'hate_speech', label: 'Hate Speech' },
+    { value: 'violence', label: 'Violence' },
+    { value: 'false_information', label: 'False Information' },
+    { value: 'copyright', label: 'Copyright Violation' },
+    { value: 'other', label: 'Other' }
+  ];
 
   // Helper function to format time ago
   const getTimeAgo = (dateString) => {
@@ -143,6 +165,88 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
    */
   const handleDeleteDialogClose = () => {
     setDeleteDialogOpen(false);
+  };
+
+  /**
+   * Handles report dialog open
+   * @function
+   */
+  const handleReportClick = () => {
+    setReportDialogOpen(true);
+    handleMenuClose();
+  };
+
+  /**
+   * Handles report dialog close
+   * @function
+   */
+  const handleReportDialogClose = () => {
+    setReportDialogOpen(false);
+    setReportReason('');
+    setReportDescription('');
+  };
+
+  /**
+   * Handles post report submission
+   * @async
+   * @function
+   */
+  const handleReport = async () => {
+    if (!user) {
+      dispatch(
+        showToast({
+          message: "Please login to report posts",
+          severity: "warning",
+        })
+      );
+      return;
+    }
+
+    if (!reportReason) {
+      dispatch(
+        showToast({
+          message: "Please select a reason for reporting",
+          severity: "warning",
+        })
+      );
+      return;
+    }
+
+    if (isReporting) return;
+
+    setIsReporting(true);
+    setError(null);
+
+    const [err] = await handleAsync(async () => {
+      await dispatch(reportPost({ 
+        postId: post._id, 
+        reason: reportReason, 
+        description: reportDescription 
+      })).unwrap();
+      
+      dispatch(
+        showToast({
+          message: "Post reported successfully. Thank you for helping keep our community safe.",
+          severity: "success",
+        })
+      );
+      
+      handleReportDialogClose();
+    }, "PostCard.handleReport");
+
+    if (err) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      dispatch(
+        showToast({
+          message: "Failed to report post",
+          severity: "error",
+        })
+      );
+      logError(err, "PostCard.handleReport");
+    }
+
+    setIsReporting(false);
   };
 
   /**
@@ -686,6 +790,22 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
             <ListItemText primary="Delete Post" />
           </MenuItem>
         )}
+        {!isOwner && (
+          <MenuItem
+            onClick={handleReportClick}
+            sx={{
+              color: '#f59e0b',
+              '&:hover': {
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              },
+            }}
+          >
+            <ListItemIcon>
+              <ReportIcon sx={{ color: '#f59e0b' }} />
+            </ListItemIcon>
+            <ListItemText primary="Report Post" />
+          </MenuItem>
+        )}
       </Menu>
 
       {/* Delete confirmation dialog */}
@@ -748,6 +868,123 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
               <CircularProgress size={16} color="inherit" />
             ) : (
               'Delete'
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Report dialog */}
+      <Dialog
+        open={reportDialogOpen}
+        onClose={handleReportDialogClose}
+        aria-labelledby="report-dialog-title"
+        aria-describedby="report-dialog-description"
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+          },
+        }}
+      >
+        <DialogTitle id="report-dialog-title" sx={{ color: '#1a1a1a', fontWeight: 600 }}>
+          Report Post
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <DialogContentText id="report-dialog-description" sx={{ color: '#6b7280', mb: 3 }}>
+            Help us keep our community safe by reporting content that violates our guidelines.
+          </DialogContentText>
+          
+          <FormControl component="fieldset" fullWidth>
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: '#374151' }}>
+              What's the issue with this post?
+            </Typography>
+            <RadioGroup
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              sx={{ mb: 3 }}
+            >
+              {reportReasons.map((reason) => (
+                <FormControlLabel
+                  key={reason.value}
+                  value={reason.value}
+                  control={<Radio size="small" />}
+                  label={reason.label}
+                  sx={{
+                    '& .MuiFormControlLabel-label': {
+                      fontSize: '0.9rem',
+                      color: '#374151',
+                    },
+                  }}
+                />
+              ))}
+            </RadioGroup>
+          </FormControl>
+
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            placeholder="Additional details (optional)"
+            value={reportDescription}
+            onChange={(e) => setReportDescription(e.target.value)}
+            variant="outlined"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                '& fieldset': {
+                  borderColor: '#e5e7eb',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#d1d5db',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#1DBF73',
+                },
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={handleReportDialogClose}
+            variant="outlined"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+              borderColor: '#e5e7eb',
+              color: '#6b7280',
+              '&:hover': {
+                borderColor: '#d1d5db',
+                backgroundColor: '#f9fafb',
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleReport}
+            disabled={isReporting || !reportReason}
+            variant="contained"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+              backgroundColor: '#f59e0b',
+              '&:hover': {
+                backgroundColor: '#d97706',
+              },
+              '&:disabled': {
+                backgroundColor: '#fbbf24',
+              },
+            }}
+          >
+            {isReporting ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : (
+              'Report Post'
             )}
           </Button>
         </DialogActions>

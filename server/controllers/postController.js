@@ -610,6 +610,68 @@ const postController = {
       res.status(500).json({ message: "Error fetching saved posts" });
     }
   },
+
+  /**
+   * Report a post
+   * @param {Object} req - Express request object
+   * @param {Object} req.body - Request body
+   * @param {string} req.body.reason - Report reason
+   * @param {string} [req.body.description] - Additional description
+   * @param {string} req.params.id - Post ID
+   * @param {Object} req.user - Authenticated user object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with success message
+   * @throws {Error} If report submission fails
+   */
+  reportPost: async (req, res) => {
+    try {
+      const { reason, description } = req.body;
+      const postId = req.params.id;
+      const userId = req.user.id;
+
+      // Validate required fields
+      if (!reason) {
+        return res.status(400).json({ message: "Report reason is required" });
+      }
+
+      // Check if post exists
+      const post = await Post.findById(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      // Check if user is trying to report their own post
+      if (post.user.toString() === userId) {
+        return res.status(400).json({ message: "You cannot report your own post" });
+      }
+
+      // Check if user has already reported this post
+      const existingReport = post.reports.find(
+        (report) => report.user.toString() === userId
+      );
+
+      if (existingReport) {
+        return res.status(400).json({ message: "You have already reported this post" });
+      }
+
+      // Add the report
+      post.reports.push({
+        user: userId,
+        reason,
+        description: description || "",
+      });
+
+      await post.save();
+
+      res.json({
+        message: "Post reported successfully. Thank you for helping keep our community safe.",
+        reportCount: post.reports.length,
+      });
+    } catch (error) {
+      console.error("Error reporting post:", error);
+      res.status(500).json({ message: "Error reporting post" });
+    }
+  },
 };
 
 export { postController as default, postController };
@@ -626,4 +688,5 @@ export const {
   getTrendingPosts,
   toggleSavePost,
   getSavedPosts,
+  reportPost,
 } = postController;

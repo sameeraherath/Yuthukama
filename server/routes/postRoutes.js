@@ -12,6 +12,7 @@ import {
   getTrendingPosts,
   toggleSavePost,
   getSavedPosts,
+  reportPost,
 } from "../controllers/postController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import {
@@ -125,5 +126,17 @@ router.get("/trending", protect, getTrendingPosts);
  * @returns {Object} JSON response containing saved posts
  */
 router.get("/saved", protect, getSavedPosts);
+
+/**
+ * @route POST /api/posts/:id/report
+ * @desc Report a post
+ * @access Private
+ * @param {string} req.params.id - ID of the post to report
+ * @param {Object} req.body - Report data
+ * @param {string} req.body.reason - Report reason
+ * @param {string} [req.body.description] - Additional description
+ * @returns {Object} JSON response confirming successful report
+ */
+router.post("/:id/report", protect, validateMongoId, reportPost);
 
 export default router;

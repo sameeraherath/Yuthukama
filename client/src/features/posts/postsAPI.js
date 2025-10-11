@@ -246,3 +246,44 @@ export const fetchSavedPosts = createAsyncThunk(
     }
   }
 );
+
+/**
+ * Reports a post
+ * @async
+ * @function reportPost
+ * @param {Object} reportData - Report data
+ * @param {string} reportData.postId - ID of the post to report
+ * @param {string} reportData.reason - Report reason
+ * @param {string} [reportData.description] - Additional description
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If report submission fails
+ */
+export const reportPost = createAsyncThunk(
+  "posts/reportPost",
+  async ({ postId, reason, description }, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        return thunkAPI.rejectWithValue(
+          "Authentication required. Please log in."
+        );
+      }
+
+      const { data } = await axios.post(
+        `${API_BASE}/api/posts/${postId}/report`,
+        { reason, description },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to report post"
+      );
+    }
+  }
+);
