@@ -182,7 +182,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
     setExpanded(!expanded);
   };
 
-  // Animation variants for card entrance and hover
+  // Animation variants for card entrance
   const cardVariants = {
     hidden: { opacity: 0, y: 30, scale: 0.95 },
     visible: {
@@ -191,14 +191,6 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
       scale: 1,
       transition: {
         duration: 0.5,
-        ease: [0.4, 0, 0.2, 1],
-      },
-    },
-    hover: {
-      y: -4,
-      scale: 1.02,
-      transition: {
-        duration: 0.2,
         ease: [0.4, 0, 0.2, 1],
       },
     },
@@ -237,7 +229,6 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
       aria-label={`Post: ${post.title}`}
       initial="hidden"
       animate="visible"
-      whileHover="hover"
       variants={cardVariants}
       sx={{
         maxWidth: "100%",
@@ -349,11 +340,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
       </CardContent>
 
       {/* Post image */}
-      <motion.div
-        whileHover={{ scale: { xs: 1, sm: 1.02 } }}
-        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-        style={{ overflow: "hidden" }}
-      >
+      <div style={{ overflow: "hidden" }}>
         <CardMedia
           component="img"
           image={post.image}
@@ -366,7 +353,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
             height: { xs: 250, sm: 350, md: 400 },
           }}
         />
-      </motion.div>
+      </div>
 
       {/* Actions bar */}
       <CardActions
@@ -396,7 +383,6 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <motion.div
               whileTap={{ scale: 0.85 }}
-              whileHover={{ scale: { xs: 1, sm: 1.15 } }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
               <IconButton
