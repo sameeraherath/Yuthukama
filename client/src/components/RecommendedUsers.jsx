@@ -2,23 +2,17 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
-  Paper,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
+  Card,
+  CardContent,
   Avatar,
   Button,
   CircularProgress,
   Alert,
-  Chip,
 } from "@mui/material";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import StarIcon from "@mui/icons-material/Star";
-import axios from "axios";
+import axios from "../utils/axiosConfig";
 import { useNavigate } from "react-router-dom";
 import EnhancedSkeleton from "./LoadingStates/EnhancedSkeleton";
-import EmptyState from "./EmptyState";
 
 /**
  * RecommendedUsers component - Displays recommended users to connect with
@@ -37,21 +31,34 @@ const RecommendedUsers = ({ limit = 10 }) => {
     const fetchRecommendedUsers = async () => {
       try {
         setLoading(true);
+        console.log("Fetching recommended users with limit:", limit);
+
         const response = await axios.get("/api/users/recommended", {
           params: { limit },
-          withCredentials: true,
         });
+
+        console.log("Recommended users response:", response.data);
+
         // Handle both response.data and response.data.users formats
-        const usersData = Array.isArray(response.data) 
-          ? response.data 
+        const usersData = Array.isArray(response.data)
+          ? response.data
           : response.data?.users || [];
+
+        console.log(
+          "Users data extracted:",
+          usersData,
+          "Length:",
+          usersData.length
+        );
         setUsers(usersData);
         setError(null);
       } catch (err) {
         console.error("Error fetching recommended users:", err);
+        console.error("Error response:", err.response?.data);
         setError(
           err.response?.data?.message || "Failed to load recommended users"
         );
+        setUsers([]); // Set empty array on error
       } finally {
         setLoading(false);
       }
@@ -66,163 +73,290 @@ const RecommendedUsers = ({ limit = 10 }) => {
 
   if (loading) {
     return (
-      <Box sx={{ p: 2 }}>
-        <EnhancedSkeleton variant="list" count={limit} />
-      </Box>
+      <Card
+        sx={{
+          borderRadius: 3,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          overflow: "hidden",
+          bgcolor: "#ffffff",
+        }}
+      >
+        <CardContent sx={{ p: 2.5 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 600,
+              color: "#374151",
+              mb: 2.5,
+              fontSize: "1rem",
+            }}
+          >
+            Recommended for You
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.8,
+            }}
+          >
+            {[1, 2, 3].map((i) => (
+              <Box
+                key={i}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  p: 1.2,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 45,
+                    height: 45,
+                    bgcolor: "#f3f4f6",
+                    borderRadius: "50%",
+                  }}
+                />
+                <Box sx={{ flex: 1 }}>
+                  <Box
+                    sx={{
+                      width: "70%",
+                      height: 14,
+                      bgcolor: "#f3f4f6",
+                      borderRadius: 1,
+                      mb: 0.5,
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      width: "50%",
+                      height: 12,
+                      bgcolor: "#f3f4f6",
+                      borderRadius: 1,
+                    }}
+                  />
+                </Box>
+                <Box
+                  sx={{
+                    width: 50,
+                    height: 28,
+                    bgcolor: "#f3f4f6",
+                    borderRadius: 2,
+                  }}
+                />
+              </Box>
+            ))}
+          </Box>
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ m: 2 }}>
-        {error}
-      </Alert>
+      <Card
+        sx={{
+          borderRadius: 3,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          bgcolor: "#ffffff",
+        }}
+      >
+        <CardContent sx={{ p: 2.5 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 600,
+              color: "#374151",
+              mb: 2,
+              fontSize: "1rem",
+            }}
+          >
+            Recommended for You
+          </Typography>
+          <Alert severity="error" sx={{ borderRadius: 2 }}>
+            {error}
+          </Alert>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (!Array.isArray(users) || users.length === 0) {
-    return <EmptyState variant="no-users" />;
-  }
-
   return (
-    <Paper
-      elevation={2}
+    <Card
       sx={{
         borderRadius: 3,
+        boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
         overflow: "hidden",
+        bgcolor: "#ffffff",
+        height: "100%",
       }}
     >
-      <Box
-        sx={{
-          p: 2,
-          backgroundColor: "#f5f5f5",
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-        }}
-      >
-        <StarIcon sx={{ color: "#1ac173" }} />
-        <Typography variant="h6" fontWeight="bold">
+      <CardContent sx={{ p: 2.5, height: "100%" }}>
+        {/* Header */}
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 700,
+            color: "#1f2937",
+            mb: 2.5,
+            fontSize: "1.05rem",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <PersonAddIcon sx={{ fontSize: 20, color: "#10b981" }} />
           Recommended for You
         </Typography>
-      </Box>
 
-      <List sx={{ p: 0 }}>
-        {users.map((user, index) => (
-          <ListItem
-            key={user._id}
+        {/* Empty State */}
+        {!Array.isArray(users) || users.length === 0 ? (
+          <Box
             sx={{
-              borderBottom:
-                index < users.length - 1 ? "1px solid #f0f0f0" : "none",
+              display: "flex",
               flexDirection: "column",
-              alignItems: "flex-start",
-              gap: 1.5,
-              py: 2,
-              px: 2.5,
-              "&:hover": {
-                backgroundColor: "rgba(26, 193, 115, 0.05)",
-              },
+              alignItems: "center",
+              justifyContent: "center",
+              py: 3,
+              textAlign: "center",
             }}
           >
             <Box
               sx={{
+                width: 70,
+                height: 70,
+                borderRadius: "50%",
+                bgcolor: "rgba(16, 185, 129, 0.1)",
                 display: "flex",
-                width: "100%",
                 alignItems: "center",
-                gap: 2,
+                justifyContent: "center",
+                mb: 2,
               }}
             >
-              <ListItemAvatar>
-                <Avatar
-                  src={user.profilePicture}
-                  alt={user.username}
-                  sx={{ width: 48, height: 48 }}
-                >
-                  {user.username.charAt(0).toUpperCase()}
-                </Avatar>
-              </ListItemAvatar>
-
-              <ListItemText
-                primary={
-                  <Typography variant="body1" fontWeight="600">
-                    {user.username}
-                  </Typography>
-                }
-                secondary={
-                  <Box sx={{ mt: 0.5 }}>
-                    <Chip
-                      label={user.role}
-                      size="small"
-                      sx={{
-                        height: 20,
-                        fontSize: "0.75rem",
-                        backgroundColor:
-                          user.role === "mentor"
-                            ? "#e3f2fd"
-                            : user.role === "mentee"
-                            ? "#fff3e0"
-                            : "#f5f5f5",
-                        color:
-                          user.role === "mentor"
-                            ? "#1976d2"
-                            : user.role === "mentee"
-                            ? "#f57c00"
-                            : "inherit",
-                        fontWeight: 500,
-                      }}
-                    />
-                  </Box>
-                }
+              <PersonAddIcon
+                sx={{
+                  fontSize: 36,
+                  color: "#10b981",
+                }}
               />
             </Box>
-
-            <Box
+            <Typography
+              variant="subtitle1"
               sx={{
-                display: "flex",
-                width: "100%",
-                justifyContent: "space-between",
-                alignItems: "center",
+                fontWeight: 600,
+                color: "#374151",
+                mb: 0.5,
+                fontSize: "0.95rem",
               }}
             >
-              {user.bio && (
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{
-                    flex: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    mr: 2,
-                  }}
-                >
-                  {user.bio}
-                </Typography>
-              )}
-
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<PersonAddIcon />}
-                onClick={() => handleViewProfile(user._id)}
+              No recommendations
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#9ca3af",
+                fontSize: "0.85rem",
+              }}
+            >
+              Check back later for user suggestions
+            </Typography>
+          </Box>
+        ) : (
+          /* Users List */
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.8,
+            }}
+          >
+            {users.map((user) => (
+              <Box
+                key={user._id}
                 sx={{
-                  borderColor: "#1ac173",
-                  color: "#1ac173",
-                  textTransform: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  p: 1.2,
                   borderRadius: 2,
+                  transition: "all 0.2s",
+                  cursor: "pointer",
                   "&:hover": {
-                    borderColor: "#158f5e",
-                    backgroundColor: "rgba(26, 193, 115, 0.1)",
+                    bgcolor: "#f9fafb",
                   },
                 }}
               >
-                View
-              </Button>
-            </Box>
-          </ListItem>
-        ))}
-      </List>
-    </Paper>
+                {/* Avatar */}
+                <Avatar
+                  src={user.profilePicture}
+                  alt={user.username || user.name}
+                  sx={{
+                    width: 45,
+                    height: 45,
+                    border: "2px solid #f3f4f6",
+                  }}
+                >
+                  {(user.username || user.name || "?").charAt(0).toUpperCase()}
+                </Avatar>
+
+                {/* User Info */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#1f2937",
+                      fontSize: "0.875rem",
+                      lineHeight: 1.2,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {user.name || user.username}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "#9ca3af",
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    @{user.username}
+                  </Typography>
+                </Box>
+
+                {/* View Button */}
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => handleViewProfile(user._id)}
+                  sx={{
+                    bgcolor: "#10b981",
+                    color: "white",
+                    textTransform: "none",
+                    borderRadius: 2,
+                    fontSize: "0.75rem",
+                    px: 1.8,
+                    py: 0.5,
+                    minWidth: "auto",
+                    fontWeight: 600,
+                    boxShadow: "none",
+                    "&:hover": {
+                      bgcolor: "#059669",
+                      boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
+                    },
+                  }}
+                >
+                  View
+                </Button>
+              </Box>
+            ))}
+          </Box>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

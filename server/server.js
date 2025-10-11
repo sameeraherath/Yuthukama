@@ -40,7 +40,12 @@ const httpServer = createServer(app);
  * List of allowed origins for CORS
  * @type {string[]}
  */
-const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174", // Added for multiple Vite instances
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174", // Added for multiple Vite instances
+];
 
 allowedOrigins.push("https://yuthukama.vercel.app");
 allowedOrigins.push(

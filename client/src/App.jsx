@@ -1,6 +1,7 @@
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Routes, Route } from "react-router-dom";
+import { Box, CircularProgress } from "@mui/material";
 import HomeScreen from "./pages/HomeScreen";
 import RegisterPage from "./pages/auth/RegisterPage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -11,6 +12,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ArticleDetailPage from "./pages/ArticleDetailPage";
 import MainLayout from "./layouts/MainLayout.jsx";
 import ChatPage from "./pages/ChatPage";
+import ModernChatPage from "./pages/ModernChatPage";
 import AdminDashboard from "./pages/admin/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { checkUserSession } from "./features/auth/authAPI";
@@ -34,6 +36,8 @@ import { checkUserSession } from "./features/auth/authAPI";
  */
 const App = () => {
   const dispatch = useDispatch();
+  const { sessionChecked } = useSelector((state) => state.auth);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   /**
    * Effect hook to check user session on application load
@@ -41,8 +45,39 @@ const App = () => {
    * @listens {dispatch} - Redux dispatch function
    */
   useEffect(() => {
-    dispatch(checkUserSession());
+    const initializeAuth = async () => {
+      try {
+        console.log("App - Starting session check");
+        await dispatch(checkUserSession()).unwrap();
+        console.log("App - Session check successful");
+      } catch (error) {
+        console.log("App - Session check failed:", error);
+        // Don't treat this as an error - just means no valid session
+      } finally {
+        console.log("App - Session check complete, setting initialCheckDone to true");
+        setInitialCheckDone(true);
+      }
+    };
+
+    initializeAuth();
   }, [dispatch]);
+
+  // Show loading screen while checking session
+  if (!initialCheckDone || !sessionChecked) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          backgroundColor: "#f5f5f5",
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: "#1DBF73" }} />
+      </Box>
+    );
+  }
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
@@ -93,6 +128,28 @@ const App = () => {
           </ProtectedRoute>
         }
       />{" "}
+      {/* Modern Chat Routes - Split Screen */}
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ModernChatPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/messages/:conversationId"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ModernChatPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      {/* Legacy Chat Routes - Full Screen */}
       <Route
         path="/chat"
         element={

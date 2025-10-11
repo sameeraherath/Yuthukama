@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -10,7 +10,7 @@ import {
   IconButton,
   CircularProgress,
 } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Visibility, VisibilityOff, Email, Lock } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../../hooks/useAuth";
@@ -26,7 +26,8 @@ import GlobalLoadingSpinner from "../../components/GlobalLoadingSpinner";
  */
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, loading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { login, loading, isAuthenticated, user } = useAuth();
 
   /**
    * Form data state
@@ -38,6 +39,25 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  // Check for session expiration
+  useEffect(() => {
+    if (searchParams.get("session") === "expired") {
+      setSessionExpired(true);
+      setTimeout(() => setSessionExpired(false), 5000);
+    }
+  }, [searchParams]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    console.log("LoginPage - Auth state:", { isAuthenticated, user, loading });
+    if (isAuthenticated && user) {
+      const redirectPath = user.role === "admin" ? "/admin/dashboard" : "/home";
+      console.log("LoginPage - Redirecting to:", redirectPath);
+      navigate(redirectPath, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   /**
    * Validates the login form data
@@ -72,20 +92,12 @@ const LoginPage = () => {
     setLoginError("");
 
     try {
-      const userData = await login(formData.email, formData.password);
-      console.log("User data:", userData);
+      await login(formData.email, formData.password);
 
-      // Check if user is admin and navigate accordingly
-      if (userData?.user?.role === "admin") {
-        console.log("Admin user detected, navigating to admin dashboard");
-        navigate("/admin/dashboard", { replace: true });
-      } else {
-        console.log("Regular user detected, navigating to home");
-        navigate("/home", { replace: true });
-      }
+      // Navigation will be handled by the useEffect above
     } catch (error) {
       console.error("Login error:", error);
-      setLoginError(error);
+      setLoginError(error || "Login failed. Please check your credentials.");
     }
   };
 
@@ -140,9 +152,34 @@ const LoginPage = () => {
           >
             Log in to your account to continue
           </Typography>
+          
+          {/* Debug info */}
+          {process.env.NODE_ENV === "development" && (
+            <Box sx={{ mt: 2, p: 2, backgroundColor: "#f5f5f5", borderRadius: 2 }}>
+              <Typography variant="caption" color="text.secondary">
+                Debug: Auth State - isAuthenticated: {isAuthenticated ? "true" : "false"}, 
+                User: {user ? user.username : "null"}, 
+                Loading: {loading ? "true" : "false"}
+              </Typography>
+            </Box>
+          )}
         </Box>
 
         <AnimatePresence mode="wait">
+          {sessionExpired && (
+            <Alert
+              component={motion.div}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              severity="warning"
+              sx={{ mb: 2 }}
+            >
+              Your session has expired. Please log in again.
+            </Alert>
+          )}
+
           {loginError && (
             <Alert
               component={motion.div}

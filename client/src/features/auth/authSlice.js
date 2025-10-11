@@ -11,14 +11,13 @@ import {
   checkUserSession,
 } from "./authAPI";
 import { updateProfilePicture } from "./userSlice";
+import { getSafeUser, clearAuthData } from "../../utils/authUtils";
 
 /**
  * Initial user state from localStorage
  * @type {Object|null}
  */
-const user = localStorage.getItem("user")
-  ? JSON.parse(localStorage.getItem("user"))
-  : null;
+const user = getSafeUser();
 
 console.log("Initial user state from localStorage:", user);
 
@@ -30,6 +29,7 @@ console.log("Initial user state from localStorage:", user);
  * @property {string|null} error - Error message
  * @property {boolean} isAuthenticated - Authentication status
  * @property {string} message - Status message
+ * @property {boolean} sessionChecked - Whether initial session check is complete
  */
 const initialState = {
   user: user,
@@ -37,6 +37,7 @@ const initialState = {
   error: null,
   isAuthenticated: !!user,
   message: "",
+  sessionChecked: false,
 };
 
 /**
@@ -63,6 +64,17 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    /**
+     * Forces logout and clears all auth data
+     * @param {Object} state - Current state
+     */
+    forceLogout: (state) => {
+      clearAuthData();
+      state.user = null;
+      state.isAuthenticated = false;
+      state.sessionChecked = true;
+      state.message = "Session expired. Please log in again.";
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -74,12 +86,15 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload;
+        state.sessionChecked = true;
         state.message = "Login successful";
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.isAuthenticated = false;
+        state.sessionChecked = true;
+        clearAuthData();
       })
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
@@ -89,16 +104,20 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload;
+        state.sessionChecked = true;
         state.message = "Registration successful";
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.isAuthenticated = false;
+        state.sessionChecked = true;
       })
       .addCase(logoutUser.fulfilled, (state) => {
+        clearAuthData();
         state.user = null;
         state.isAuthenticated = false;
+        state.sessionChecked = true;
         state.message = "Logged out successfully";
       })
       .addCase(checkUserSession.pending, (state) => {
@@ -108,11 +127,21 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload;
+        state.sessionChecked = true;
       })
-      .addCase(checkUserSession.rejected, (state) => {
+      .addCase(checkUserSession.rejected, (state, action) => {
         state.loading = false;
-        state.user = null;
-        state.isAuthenticated = false;
+        state.sessionChecked = true;
+        
+        // Only clear auth data if it's a real authentication error
+        if (action.payload === "Session expired" || action.payload === "No token") {
+          state.user = null;
+          state.isAuthenticated = false;
+          clearAuthData();
+        } else {
+          // For network errors, keep existing auth state but mark session as checked
+          console.log("Session check failed due to network error, keeping existing auth state");
+        }
       })
       .addCase(updateProfilePicture.fulfilled, (state, action) => {
         console.log(
@@ -129,5 +158,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { reset, clearError } = authSlice.actions;
+export const { reset, clearError, forceLogout } = authSlice.actions;
 export default authSlice.reducer;

@@ -5,8 +5,6 @@ import {
   IconButton,
   Typography,
   Box,
-  Menu,
-  MenuItem,
   Avatar,
   Divider,
   ListItemIcon,
@@ -19,21 +17,18 @@ import {
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import PostAddIcon from "@mui/icons-material/PostAdd";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
-import SmartToyIcon from "@mui/icons-material/SmartToy";
 import MenuIcon from "@mui/icons-material/Menu";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
 import HomeIcon from "@mui/icons-material/Home";
 import ChatIcon from "@mui/icons-material/Chat";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PostDialog from "./PostDialog";
 import LogoutDialog from "./LogoutDialog";
-import NotificationMenu from "./NotificationMenu";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { useSelector } from "react-redux";
-import AIChatBot from "./AIChatBot";
 
 /**
  * Navigation bar component that provides main navigation and actions
@@ -46,14 +41,11 @@ import AIChatBot from "./AIChatBot";
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
-  const [showAIChat, setShowAIChat] = useState(false);
-  const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { user } = useSelector((state) => state.auth);
   const isAdmin = user?.role === "admin";
-  const profileMenuOpen = Boolean(profileAnchorEl);
 
   /**
    * Opens the post creation dialog
@@ -82,39 +74,6 @@ const Navbar = () => {
     handleClose();
   };
 
-  /**
-   * Opens the profile menu
-   * @function
-   */
-  const handleProfileMenuOpen = (event) => {
-    setProfileAnchorEl(event.currentTarget);
-  };
-
-  /**
-   * Closes the profile menu
-   * @function
-   */
-  const handleProfileMenuClose = () => {
-    setProfileAnchorEl(null);
-  };
-
-  /**
-   * Navigates to profile page
-   * @function
-   */
-  const handleProfileNavigation = () => {
-    navigate("/profile");
-    setProfileAnchorEl(null);
-  };
-
-  /**
-   * Navigates to settings page
-   * @function
-   */
-  const handleSettingsNavigation = () => {
-    navigate("/settings");
-    setProfileAnchorEl(null);
-  };
 
   /**
    * Toggles the mobile menu drawer
@@ -140,7 +99,6 @@ const Navbar = () => {
    */
   const handleLogoutClick = () => {
     setLogoutConfirmOpen(true);
-    setProfileAnchorEl(null);
   };
 
   /**
@@ -215,68 +173,20 @@ const Navbar = () => {
                 <LogoutIcon sx={{ fontSize: "28px", color: "#1DBF73" }} />
               </IconButton>
             ) : (
-              <>
-                <IconButton
-                  color="inherit"
-                  onClick={handleClickOpen}
-                  aria-label="Create post"
-                  sx={{
-                    transition: "all 0.2s ease-in-out",
-                    "&:hover": {
-                      backgroundColor: "rgba(29, 191, 115, 0.1)",
-                      transform: "translateY(-2px)",
-                    },
-                  }}
-                >
-                  <PostAddIcon sx={{ fontSize: "28px", color: "#1DBF73" }} />
-                </IconButton>
-
-                <NotificationMenu />
-
-                <IconButton
-                  color="inherit"
-                  onClick={() => setShowAIChat((prev) => !prev)}
-                  aria-label="AI Chat"
-                  sx={{
-                    transition: "all 0.2s ease-in-out",
-                    "&:hover": {
-                      backgroundColor: "rgba(29, 191, 115, 0.1)",
-                      transform: "translateY(-2px)",
-                    },
-                  }}
-                >
-                  <SmartToyIcon sx={{ fontSize: "28px", color: "#1DBF73" }} />
-                </IconButton>
-
-                {/* Profile Menu Button */}
-                <IconButton
-                  onClick={handleProfileMenuOpen}
-                  aria-label="Profile menu"
-                  aria-controls={profileMenuOpen ? "profile-menu" : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={profileMenuOpen ? "true" : undefined}
-                  sx={{
-                    ml: 1,
-                    transition: "all 0.2s ease-in-out",
-                    "&:hover": {
-                      transform: "scale(1.1)",
-                    },
-                  }}
-                >
-                  <Avatar
-                    src={user?.profilePicture}
-                    alt={user?.username}
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      border: "2px solid #1DBF73",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {user?.username?.charAt(0).toUpperCase()}
-                  </Avatar>
-                </IconButton>
-              </>
+              <IconButton
+                color="inherit"
+                onClick={handleClickOpen}
+                aria-label="Create post"
+                sx={{
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    backgroundColor: "rgba(29, 191, 115, 0.1)",
+                    transform: "translateY(-2px)",
+                  },
+                }}
+              >
+                <PostAddIcon sx={{ fontSize: "28px", color: "#1DBF73" }} />
+              </IconButton>
             )}
           </Box>
 
@@ -299,88 +209,6 @@ const Navbar = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Profile Dropdown Menu */}
-      <Menu
-        id="profile-menu"
-        anchorEl={profileAnchorEl}
-        open={profileMenuOpen}
-        onClose={handleProfileMenuClose}
-        onClick={handleProfileMenuClose}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-        PaperProps={{
-          elevation: 3,
-          sx: {
-            mt: 1.5,
-            minWidth: 200,
-            borderRadius: 2,
-            overflow: "visible",
-            filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.1))",
-            "&:before": {
-              content: '""',
-              display: "block",
-              position: "absolute",
-              top: 0,
-              right: 14,
-              width: 10,
-              height: 10,
-              bgcolor: "background.paper",
-              transform: "translateY(-50%) rotate(45deg)",
-              zIndex: 0,
-            },
-          },
-        }}
-      >
-        {/* User Info */}
-        <Box sx={{ px: 2, py: 1.5, pb: 1 }}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            {user?.username}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {user?.email}
-          </Typography>
-        </Box>
-
-        <Divider sx={{ my: 0.5 }} />
-
-        {/* Profile Link */}
-        <MenuItem onClick={handleProfileNavigation} sx={{ py: 1.5 }}>
-          <ListItemIcon>
-            <AccountCircleIcon fontSize="small" sx={{ color: "#1DBF73" }} />
-          </ListItemIcon>
-          <ListItemText>Profile</ListItemText>
-        </MenuItem>
-
-        {/* Settings Link */}
-        <MenuItem onClick={handleSettingsNavigation} sx={{ py: 1.5 }}>
-          <ListItemIcon>
-            <SettingsIcon fontSize="small" sx={{ color: "#1DBF73" }} />
-          </ListItemIcon>
-          <ListItemText>Settings</ListItemText>
-        </MenuItem>
-
-        <Divider sx={{ my: 0.5 }} />
-
-        {/* Logout */}
-        <MenuItem
-          onClick={() => {
-            setProfileAnchorEl(null);
-            handleLogoutClick();
-          }}
-          sx={{
-            py: 1.5,
-            color: "#FF6B6B",
-            "&:hover": {
-              backgroundColor: "rgba(255, 107, 107, 0.1)",
-            },
-          }}
-        >
-          <ListItemIcon>
-            <LogoutIcon fontSize="small" sx={{ color: "#FF6B6B" }} />
-          </ListItemIcon>
-          <ListItemText>Logout</ListItemText>
-        </MenuItem>
-      </Menu>
 
       {/* Mobile Drawer */}
       <Drawer
@@ -489,20 +317,6 @@ const Navbar = () => {
                   </ListItemButton>
                 </ListItem>
 
-                <ListItem disablePadding>
-                  <ListItemButton
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      setShowAIChat(true);
-                    }}
-                  >
-                    <ListItemIcon>
-                      <SmartToyIcon sx={{ color: "#1DBF73" }} />
-                    </ListItemIcon>
-                    <ListItemText primary="AI Assistant" />
-                  </ListItemButton>
-                </ListItem>
-
                 <Divider sx={{ my: 1 }} />
 
                 <ListItem disablePadding>
@@ -554,7 +368,6 @@ const Navbar = () => {
         handleClose={handleClose}
         handlePostSubmit={handlePostSubmit}
       />
-      {showAIChat && <AIChatBot onClose={() => setShowAIChat(false)} />}
     </div>
   );
 };

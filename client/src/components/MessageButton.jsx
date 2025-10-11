@@ -17,11 +17,11 @@ const MessageButton = ({ user }) => {
   const navigate = useNavigate();
 
   /**
-   * Navigates to chat page with post owner data
+   * Navigates to modern chat page with post owner data
    * @function
    */
   const handleClick = () => {
-    navigate("/chat", {
+    navigate("/messages", {
       state: {
         postOwner: user,
       },

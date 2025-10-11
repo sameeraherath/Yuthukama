@@ -143,11 +143,12 @@ const EmptyState = ({
         <motion.div variants={iconVariants}>
           <Box
             sx={{
-              width: 120,
-              height: 120,
+              width: 140,
+              height: 140,
               borderRadius: "50%",
-              backgroundColor: `${content.color}15`,
+              background: `linear-gradient(135deg, ${content.color}10 0%, ${content.color}25 100%)`,
               display: "flex",
+              boxShadow: `0 8px 24px ${content.color}20`,
               alignItems: "center",
               justifyContent: "center",
               mb: 3,

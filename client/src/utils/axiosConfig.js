@@ -4,6 +4,9 @@
  */
 
 import axios from "axios";
+import { store } from "../store/store";
+import { forceLogout } from "../features/auth/authSlice";
+import { isTokenValid } from "./authUtils";
 
 /**
  * Base URL for API requests
@@ -38,9 +41,14 @@ axios.interceptors.request.use(
 
     const token = localStorage.getItem("token");
 
-    // Keep Authorization header for backward compatibility
-    // Server will prioritize cookie over header
+    // Check token validity before making request
     if (token) {
+      if (!isTokenValid(token)) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        store.dispatch(forceLogout());
+        return Promise.reject(new Error("Token expired"));
+      }
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -102,16 +110,41 @@ axios.interceptors.response.use(
         url: error.config.url,
       });
 
-      if (error.response.status === 401) {
-        console.log("Authentication error:", error.response.data.message);
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-      } else if (error.response.status === 404) {
-        return Promise.reject(
-          new Error(
-            "The requested resource was not found. Please check the server URL."
-          )
-        );
+      const { status } = error.response;
+
+      switch (status) {
+        case 401: {
+          // Token expired or invalid
+          console.log("Authentication error - token expired or invalid");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          store.dispatch(forceLogout());
+
+          // Only redirect if not already on auth pages
+          const currentPath = window.location.pathname;
+          if (
+            !["/login", "/register", "/forgot-password", "/"].some((path) =>
+              currentPath.startsWith(path)
+            )
+          ) {
+            window.location.href = "/login?session=expired";
+          }
+          break;
+        }
+
+        case 403:
+          console.error("Access forbidden:", error.response.data.message);
+          break;
+
+        case 404:
+          if (!config.url.includes("/api/")) {
+            return Promise.reject(new Error("Endpoint not found"));
+          }
+          break;
+
+        case 500:
+          console.error("Server error:", error.response.data.message);
+          break;
       }
     } else if (error.request) {
       // The request was made but no response was received

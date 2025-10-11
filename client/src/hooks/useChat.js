@@ -29,6 +29,8 @@ let socket;
 const useChat = (userId, receiverId, conversationId) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isTyping] = useState(false);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [connectionError, setConnectionError] = useState(null);
   const dispatch = useDispatch();
 
   const roomId =
@@ -43,22 +45,38 @@ const useChat = (userId, receiverId, conversationId) => {
    * @listens {dispatch} - Redux dispatch function
    */
   useEffect(() => {
-    if (!userId || !receiverId) return;
+    if (!userId || !receiverId) {
+      console.log("Missing userId or receiverId, skipping socket connection");
+      return;
+    }
+
+    // Add connection timeout
+    const connectionTimeout = setTimeout(() => {
+      if (!isConnected) {
+        console.warn("Socket connection timeout after 10 seconds");
+        setConnectionError("Connection timeout. Please refresh the page.");
+        setConnectionAttempts((prev) => prev + 1);
+      }
+    }, 10000);
 
     if (!socket) {
+      console.log("Initializing new socket connection...");
       socket = io(import.meta.env.VITE_SERVER_URL || "http://localhost:5000", {
         withCredentials: true,
         reconnection: true,
-        reconnectionAttempts: 5,
+        reconnectionAttempts: 10,
         reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 10000,
         path: "/socket.io",
         transports: ["websocket", "polling"],
         autoConnect: true,
-        forceNew: true,
+        forceNew: false,
       });
     }
 
     if (!socket.connected) {
+      console.log("Socket not connected, attempting to connect...");
       socket.connect();
     }
 
@@ -67,8 +85,12 @@ const useChat = (userId, receiverId, conversationId) => {
      * @function
      */
     const handleConnect = () => {
-      console.log("Socket connected");
+      console.log("Socket connected successfully");
       setIsConnected(true);
+      setConnectionError(null);
+      setConnectionAttempts(0);
+      clearTimeout(connectionTimeout);
+
       if (roomId) {
         joinRoom();
       }
@@ -78,9 +100,19 @@ const useChat = (userId, receiverId, conversationId) => {
      * Handles socket disconnection
      * @function
      */
-    const handleDisconnect = () => {
-      console.log("Socket disconnected");
+    const handleDisconnect = (reason) => {
+      console.log("Socket disconnected:", reason);
       setIsConnected(false);
+
+      if (
+        reason === "io server disconnect" ||
+        reason === "io client disconnect"
+      ) {
+        // Manual disconnect, don't show error
+        setConnectionError(null);
+      } else {
+        setConnectionError("Connection lost. Reconnecting...");
+      }
     };
 
     /**
@@ -89,19 +121,56 @@ const useChat = (userId, receiverId, conversationId) => {
      * @param {Error} error - Connection error
      */
     const handleConnectError = (error) => {
-      console.error("Connection error:", error);
+      console.error("Connection error:", error.message || error);
       console.log(
         "Attempted connection to:",
-        import.meta.env.VITE_API_URL || "http://localhost:5000"
+        import.meta.env.VITE_SERVER_URL || "http://localhost:5000"
       );
       setIsConnected(false);
+      setConnectionAttempts((prev) => prev + 1);
 
-      setTimeout(() => {
-        if (!socket.connected) {
-          console.log("Attempting to reconnect...");
-          socket.connect();
-        }
-      }, 5000);
+      // Provide specific error messages
+      if (error.message?.includes("xhr poll error")) {
+        setConnectionError(
+          "Server connection failed. Please check if the server is running."
+        );
+      } else if (error.message?.includes("timeout")) {
+        setConnectionError("Connection timeout. Retrying...");
+      } else {
+        setConnectionError("Unable to connect. Retrying...");
+      }
+    };
+
+    /**
+     * Handles successful reconnection
+     * @function
+     */
+    const handleReconnect = (attemptNumber) => {
+      console.log("Reconnected after", attemptNumber, "attempts");
+      setConnectionError(null);
+      setConnectionAttempts(0);
+      if (roomId) {
+        joinRoom();
+      }
+    };
+
+    /**
+     * Handles reconnection attempts
+     * @function
+     */
+    const handleReconnectAttempt = (attemptNumber) => {
+      console.log("Reconnection attempt", attemptNumber);
+      setConnectionError(`Reconnecting... (Attempt ${attemptNumber})`);
+    };
+
+    /**
+     * Handles failed reconnection
+     * @function
+     */
+    const handleReconnectFailed = () => {
+      console.error("Reconnection failed after all attempts");
+      setConnectionError("Failed to connect. Please refresh the page.");
+      setIsConnected(false);
     };
 
     /**
@@ -146,23 +215,30 @@ const useChat = (userId, receiverId, conversationId) => {
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleConnectError);
+    socket.on("reconnect", handleReconnect);
+    socket.on("reconnect_attempt", handleReconnectAttempt);
+    socket.on("reconnect_failed", handleReconnectFailed);
     socket.on("receive_message", handleReceiveMessage);
     socket.on("typing", handleTypingStart);
     socket.on("stop_typing", handleTypingStop);
 
     if (socket.connected) {
-      joinRoom();
+      handleConnect();
     }
 
     return () => {
+      clearTimeout(connectionTimeout);
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
       socket.off("connect_error", handleConnectError);
+      socket.off("reconnect", handleReconnect);
+      socket.off("reconnect_attempt", handleReconnectAttempt);
+      socket.off("reconnect_failed", handleReconnectFailed);
       socket.off("receive_message", handleReceiveMessage);
       socket.off("typing", handleTypingStart);
       socket.off("stop_typing", handleTypingStop);
     };
-  }, [dispatch, userId, receiverId, roomId, conversationId]);
+  }, [dispatch, userId, receiverId, roomId, conversationId, isConnected]);
 
   /**
    * Sends a message through the socket
@@ -236,6 +312,8 @@ const useChat = (userId, receiverId, conversationId) => {
     startTyping,
     stopTyping,
     isTyping,
+    connectionError,
+    connectionAttempts,
   };
 };
 

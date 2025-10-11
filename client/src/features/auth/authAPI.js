@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { setToken, setUser, clearAuthData } from "../../utils/authUtils";
 
 const API_BASE = import.meta.env.VITE_SERVER_URL;
 console.log("Auth API Base URL:", API_BASE); // Debug log
@@ -29,6 +30,7 @@ export const loginUser = createAsyncThunk(
         { email, password },
         {
           timeout: 15000, // Increased timeout to 15 seconds
+          withCredentials: true, // Enable cookies
           headers: {
             "Content-Type": "application/json",
           },
@@ -44,8 +46,8 @@ export const loginUser = createAsyncThunk(
       }
 
       console.log("Login successful, storing token and user data");
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data));
+      setToken(data.token);
+      setUser(data);
 
       return data;
     } catch (error) {
@@ -112,8 +114,8 @@ export const registerUser = createAsyncThunk(
         password,
       });
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data));
+      setToken(data.token);
+      setUser(data);
 
       return data;
     } catch (error) {
@@ -140,11 +142,11 @@ export const logoutUser = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       await axios.post(`${API_BASE}/api/auth/logout`);
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      clearAuthData();
       return true;
     } catch (error) {
       console.error("Logout error:", error);
+      clearAuthData(); // Clear data even if API call fails
       return thunkAPI.rejectWithValue("Logout failed");
     }
   }
@@ -178,16 +180,24 @@ export const checkUserSession = createAsyncThunk(
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        withCredentials: true, // Ensure cookies are sent
       });
       console.log("checkUserSession - Server response:", data);
 
-      localStorage.setItem("user", JSON.stringify(data));
+      // Update user data in localStorage
+      setUser(data);
       return data;
     } catch (error) {
       console.error("checkUserSession - Error:", error.response?.data || error);
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      return thunkAPI.rejectWithValue("Session expired");
+      
+      // Only clear auth data if it's a real authentication error
+      if (error.response?.status === 401) {
+        clearAuthData();
+        return thunkAPI.rejectWithValue("Session expired");
+      }
+      
+      // For other errors (network, server), don't clear auth data
+      return thunkAPI.rejectWithValue("Session check failed");
     }
   }
 );

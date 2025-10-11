@@ -31,6 +31,7 @@ import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloseIcon from "@mui/icons-material/Close";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
+import CircleIcon from "@mui/icons-material/Circle";
 import MessageActions from "../components/MessageActions";
 import MessageAttachment from "../components/MessageAttachment";
 import ChatAPI from "../features/chat/chatAPI";
@@ -86,19 +87,6 @@ const ChatPage = () => {
     }
   }, [isAuthenticated, authLoading, navigate, location]);
 
-  const postOwner = location.state?.postOwner;
-  const receiverId = postOwner?._id;
-  const displayName = postOwner?.username || "Unknown Author";
-
-  console.log("Initial props:", {
-    locationState: location.state,
-    postOwner,
-    user: user?._id,
-    isAuthenticated,
-    authLoading,
-    userData: user,
-  });
-
   const {
     messages,
     currentConversation,
@@ -111,11 +99,40 @@ const ChatPage = () => {
 
   // Initialize chat with proper user ID handling
   const userId = user?._id || user?.id;
-  const { isConnected, startTyping, stopTyping } = useChat(
-    userId,
-    receiverId,
-    currentConversation?._id
+
+  // Get other participant from current conversation or location state
+  const postOwner = location.state?.postOwner;
+  const otherParticipant = currentConversation?.participants?.find(
+    (p) => p._id !== userId
   );
+
+  // Receiver can be from postOwner (when coming from MessageButton)
+  // or from conversation participants (when coming from ConversationList)
+  const receiverId = postOwner?._id || otherParticipant?._id;
+  const displayName =
+    postOwner?.username || otherParticipant?.username || "Unknown User";
+
+  console.log("Initial props:", {
+    locationState: location.state,
+    postOwner,
+    conversationId,
+    currentConversation: currentConversation?._id,
+    otherParticipant,
+    receiverId,
+    displayName,
+    user: user?._id,
+    isAuthenticated,
+    authLoading,
+    userData: user,
+  });
+
+  const {
+    isConnected,
+    startTyping,
+    stopTyping,
+    connectionError: socketError,
+    connectionAttempts,
+  } = useChat(userId, receiverId, currentConversation?._id);
 
   console.log("Chat state:", {
     conversationId,
@@ -186,12 +203,26 @@ const ChatPage = () => {
 
   // Handle socket connection errors
   useEffect(() => {
-    if (!isConnected && userId && receiverId) {
-      setConnectionError("Connection lost. Trying to reconnect...");
+    if (socketError) {
+      setConnectionError(socketError);
+    } else if (!isConnected && userId && receiverId && !chatLoading) {
+      // Only show error if we're not loading and should be connected
+      if (connectionAttempts > 0) {
+        setConnectionError(`Connecting... (Attempt ${connectionAttempts})`);
+      } else {
+        setConnectionError("Connecting to chat server...");
+      }
     } else {
       setConnectionError(null);
     }
-  }, [isConnected, userId, receiverId]);
+  }, [
+    isConnected,
+    userId,
+    receiverId,
+    socketError,
+    connectionAttempts,
+    chatLoading,
+  ]);
 
   /**
    * Handles file selection
@@ -244,6 +275,12 @@ const ChatPage = () => {
       return;
     }
 
+    // Check if connected before sending
+    if (!isConnected && !selectedFile) {
+      setConnectionError("Cannot send message. Waiting for connection...");
+      return;
+    }
+
     setIsSending(true);
 
     try {
@@ -259,6 +296,7 @@ const ChatPage = () => {
         dispatch(addMessage(messageData));
         setNewMessage("");
         handleClearFile();
+        setConnectionError(null); // Clear any connection errors on success
 
         if (typingTimeoutRef.current) {
           clearTimeout(typingTimeoutRef.current);
@@ -268,9 +306,16 @@ const ChatPage = () => {
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      setConnectionError(
-        error.message || "Failed to send message. Please try again."
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to send message. Please try again.";
+      setConnectionError(errorMessage);
+
+      // Auto-clear error after 5 seconds
+      setTimeout(() => {
+        setConnectionError(null);
+      }, 5000);
     } finally {
       setIsSending(false);
     }
@@ -355,93 +400,131 @@ const ChatPage = () => {
         className="message-container"
         sx={{
           alignSelf: isSentByCurrentUser ? "flex-end" : "flex-start",
-          maxWidth: "70%",
+          maxWidth: { xs: "85%", sm: "70%" },
           display: "flex",
           alignItems: "flex-start",
           gap: 0.5,
+          mb: 0.5,
         }}
       >
-        <Paper
-          sx={{
-            p: 1.5,
-            backgroundColor: isSentByCurrentUser ? "#e3f2fd" : "#f5f5f5",
-            borderRadius: 2,
-            position: "relative",
-            flex: 1,
-            opacity: message.deleted ? 0.6 : 1,
-          }}
+        {/* Show avatar for received messages */}
+        {!isSentByCurrentUser && (
+          <Avatar
+            src={otherParticipant?.profilePicture || postOwner?.profilePicture}
+            sx={{ width: 32, height: 32, mt: 0.5 }}
+          >
+            {displayName.charAt(0).toUpperCase()}
+          </Avatar>
+        )}
+
+        <Box
+          sx={{ display: "flex", flexDirection: "column", gap: 0.5, flex: 1 }}
         >
-          {message.sender === "system" ? (
-            <Typography
-              variant="body2"
-              sx={{ fontStyle: "italic", color: "text.secondary" }}
-            >
-              {message.text}
-            </Typography>
-          ) : (
-            <>
-              {/* Message attachment */}
-              {message.attachment && (
-                <MessageAttachment attachment={message.attachment} />
-              )}
-
-              {/* Message text */}
-              {message.text && (
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontStyle: message.deleted ? "italic" : "normal",
-                    color: message.deleted ? "text.secondary" : "text.primary",
-                  }}
-                >
-                  {message.text}
-                </Typography>
-              )}
-
-              {/* Message metadata */}
-              <Box
+          <Paper
+            elevation={0}
+            sx={{
+              p: message.attachment ? 0.5 : 1.5,
+              backgroundColor: isSentByCurrentUser ? "#1ac173" : "white",
+              color: isSentByCurrentUser ? "white" : "#050505",
+              borderRadius: message.attachment ? 3 : "18px",
+              position: "relative",
+              opacity: message.deleted ? 0.6 : 1,
+              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+              wordWrap: "break-word",
+              border: isSentByCurrentUser ? "none" : "1px solid #e4e6eb",
+            }}
+          >
+            {message.sender === "system" ? (
+              <Typography
+                variant="body2"
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  mt: 0.5,
+                  fontStyle: "italic",
+                  color: isSentByCurrentUser
+                    ? "rgba(255,255,255,0.9)"
+                    : "text.secondary",
+                  px: 1,
                 }}
               >
-                <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                  {message.timestamp
-                    ? new Date(message.timestamp).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : ""}
+                {message.text}
+              </Typography>
+            ) : (
+              <>
+                {/* Message attachment */}
+                {message.attachment && (
+                  <Box sx={{ borderRadius: 2.5, overflow: "hidden" }}>
+                    <MessageAttachment attachment={message.attachment} />
+                  </Box>
+                )}
+
+                {/* Message text */}
+                {message.text && (
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontStyle: message.deleted ? "italic" : "normal",
+                      fontSize: "0.9375rem",
+                      lineHeight: 1.4,
+                      px: message.attachment ? 1.5 : 0,
+                      py: message.attachment ? 1 : 0,
+                    }}
+                  >
+                    {message.text}
+                  </Typography>
+                )}
+              </>
+            )}
+          </Paper>
+
+          {/* Message metadata below bubble */}
+          {message.sender !== "system" && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                px: 1.5,
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontSize: "0.75rem",
+                }}
+              >
+                {message.timestamp
+                  ? new Date(message.timestamp).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : ""}
+              </Typography>
+
+              {/* Edited indicator */}
+              {message.edited && !message.deleted && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontSize: "0.7rem",
+                  }}
+                >
+                  • edited
                 </Typography>
+              )}
 
-                {/* Edited indicator */}
-                {message.edited && !message.deleted && (
-                  <Chip
-                    label="edited"
-                    size="small"
-                    sx={{
-                      height: 16,
-                      fontSize: "0.65rem",
-                      backgroundColor: "rgba(0, 0, 0, 0.08)",
-                    }}
-                  />
-                )}
-
-                {/* Read receipt for sent messages */}
-                {isSentByCurrentUser && message.read && (
-                  <DoneAllIcon
-                    sx={{
-                      fontSize: 14,
-                      color: "#1ac173",
-                    }}
-                  />
-                )}
-              </Box>
-            </>
+              {/* Read receipt for sent messages */}
+              {isSentByCurrentUser && message.read && (
+                <DoneAllIcon
+                  sx={{
+                    fontSize: 12,
+                    color: "#1ac173",
+                  }}
+                />
+              )}
+            </Box>
           )}
-        </Paper>
+        </Box>
 
         {/* Message actions (edit/delete) */}
         {isSentByCurrentUser && message.sender !== "system" && (
@@ -509,7 +592,8 @@ const ChatPage = () => {
     );
   }
 
-  if (!receiverId && !location.state?.postOwner) {
+  // Show "No chat selected" only if we don't have conversationId, receiverId, or postOwner
+  if (!conversationId && !receiverId && !location.state?.postOwner) {
     return (
       <Box sx={{ minHeight: "100vh", padding: "20px" }}>
         <Paper
@@ -545,83 +629,221 @@ const ChatPage = () => {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", padding: "20px" }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "#f0f2f5",
+      }}
+    >
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
-          maxWidth: 800,
-          margin: "0 auto",
-          height: "80vh",
+          height: "100%",
           display: "flex",
           flexDirection: "column",
-          borderRadius: 4,
+          borderRadius: 0,
           overflow: "hidden",
+          backgroundColor: "white",
         }}
       >
+        {/* Header */}
         <Box
           sx={{
             p: 2,
-            backgroundColor: "#1ac173",
-            color: "white",
+            backgroundColor: "white",
+            borderBottom: "1px solid #e4e6eb",
             display: "flex",
             alignItems: "center",
             gap: 2,
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
           }}
         >
-          <Avatar>{displayName.charAt(0)}</Avatar>
-          <Typography variant="h6">
-            Chat with {displayName}
-            {!isConnected && <span> (Connecting...)</span>}
-          </Typography>
-        </Box>
-        <Divider />
+          <Avatar
+            src={otherParticipant?.profilePicture || postOwner?.profilePicture}
+            sx={{ width: 40, height: 40 }}
+          >
+            {displayName.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="subtitle1" fontWeight={600}>
+              {displayName}
+            </Typography>
+            {!isConnected ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <CircleIcon sx={{ fontSize: 8, color: "#95999e" }} />
+                <Typography variant="caption" color="text.secondary">
+                  {connectionError || "Connecting..."}
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <CircleIcon sx={{ fontSize: 8, color: "#1ac173" }} />
+                <Typography variant="caption" sx={{ color: "#1ac173" }}>
+                  Online
+                </Typography>
+              </Box>
+            )}
+          </Box>
 
+          {/* Show upgrade notice only when used as standalone page */}
+          {location.pathname.startsWith("/chat") && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => navigate("/messages")}
+              sx={{
+                borderColor: "#1ac173",
+                color: "#1ac173",
+                textTransform: "none",
+                "&:hover": {
+                  borderColor: "#17a061",
+                  backgroundColor: "rgba(26, 193, 115, 0.04)",
+                },
+              }}
+            >
+              Try New Chat
+            </Button>
+          )}
+        </Box>
+
+        {/* Messages Area */}
         <Box
           sx={{
             flexGrow: 1,
-            p: 2,
+            p: 3,
             overflowY: "auto",
             display: "flex",
             flexDirection: "column",
-            gap: 1.5,
-            position: "relative",
+            gap: 1,
+            backgroundColor: "#f0f2f5",
+            backgroundImage: `
+              linear-gradient(45deg, rgba(26, 193, 115, 0.02) 25%, transparent 25%),
+              linear-gradient(-45deg, rgba(26, 193, 115, 0.02) 25%, transparent 25%),
+              linear-gradient(45deg, transparent 75%, rgba(26, 193, 115, 0.02) 75%),
+              linear-gradient(-45deg, transparent 75%, rgba(26, 193, 115, 0.02) 75%)
+            `,
+            backgroundSize: "20px 20px",
+            backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
           }}
         >
+          {/* Connection Error Alert */}
+          {!isConnected && connectionError && connectionAttempts > 5 && (
+            <Alert
+              severity="warning"
+              sx={{ mb: 2 }}
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => window.location.reload()}
+                >
+                  Refresh Page
+                </Button>
+              }
+            >
+              {connectionError}
+            </Alert>
+          )}
+
           {chatLoading && !messages.length ? (
             <Box
               sx={{
                 display: "flex",
+                flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "center",
                 height: "100%",
+                gap: 2,
               }}
             >
               <CircularProgress sx={{ color: "#1ac173" }} />
+              <Typography variant="body2" color="text.secondary">
+                Loading messages...
+              </Typography>
             </Box>
-          ) : error || connectionError ? (
-            <Alert severity="error" sx={{ m: 2 }}>
-              {error || connectionError}
+          ) : error ? (
+            <Alert
+              severity="error"
+              sx={{ m: 2 }}
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </Button>
+              }
+            >
+              {error}
             </Alert>
           ) : (
             <>
               {messages.map(renderMessage)}
               {isTyping && (
-                <Box sx={{ alignSelf: "flex-start", ml: 1 }}>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontStyle: "italic", color: "text.secondary" }}
+                <Box
+                  sx={{
+                    alignSelf: "flex-start",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    ml: 1,
+                  }}
+                >
+                  <Avatar
+                    src={
+                      otherParticipant?.profilePicture ||
+                      postOwner?.profilePicture
+                    }
+                    sx={{ width: 32, height: 32 }}
                   >
-                    {displayName} is typing...
-                  </Typography>
+                    {displayName.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      px: 2,
+                      py: 1.5,
+                      backgroundColor: "white",
+                      borderRadius: "18px",
+                      border: "1px solid #e4e6eb",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", gap: 0.5 }}>
+                      <CircleIcon
+                        sx={{
+                          fontSize: 8,
+                          color: "#90949c",
+                          animation: "pulse 1.5s ease-in-out infinite",
+                          "@keyframes pulse": {
+                            "0%, 100%": { opacity: 0.4 },
+                            "50%": { opacity: 1 },
+                          },
+                        }}
+                      />
+                      <CircleIcon
+                        sx={{
+                          fontSize: 8,
+                          color: "#90949c",
+                          animation: "pulse 1.5s ease-in-out 0.2s infinite",
+                        }}
+                      />
+                      <CircleIcon
+                        sx={{
+                          fontSize: 8,
+                          color: "#90949c",
+                          animation: "pulse 1.5s ease-in-out 0.4s infinite",
+                        }}
+                      />
+                    </Box>
+                  </Paper>
                 </Box>
               )}
               <div ref={messagesEndRef} />
             </>
           )}
         </Box>
-        <Divider />
 
         {/* File preview */}
         {selectedFile && (
@@ -673,73 +895,104 @@ const ChatPage = () => {
           </Box>
         )}
 
-        <Stack direction="row" spacing={1} sx={{ p: 2 }}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-            style={{ display: "none" }}
-            onChange={handleFileSelect}
-          />
-          <IconButton
-            color="primary"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isSending}
-            sx={{
-              color: "#1ac173",
-              "&:hover": {
-                backgroundColor: "rgba(26, 193, 115, 0.1)",
-              },
-            }}
-          >
-            <AttachFileIcon />
-          </IconButton>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Type your message..."
-            size="small"
-            value={newMessage}
-            onChange={handleTyping}
-            onKeyPress={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 3,
-                "&.Mui-focused fieldset": {
-                  borderColor: "#1ac173",
-                  borderWidth: 2,
+        {/* Input Area */}
+        <Box
+          sx={{
+            p: 2,
+            backgroundColor: "white",
+            borderTop: "1px solid #e4e6eb",
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="flex-end">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+              style={{ display: "none" }}
+              onChange={handleFileSelect}
+            />
+
+            <IconButton
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isSending}
+              sx={{
+                color: "#1ac173",
+                "&:hover": {
+                  backgroundColor: "rgba(26, 193, 115, 0.08)",
                 },
-              },
-            }}
-          />
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: "#1ac173",
-              borderRadius: 3,
-              padding: "8px 16px",
-              "&:hover": {
-                backgroundColor: "#158f5e",
-              },
-            }}
-            endIcon={
-              isSending ? (
-                <CircularProgress size={16} color="inherit" />
+                "&:disabled": {
+                  color: "#bcc0c4",
+                },
+              }}
+            >
+              <AttachFileIcon />
+            </IconButton>
+
+            <TextField
+              fullWidth
+              multiline
+              maxRows={4}
+              variant="outlined"
+              placeholder="Aa"
+              value={newMessage}
+              onChange={handleTyping}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "20px",
+                  backgroundColor: "#f0f2f5",
+                  fontSize: "0.9375rem",
+                  "& fieldset": {
+                    borderColor: "transparent",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "transparent",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#1ac173",
+                    borderWidth: 1,
+                  },
+                  "& .MuiOutlinedInput-input": {
+                    py: 1,
+                  },
+                },
+              }}
+            />
+
+            <IconButton
+              onClick={handleSendMessage}
+              disabled={
+                (!newMessage.trim() && !selectedFile) ||
+                isSending ||
+                (!isConnected && !selectedFile)
+              }
+              sx={{
+                backgroundColor: "#1ac173",
+                color: "white",
+                width: 36,
+                height: 36,
+                "&:hover": {
+                  backgroundColor: "#17a061",
+                },
+                "&:disabled": {
+                  backgroundColor: "#e4e6eb",
+                  color: "#bcc0c4",
+                },
+              }}
+            >
+              {isSending ? (
+                <CircularProgress size={20} sx={{ color: "white" }} />
               ) : (
-                <SendIcon />
-              )
-            }
-            onClick={handleSendMessage}
-            disabled={(!newMessage.trim() && !selectedFile) || isSending}
-          >
-            {isSending ? "Sending..." : "Send"}
-          </Button>
-        </Stack>
+                <SendIcon sx={{ fontSize: 20 }} />
+              )}
+            </IconButton>
+          </Stack>
+        </Box>
       </Paper>
     </Box>
   );

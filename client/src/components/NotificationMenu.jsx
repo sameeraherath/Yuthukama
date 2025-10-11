@@ -57,7 +57,7 @@ const NotificationMenu = () => {
         navigate(`/profile/${notification.sender._id}`);
         break;
       case "message":
-        navigate(`/chat/${notification.sender._id}`);
+        navigate(`/messages/${notification.sender._id}`);
         break;
       default:
         break;
