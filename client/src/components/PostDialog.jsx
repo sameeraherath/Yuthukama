@@ -32,8 +32,8 @@ const validationSchema = Yup.object().shape({
     .min(3, "Title is too short"),
   description: Yup.string()
     .required("Description is required")
-    .min(3, "Description is too short"),
-  image: Yup.mixed().required("Image is required"),
+    .min(10, "Description must be at least 10 characters"),
+  image: Yup.mixed().optional(),
 });
 
 /**
@@ -73,16 +73,21 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
     const formData = new FormData();
     formData.append("title", values.title);
     formData.append("description", values.description);
-    formData.append("image", values.image);
+    if (values.image) {
+      formData.append("image", values.image);
+    }
 
     const [error, data] = await handleAsync(async () => {
+      const token = localStorage.getItem("token");
       const response = await axios.post(
         `${import.meta.env.VITE_SERVER_URL}/api/posts`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            ...(token && { Authorization: `Bearer ${token}` }),
           },
+          withCredentials: true,
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total
@@ -268,7 +273,7 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
                       },
                     }}
                   >
-                    Choose Image
+                    Choose Image (Optional)
                   </Button>
                   {values.image && (
                     <Typography

@@ -26,7 +26,12 @@ export const fetchPosts = createAsyncThunk(
         );
       }
 
-      const { data } = await axios.get(`${API_BASE}/api/posts`);
+      const { data } = await axios.get(`${API_BASE}/api/posts`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
       return data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -50,10 +55,13 @@ export const createPost = createAsyncThunk(
   "posts/createPost",
   async (postData, thunkAPI) => {
     try {
+      const token = localStorage.getItem("token");
       const { data } = await axios.post(`${API_BASE}/api/posts`, postData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
+        withCredentials: true,
       });
       return data;
     } catch (error) {
