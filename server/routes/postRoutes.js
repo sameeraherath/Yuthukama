@@ -10,6 +10,8 @@ import {
   deleteComment,
   searchPosts,
   getTrendingPosts,
+  toggleSavePost,
+  getSavedPosts,
 } from "../controllers/postController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import {
@@ -74,6 +76,13 @@ router
 router.put("/:id/like", protect, validateMongoId, toggleLikePost);
 
 /**
+ * @route PUT /api/posts/:id/save
+ * @desc Toggle save/unsave a post
+ * @access Private
+ */
+router.put("/:id/save", protect, validateMongoId, toggleSavePost);
+
+/**
  * @route POST /api/posts/:id/comments
  * @desc Add a comment to a post
  * @access Private
@@ -108,5 +117,13 @@ router.get("/search", protect, searchPosts);
  * @returns {Object} JSON response containing trending posts
  */
 router.get("/trending", protect, getTrendingPosts);
+
+/**
+ * @route GET /api/posts/saved
+ * @desc Get user's saved posts
+ * @access Private
+ * @returns {Object} JSON response containing saved posts
+ */
+router.get("/saved", protect, getSavedPosts);
 
 export default router;

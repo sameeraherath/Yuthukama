@@ -151,3 +151,90 @@ export const deleteComment = createAsyncThunk(
     }
   }
 );
+
+/**
+ * Fetches trending/popular posts
+ * @async
+ * @function fetchTrendingPosts
+ * @param {Object} params - Parameters for fetching trending posts
+ * @param {number} [params.limit=5] - Number of posts to fetch
+ * @param {number} [params.days=7] - Number of days to consider for trending
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If authentication is missing or request fails
+ */
+export const fetchTrendingPosts = createAsyncThunk(
+  "posts/fetchTrendingPosts",
+  async ({ limit = 5, days = 7 }, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        return thunkAPI.rejectWithValue(
+          "Authentication required. Please log in."
+        );
+      }
+
+      const { data } = await axios.get(`${API_BASE}/api/posts/trending`, {
+        params: { limit, days },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch trending posts"
+      );
+    }
+  }
+);
+
+/**
+ * Toggles save/unsave a post
+ * @async
+ * @function toggleSavePost
+ * @param {string} postId - ID of the post to save/unsave
+ * @returns {Promise<Object>} Updated save status
+ * @throws {Error} If saving the post fails
+ */
+export const toggleSavePost = async (postId) => {
+  const response = await axios.put(`${API_BASE}/api/posts/${postId}/save`, {}, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+  return response.data;
+};
+
+/**
+ * Fetches user's saved posts
+ * @async
+ * @function fetchSavedPosts
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If authentication is missing or request fails
+ */
+export const fetchSavedPosts = createAsyncThunk(
+  "posts/fetchSavedPosts",
+  async (_, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        return thunkAPI.rejectWithValue(
+          "Authentication required. Please log in."
+        );
+      }
+
+      const { data } = await axios.get(`${API_BASE}/api/posts/saved`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch saved posts"
+      );
+    }
+  }
+);

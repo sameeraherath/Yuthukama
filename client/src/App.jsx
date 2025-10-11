@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { Routes, Route } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 import HomeScreen from "./pages/HomeScreen";
+import ExplorePage from "./pages/ExplorePage";
+import SavedPage from "./pages/SavedPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import LoginPage from "./pages/auth/LoginPage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -13,6 +15,7 @@ import ArticleDetailPage from "./pages/ArticleDetailPage";
 import MainLayout from "./layouts/MainLayout.jsx";
 import ChatPage from "./pages/ChatPage";
 import ModernChatPage from "./pages/ModernChatPage";
+import SettingsPage from "./pages/SettingsPage";
 import AdminDashboard from "./pages/admin/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { checkUserSession } from "./features/auth/authAPI";
@@ -107,7 +110,27 @@ const App = () => {
             </MainLayout>
           </ProtectedRoute>
         }
-      />{" "}
+      />
+      <Route
+        path="/explore"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ExplorePage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/saved"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <SavedPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/profile"
         element={
@@ -127,7 +150,17 @@ const App = () => {
             </MainLayout>
           </ProtectedRoute>
         }
-      />{" "}
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <SettingsPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
       {/* Modern Chat Routes - Split Screen */}
       <Route
         path="/messages"

@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
-import { deletePost } from "../features/posts/postsAPI";
+import { deletePost, toggleSavePost } from "../features/posts/postsAPI";
 import useAuth from "../hooks/useAuth";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -27,7 +27,7 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import MessageButton from "./MessageButton";
 import Comments from "./Comments";
 import { likePost } from "../features/posts/postsSlice";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   COLORS,
@@ -75,6 +75,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
   const [expanded, setExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [error, setError] = useState(null);
 
@@ -209,14 +210,51 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
     },
   };
 
-  const handleSave = () => {
-    setIsSaved(!isSaved);
-    dispatch(
-      showToast({
-        message: isSaved ? "Post unsaved" : "Post saved",
-        severity: "success",
-      })
-    );
+  /**
+   * Handles post save/unsave with error handling
+   * @async
+   * @function
+   */
+  const handleSave = async () => {
+    if (!user) {
+      dispatch(
+        showToast({
+          message: "Please login to save posts",
+          severity: "warning",
+        })
+      );
+      return;
+    }
+
+    if (isSaving) return;
+
+    setIsSaving(true);
+    setError(null);
+
+    const [err] = await handleAsync(async () => {
+      const result = await toggleSavePost(post._id);
+      setIsSaved(result.isSaved);
+      dispatch(
+        showToast({
+          message: result.message,
+          severity: "success",
+        })
+      );
+    }, "PostCard.handleSave");
+
+    if (err) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      dispatch(
+        showToast({
+          message: "Failed to save post",
+          severity: "error",
+        })
+      );
+      logError(err, "PostCard.handleSave");
+    }
+
+    setIsSaving(false);
   };
 
   // Extract hashtags from description
@@ -527,18 +565,22 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           )}
           <IconButton
             onClick={handleSave}
+            disabled={isSaving}
             size="small"
             sx={{
-              color: "#4b5563",
+              color: isSaved ? "#1DBF73" : "#4b5563",
               borderRadius: 2,
               p: { xs: 0.5, sm: 1 },
               "&:hover": {
-                backgroundColor: "#f3f4f6",
+                backgroundColor: isSaved ? "rgba(29, 191, 115, 0.1)" : "#f3f4f6",
                 color: "#1DBF73",
               },
             }}
+            aria-label={isSaved ? "Unsave post" : "Save post"}
           >
-            {isSaved ? (
+            {isSaving ? (
+              <CircularProgress size={16} />
+            ) : isSaved ? (
               <BookmarkIcon sx={{ width: { xs: 16, sm: 20 }, height: { xs: 16, sm: 20 } }} />
             ) : (
               <BookmarkBorderIcon sx={{ width: { xs: 16, sm: 20 }, height: { xs: 16, sm: 20 } }} />

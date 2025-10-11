@@ -16,13 +16,17 @@ import {
   Paper,
   IconButton,
   Chip,
+  Fab,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import CircleIcon from "@mui/icons-material/Circle";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
+import AddIcon from "@mui/icons-material/Add";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchConversations } from "../../features/chat/chatSlice";
 import useAuth from "../../hooks/useAuth";
+import UserSearch from "./UserSearch";
+import ChatAPI from "../../features/chat/chatAPI";
 
 /**
  * ConversationList component - displays list of conversations
@@ -34,6 +38,8 @@ const ConversationList = ({ onSelectConversation }) => {
   const dispatch = useDispatch();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
   const { conversations, loading } = useSelector((state) => state.chat);
 
@@ -84,6 +90,32 @@ const ConversationList = ({ onSelectConversation }) => {
   const handleSelectConversation = (conversation) => {
     if (onSelectConversation) {
       onSelectConversation(conversation);
+    }
+  };
+
+  /**
+   * Handle user selection from search
+   */
+  const handleUserSelect = async (selectedUser) => {
+    setIsCreatingConversation(true);
+    try {
+      // Get or create conversation with selected user
+      const conversation = await ChatAPI.getOrCreateConversation(selectedUser._id);
+      
+      // Refresh conversations list
+      dispatch(fetchConversations());
+      
+      // Select the new conversation
+      if (onSelectConversation) {
+        onSelectConversation(conversation);
+      }
+      
+      // Navigate to the conversation
+      navigate(`/messages/${conversation._id}`);
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+    } finally {
+      setIsCreatingConversation(false);
     }
   };
 
@@ -178,10 +210,62 @@ const ConversationList = ({ onSelectConversation }) => {
           >
             Messages
           </Typography>
-          <IconButton size="small" sx={{ color: "#65676b" }}>
-            <SearchIcon />
-          </IconButton>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <IconButton 
+              size="small" 
+              sx={{ color: "#65676b" }}
+              onClick={() => setShowUserSearch(true)}
+            >
+              <SearchIcon />
+            </IconButton>
+            <IconButton 
+              size="small" 
+              sx={{ 
+                color: "#1DBF73",
+                backgroundColor: "#f0fdf4",
+                "&:hover": {
+                  backgroundColor: "#e8f5e9",
+                },
+              }}
+              onClick={() => setShowUserSearch(true)}
+              disabled={isCreatingConversation}
+            >
+              <AddIcon />
+            </IconButton>
+          </Box>
         </Box>
+        
+        {/* Search Input */}
+        <TextField
+          fullWidth
+          placeholder="Search conversations..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          size="small"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: "#65676b", fontSize: 20 }} />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+              backgroundColor: "#f0f2f5",
+              fontSize: "0.875rem",
+              "& fieldset": {
+                borderColor: "transparent",
+              },
+              "&:hover fieldset": {
+                borderColor: "#e4e6eb",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "#1DBF73",
+              },
+            },
+          }}
+        />
       </Box>
 
       {/* Conversation List */}
@@ -304,6 +388,13 @@ const ConversationList = ({ onSelectConversation }) => {
           })
         )}
       </Box>
+
+      {/* User Search Dialog */}
+      <UserSearch
+        open={showUserSearch}
+        onClose={() => setShowUserSearch(false)}
+        onUserSelect={handleUserSelect}
+      />
     </Box>
   );
 };

@@ -23,6 +23,11 @@ axios.defaults.withCredentials = true;
 // Add timeout configuration
 axios.defaults.timeout = 15000; // Increased to 15 seconds timeout
 
+// Don't treat 4xx errors as successful responses
+axios.defaults.validateStatus = function (status) {
+  return status >= 200 && status < 300;
+};
+
 // Add retry configuration
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
@@ -80,6 +85,7 @@ axios.interceptors.response.use(
     // If the error is a timeout or network error and we haven't exceeded max retries
     if (
       (error.code === "ECONNABORTED" || !error.response) &&
+      config &&
       config.retryCount < MAX_RETRIES
     ) {
       config.retryCount += 1;
@@ -134,6 +140,10 @@ axios.interceptors.response.use(
 
         case 403:
           console.error("Access forbidden:", error.response.data.message);
+          break;
+
+        case 429:
+          console.error("Rate limit exceeded:", error.response.data.message);
           break;
 
         case 404:

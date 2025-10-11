@@ -10,8 +10,12 @@ import {
   updateUsername,
   updateProfilePicture,
   searchUsers,
-  getRecommendedUsers,
   getUserStats,
+  followUser,
+  unfollowUser,
+  getFollowers,
+  getFollowing,
+  getFollowStatus,
 } from "../controllers/userController.js";
 import multer from "multer";
 
@@ -72,14 +76,6 @@ router.put(
  */
 router.get("/search", protect, searchUsers);
 
-/**
- * @route GET /api/users/recommended
- * @desc Get recommended users for the authenticated user
- * @access Private
- * @param {number} [req.query.limit] - Limit results
- * @returns {Object} JSON response containing recommended users
- */
-router.get("/recommended", protect, getRecommendedUsers);
 
 /**
  * @route GET /api/users/:id
@@ -98,5 +94,54 @@ router.get("/:id", protect, getUserProfile);
  * @returns {Object} JSON response containing user statistics
  */
 router.get("/:id/stats", protect, getUserStats);
+
+/**
+ * @route POST /api/users/:id/follow
+ * @desc Follow a user
+ * @access Private
+ * @param {string} req.params.id - User ID to follow
+ * @returns {Object} JSON response with success message
+ */
+router.post("/:id/follow", protect, followUser);
+
+/**
+ * @route DELETE /api/users/:id/follow
+ * @desc Unfollow a user
+ * @access Private
+ * @param {string} req.params.id - User ID to unfollow
+ * @returns {Object} JSON response with success message
+ */
+router.delete("/:id/follow", protect, unfollowUser);
+
+/**
+ * @route GET /api/users/:id/followers
+ * @desc Get followers list for a user
+ * @access Private
+ * @param {string} req.params.id - User ID
+ * @param {number} [req.query.limit] - Limit results
+ * @param {number} [req.query.offset] - Offset for pagination
+ * @returns {Object} JSON response containing followers list
+ */
+router.get("/:id/followers", protect, getFollowers);
+
+/**
+ * @route GET /api/users/:id/following
+ * @desc Get following list for a user
+ * @access Private
+ * @param {string} req.params.id - User ID
+ * @param {number} [req.query.limit] - Limit results
+ * @param {number} [req.query.offset] - Offset for pagination
+ * @returns {Object} JSON response containing following list
+ */
+router.get("/:id/following", protect, getFollowing);
+
+/**
+ * @route GET /api/users/:id/follow-status
+ * @desc Check if current user is following a specific user
+ * @access Private
+ * @param {string} req.params.id - User ID to check
+ * @returns {Object} JSON response with follow status
+ */
+router.get("/:id/follow-status", protect, getFollowStatus);
 
 export default router;

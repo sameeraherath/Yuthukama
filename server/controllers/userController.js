@@ -202,38 +202,6 @@ const userController = {
     }
   },
 
-  /**
-   * Gets recommended users for the authenticated user
-   * Based on recent activity, popular users, and new users
-   * @param {Object} req - Express request object
-   * @param {Object} req.user - Authenticated user object
-   * @param {string} req.user._id - User's ID
-   * @param {Object} res - Express response object
-   * @returns {Object} JSON response containing recommended users
-   * @throws {Error} If recommendation fails
-   */
-  getRecommendedUsers: async (req, res) => {
-    try {
-      const { limit = 10 } = req.query;
-      const limitNum = Math.min(parseInt(limit) || 10, 20);
-
-      // Exclude current user from recommendations
-      const recommendedUsers = await User.find({
-        _id: { $ne: req.user._id },
-      })
-        .select("username profilePicture createdAt")
-        .sort({ createdAt: -1 }) // Newer users first
-        .limit(limitNum);
-
-      res.json({
-        count: recommendedUsers.length,
-        users: recommendedUsers,
-      });
-    } catch (error) {
-      console.error("Error getting recommended users:", error);
-      res.status(500).json({ message: "Error getting recommended users" });
-    }
-  },
 
   /**
    * Gets user statistics
@@ -277,6 +245,230 @@ const userController = {
       res.status(500).json({ message: "Error getting user statistics" });
     }
   },
+
+  /**
+   * Follows a user
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Request parameters
+   * @param {string} req.params.id - ID of the user to follow
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user._id - Current user's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with success message
+   * @throws {Error} If follow operation fails
+   * @example
+   * // Route: POST /api/users/:id/follow
+   */
+  followUser: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const currentUserId = req.user._id;
+
+      // Check if user is trying to follow themselves
+      if (id === currentUserId) {
+        return res.status(400).json({ message: "You cannot follow yourself" });
+      }
+
+      // Check if target user exists
+      const targetUser = await User.findById(id);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if already following
+      const currentUser = await User.findById(currentUserId);
+      if (currentUser.following.includes(id)) {
+        return res.status(400).json({ message: "You are already following this user" });
+      }
+
+      // Add to following list of current user
+      await User.findByIdAndUpdate(
+        currentUserId,
+        { $addToSet: { following: id } },
+        { new: true }
+      );
+
+      // Add to followers list of target user
+      await User.findByIdAndUpdate(
+        id,
+        { $addToSet: { followers: currentUserId } },
+        { new: true }
+      );
+
+      res.json({ message: "Successfully followed user" });
+    } catch (error) {
+      console.error("Error following user:", error);
+      res.status(500).json({ message: "Error following user" });
+    }
+  },
+
+  /**
+   * Unfollows a user
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Request parameters
+   * @param {string} req.params.id - ID of the user to unfollow
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user._id - Current user's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with success message
+   * @throws {Error} If unfollow operation fails
+   * @example
+   * // Route: DELETE /api/users/:id/follow
+   */
+  unfollowUser: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const currentUserId = req.user._id;
+
+      // Check if user is trying to unfollow themselves
+      if (id === currentUserId) {
+        return res.status(400).json({ message: "You cannot unfollow yourself" });
+      }
+
+      // Check if target user exists
+      const targetUser = await User.findById(id);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if currently following
+      const currentUser = await User.findById(currentUserId);
+      if (!currentUser.following.includes(id)) {
+        return res.status(400).json({ message: "You are not following this user" });
+      }
+
+      // Remove from following list of current user
+      await User.findByIdAndUpdate(
+        currentUserId,
+        { $pull: { following: id } },
+        { new: true }
+      );
+
+      // Remove from followers list of target user
+      await User.findByIdAndUpdate(
+        id,
+        { $pull: { followers: currentUserId } },
+        { new: true }
+      );
+
+      res.json({ message: "Successfully unfollowed user" });
+    } catch (error) {
+      console.error("Error unfollowing user:", error);
+      res.status(500).json({ message: "Error unfollowing user" });
+    }
+  },
+
+  /**
+   * Gets followers list for a user
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Request parameters
+   * @param {string} req.params.id - User ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing followers list
+   * @throws {Error} If fetching followers fails
+   * @example
+   * // Route: GET /api/users/:id/followers
+   */
+  getFollowers: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { limit = 20, offset = 0 } = req.query;
+
+      const user = await User.findById(id)
+        .populate({
+          path: 'followers',
+          select: 'username profilePicture createdAt',
+          options: {
+            limit: parseInt(limit),
+            skip: parseInt(offset),
+            sort: { createdAt: -1 }
+          }
+        })
+        .select('followers');
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        count: user.followers.length,
+        followers: user.followers,
+      });
+    } catch (error) {
+      console.error("Error getting followers:", error);
+      res.status(500).json({ message: "Error getting followers" });
+    }
+  },
+
+  /**
+   * Gets following list for a user
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Request parameters
+   * @param {string} req.params.id - User ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing following list
+   * @throws {Error} If fetching following fails
+   * @example
+   * // Route: GET /api/users/:id/following
+   */
+  getFollowing: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { limit = 20, offset = 0 } = req.query;
+
+      const user = await User.findById(id)
+        .populate({
+          path: 'following',
+          select: 'username profilePicture createdAt',
+          options: {
+            limit: parseInt(limit),
+            skip: parseInt(offset),
+            sort: { createdAt: -1 }
+          }
+        })
+        .select('following');
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        count: user.following.length,
+        following: user.following,
+      });
+    } catch (error) {
+      console.error("Error getting following:", error);
+      res.status(500).json({ message: "Error getting following" });
+    }
+  },
+
+  /**
+   * Checks if current user is following a specific user
+   * @param {Object} req - Express request object
+   * @param {Object} req.params - Request parameters
+   * @param {string} req.params.id - User ID to check
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user._id - Current user's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with follow status
+   * @throws {Error} If checking follow status fails
+   * @example
+   * // Route: GET /api/users/:id/follow-status
+   */
+  getFollowStatus: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const currentUserId = req.user._id;
+
+      const currentUser = await User.findById(currentUserId).select('following');
+      const isFollowing = currentUser.following.includes(id);
+
+      res.json({ isFollowing });
+    } catch (error) {
+      console.error("Error checking follow status:", error);
+      res.status(500).json({ message: "Error checking follow status" });
+    }
+  },
 };
 
 export { userController as default };
@@ -285,6 +477,10 @@ export const {
   updateUsername,
   getUserProfile,
   searchUsers,
-  getRecommendedUsers,
   getUserStats,
+  followUser,
+  unfollowUser,
+  getFollowers,
+  getFollowing,
+  getFollowStatus,
 } = userController;

@@ -10,6 +10,7 @@ import {
   deleteMessage,
   markMessagesAsRead,
 } from "../features/chat/chatSlice";
+import { fetchUserById } from "../features/auth/userSlice";
 import useAuth from "../hooks/useAuth";
 import useChat from "../hooks/useChat";
 import {
@@ -34,6 +35,7 @@ import DoneAllIcon from "@mui/icons-material/DoneAll";
 import CircleIcon from "@mui/icons-material/Circle";
 import MessageActions from "../components/MessageActions";
 import MessageAttachment from "../components/MessageAttachment";
+import UserManagement from "../components/chat/UserManagement";
 import ChatAPI from "../features/chat/chatAPI";
 import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
 
@@ -95,6 +97,8 @@ const ChatPage = () => {
     loading: chatLoading,
   } = useSelector((state) => state.chat);
 
+  const { profileUser } = useSelector((state) => state.user);
+
   const [newMessage, setNewMessage] = useState("");
 
   // Initialize chat with proper user ID handling
@@ -110,7 +114,12 @@ const ChatPage = () => {
   // or from conversation participants (when coming from ConversationList)
   const receiverId = postOwner?._id || otherParticipant?._id;
   const displayName =
-    postOwner?.username || otherParticipant?.username || "Unknown User";
+    postOwner?.username || 
+    otherParticipant?.username || 
+    postOwner?.name || 
+    otherParticipant?.name ||
+    (profileUser?._id === receiverId ? profileUser?.username : null) ||
+    "Loading...";
 
   console.log("Initial props:", {
     locationState: location.state,
@@ -183,6 +192,13 @@ const ChatPage = () => {
     isAuthenticated,
     authLoading,
   ]);
+
+  // Fetch user details if we don't have them
+  useEffect(() => {
+    if (receiverId && !postOwner?.username && !otherParticipant?.username) {
+      dispatch(fetchUserById(receiverId));
+    }
+  }, [receiverId, postOwner, otherParticipant, dispatch]);
 
   // Scroll to latest message
   useEffect(() => {
@@ -405,6 +421,8 @@ const ChatPage = () => {
           alignItems: "flex-start",
           gap: 0.5,
           mb: 0.5,
+          width: "fit-content",
+          minWidth: 0,
         }}
       >
         {/* Show avatar for received messages */}
@@ -432,7 +450,9 @@ const ChatPage = () => {
               boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
               wordWrap: "break-word",
               border: isSentByCurrentUser ? "none" : "1px solid #e4e6eb",
-              maxWidth: "70%",
+              maxWidth: "100%",
+              width: "fit-content",
+              minWidth: 0,
             }}
           >
             {message.sender === "system" ? (
@@ -650,70 +670,23 @@ const ChatPage = () => {
           backgroundColor: "white",
         }}
       >
-        {/* Header */}
-        <Box
-          sx={{
-            p: 2,
-            backgroundColor: "white",
-            borderBottom: "1px solid #e4e6eb",
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
+        {/* User Management Header */}
+        <UserManagement
+          user={otherParticipant || postOwner}
+          conversation={currentConversation}
+          onBlockUser={(user) => {
+            console.log("Block user:", user);
+            // Implement block user functionality
           }}
-        >
-          <Avatar
-            src={otherParticipant?.profilePicture || postOwner?.profilePicture}
-            sx={{ 
-              width: 40, 
-              height: 40,
-              backgroundColor: "#e0e0e0",
-            }}
-          >
-            {displayName.charAt(0).toUpperCase()}
-          </Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Typography 
-              variant="subtitle1" 
-              fontWeight={600}
-              sx={{
-                fontSize: "1rem",
-                color: "#050505",
-                mb: 0.5,
-              }}
-            >
-              {displayName}
-            </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  color: "#65676b",
-                  fontSize: "0.75rem",
-                }}
-              >
-                Authorised Dealer
-              </Typography>
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  backgroundColor: "#9c27b0",
-                  borderRadius: "50%",
-                  ml: 0.5,
-                }}
-              />
-            </Box>
-          </Box>
-
-          {/* Menu Icon */}
-          <IconButton size="small" sx={{ color: "#65676b" }}>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              <Box sx={{ width: 4, height: 4, backgroundColor: "#65676b", borderRadius: "50%" }} />
-              <Box sx={{ width: 4, height: 4, backgroundColor: "#65676b", borderRadius: "50%" }} />
-              <Box sx={{ width: 4, height: 4, backgroundColor: "#65676b", borderRadius: "50%" }} />
-            </Box>
-          </IconButton>
-        </Box>
+          onReportUser={(user) => {
+            console.log("Report user:", user);
+            // Implement report user functionality
+          }}
+          onRemoveUser={(user) => {
+            console.log("Remove user:", user);
+            // Implement remove user functionality
+          }}
+        />
 
         {/* Messages Area */}
         <Box
@@ -725,6 +698,7 @@ const ChatPage = () => {
             flexDirection: "column",
             gap: 1,
             backgroundColor: "white",
+            alignItems: "stretch",
           }}
         >
           {/* Connection Error Alert */}

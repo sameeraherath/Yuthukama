@@ -2,7 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { setToken, setUser, clearAuthData } from "../../utils/authUtils";
 
-const API_BASE = import.meta.env.VITE_SERVER_URL;
+const API_BASE = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
 console.log("Auth API Base URL:", API_BASE); // Debug log
 
 /**
@@ -108,19 +108,74 @@ export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async ({ username, email, password }, thunkAPI) => {
     try {
-      const { data } = await axios.post(`${API_BASE}/api/auth/register`, {
-        username,
-        email,
-        password,
-      });
+      console.log("Attempting registration to:", `${API_BASE}/api/auth/register`);
 
+      const { data } = await axios.post(
+        `${API_BASE}/api/auth/register`,
+        { username, email, password },
+        {
+          timeout: 15000, // Increased timeout to 15 seconds
+          withCredentials: true, // Enable cookies
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Registration successful, storing token and user data");
       setToken(data.token);
       setUser(data);
 
       return data;
     } catch (error) {
+      console.error("Registration error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        code: error.code,
+        url: error.config?.url,
+        method: error.config?.method,
+      });
+
+      if (error.code === "ECONNABORTED") {
+        return thunkAPI.rejectWithValue(
+          "Connection timed out. The server is taking too long to respond. Please try again."
+        );
+      }
+
+      if (!error.response) {
+        return thunkAPI.rejectWithValue(
+          "Unable to connect to the server. Please check your internet connection and try again."
+        );
+      }
+
+      if (error.response.status === 404) {
+        return thunkAPI.rejectWithValue(
+          "Registration endpoint not found. Please check the server configuration."
+        );
+      }
+
+      // Handle validation errors from server
+      if (error.response.status === 400 && error.response.data?.errors) {
+        const validationErrors = error.response.data.errors;
+        const errorMessage = validationErrors.map(err => err.message).join(', ');
+        return thunkAPI.rejectWithValue(errorMessage);
+      }
+
+      // Handle rate limiting error
+      if (error.response.status === 429) {
+        return thunkAPI.rejectWithValue(
+          "Too many registration attempts. Please wait a few minutes before trying again."
+        );
+      }
+
+      // Handle user already exists error
+      if (error.response.status === 400 && error.response.data?.message) {
+        return thunkAPI.rejectWithValue(error.response.data.message);
+      }
+
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Registration failed"
+        error.response?.data?.message || "Registration failed. Please try again."
       );
     }
   }

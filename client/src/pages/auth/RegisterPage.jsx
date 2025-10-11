@@ -59,12 +59,20 @@ const RegisterPage = () => {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.username) newErrors.username = "Username is required";
+    else if (formData.username.length < 3 || formData.username.length > 30)
+      newErrors.username = "Username must be between 3 and 30 characters";
+    else if (!/^[a-zA-Z0-9_-]+$/.test(formData.username))
+      newErrors.username = "Username can only contain letters, numbers, underscores, and hyphens";
+    
     if (!formData.email) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "Email is invalid";
+    
     if (!formData.password) newErrors.password = "Password is required";
-    else if (formData.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters long";
+    else if (formData.password.length < 8)
+      newErrors.password = "Password must be at least 8 characters long";
+    else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password))
+      newErrors.password = "Password must contain at least one uppercase letter, one lowercase letter, and one number";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -79,14 +87,22 @@ const RegisterPage = () => {
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    console.log("Form submitted with data:", formData);
+    
+    if (!validateForm()) {
+      console.log("Form validation failed:", errors);
+      return;
+    }
 
+    console.log("Form validation passed, attempting registration...");
     setRegisterError("");
 
     try {
       await register(formData.username, formData.email, formData.password);
+      console.log("Registration successful, navigating to home");
       navigate("/home");
     } catch (error) {
+      console.error("Registration failed:", error);
       setRegisterError(error);
     }
   };

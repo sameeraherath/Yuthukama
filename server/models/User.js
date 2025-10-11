@@ -62,6 +62,27 @@ const UserSchema = new mongoose.Schema({
   emailVerificationExpire: {
     type: Date,
   },
+  savedPosts: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      default: [],
+    },
+  ],
+  followers: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: [],
+    },
+  ],
+  following: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: [],
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

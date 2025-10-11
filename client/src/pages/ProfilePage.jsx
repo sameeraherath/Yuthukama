@@ -9,6 +9,11 @@ import {
   updateUsername,
   clearMessage,
   fetchUserById,
+  followUser,
+  unfollowUser,
+  checkFollowStatus,
+  fetchFollowers,
+  fetchFollowing,
 } from "../features/auth/userSlice";
 import { deletePost } from "../features/posts/postsAPI";
 
@@ -38,6 +43,9 @@ import {
   ListItemText,
   Divider,
   Badge,
+  Chip,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
@@ -54,6 +62,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
+import PeopleIcon from "@mui/icons-material/People";
 import { useNavigate } from "react-router-dom";
 
 /**
@@ -77,6 +88,9 @@ const ProfilePage = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
+  const [followersDialogOpen, setFollowersDialogOpen] = useState(false);
+  const [followingDialogOpen, setFollowingDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
 
   /**
    * Effect hook to log user state changes
@@ -98,6 +112,9 @@ const ProfilePage = () => {
     error: userError,
     message,
     profileUser,
+    followers,
+    following,
+    followStatus,
   } = useSelector((state) => state.user);
 
   console.log("ProfilePage userPosts:", userPosts);
@@ -122,6 +139,11 @@ const ProfilePage = () => {
       // If viewing another user's profile, fetch their data
       if (!isViewingOwnProfile) {
         dispatch(fetchUserById(userId));
+        // Check follow status
+        dispatch(checkFollowStatus(userId));
+        // Fetch followers and following counts
+        dispatch(fetchFollowers(userId));
+        dispatch(fetchFollowing(userId));
       }
     }
   }, [dispatch, targetUserId, userId, isViewingOwnProfile]);
@@ -245,6 +267,52 @@ const ProfilePage = () => {
     }
     setDeleteDialogOpen(false);
     setPostToDelete(null);
+  };
+
+  /**
+   * Handles following a user
+   * @async
+   * @function
+   */
+  const handleFollow = async () => {
+    if (userId) {
+      await dispatch(followUser(userId));
+      // Refresh followers/following data
+      dispatch(fetchFollowers(userId));
+      dispatch(fetchFollowing(userId));
+    }
+  };
+
+  /**
+   * Handles unfollowing a user
+   * @async
+   * @function
+   */
+  const handleUnfollow = async () => {
+    if (userId) {
+      await dispatch(unfollowUser(userId));
+      // Refresh followers/following data
+      dispatch(fetchFollowers(userId));
+      dispatch(fetchFollowing(userId));
+    }
+  };
+
+  /**
+   * Handles opening followers dialog
+   * @function
+   */
+  const handleOpenFollowers = () => {
+    setFollowersDialogOpen(true);
+    setActiveTab(0);
+  };
+
+  /**
+   * Handles opening following dialog
+   * @function
+   */
+  const handleOpenFollowing = () => {
+    setFollowingDialogOpen(true);
+    setActiveTab(1);
   };
 
   if (postsLoading || userLoading) {
@@ -948,6 +1016,67 @@ const ProfilePage = () => {
         <Typography variant="body1" sx={{ mt: 3, color: "#555" }}>
           Email: <b>{displayUser?.email}</b>
         </Typography>
+        
+        {/* Follow/Unfollow Button and Stats */}
+        {!isViewingOwnProfile && (
+          <Box sx={{ mt: 3, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+            <Button
+              variant={followStatus[userId] ? "outlined" : "contained"}
+              color="success"
+              onClick={followStatus[userId] ? handleUnfollow : handleFollow}
+              disabled={userLoading}
+              startIcon={followStatus[userId] ? <PersonRemoveIcon /> : <PersonAddIcon />}
+              sx={{
+                fontWeight: "bold",
+                textTransform: "none",
+                borderRadius: 5,
+                px: 4,
+                py: 1,
+                backgroundColor: followStatus[userId] ? "transparent" : "#1dbf73",
+                borderColor: "#1dbf73",
+                color: followStatus[userId] ? "#1dbf73" : "white",
+                "&:hover": {
+                  backgroundColor: followStatus[userId] ? "#f0fdf4" : "#169c5f",
+                  borderColor: "#1dbf73",
+                },
+              }}
+            >
+              {followStatus[userId] ? "Unfollow" : "Follow"}
+            </Button>
+            
+            {/* Followers and Following Stats */}
+            <Box sx={{ display: "flex", gap: 3, mt: 1 }}>
+              <Chip
+                icon={<PeopleIcon />}
+                label={`${followers?.length || 0} Followers`}
+                onClick={handleOpenFollowers}
+                sx={{
+                  cursor: "pointer",
+                  backgroundColor: "#f0fdf4",
+                  color: "#1dbf73",
+                  border: "1px solid #1dbf73",
+                  "&:hover": {
+                    backgroundColor: "#e0f2e9",
+                  },
+                }}
+              />
+              <Chip
+                icon={<PeopleIcon />}
+                label={`${following?.length || 0} Following`}
+                onClick={handleOpenFollowing}
+                sx={{
+                  cursor: "pointer",
+                  backgroundColor: "#f0fdf4",
+                  color: "#1dbf73",
+                  border: "1px solid #1dbf73",
+                  "&:hover": {
+                    backgroundColor: "#e0f2e9",
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+        )}
       </Paper>
 
       <Paper elevation={1} sx={{ p: 3, mb: 4, borderRadius: 4 }}>
@@ -1018,6 +1147,96 @@ const ProfilePage = () => {
           </Container>
         </Box>
       </Box>
+
+      {/* Followers Dialog */}
+      <Dialog
+        open={followersDialogOpen}
+        onClose={() => setFollowersDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, textAlign: "center" }}>
+          Followers
+        </DialogTitle>
+        <DialogContent>
+          {followers?.length > 0 ? (
+            <List>
+              {followers.map((follower) => (
+                <ListItem key={follower._id} sx={{ px: 0 }}>
+                  <ListItemButton
+                    onClick={() => {
+                      navigate(`/profile/${follower._id}`);
+                      setFollowersDialogOpen(false);
+                    }}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <Avatar
+                      src={follower.profilePicture}
+                      sx={{ width: 40, height: 40, mr: 2 }}
+                    >
+                      {follower.username?.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <ListItemText
+                      primary={follower.username}
+                      secondary={`Joined ${new Date(follower.createdAt).toLocaleDateString()}`}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+              No followers yet
+            </Typography>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Following Dialog */}
+      <Dialog
+        open={followingDialogOpen}
+        onClose={() => setFollowingDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, textAlign: "center" }}>
+          Following
+        </DialogTitle>
+        <DialogContent>
+          {following?.length > 0 ? (
+            <List>
+              {following.map((user) => (
+                <ListItem key={user._id} sx={{ px: 0 }}>
+                  <ListItemButton
+                    onClick={() => {
+                      navigate(`/profile/${user._id}`);
+                      setFollowingDialogOpen(false);
+                    }}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <Avatar
+                      src={user.profilePicture}
+                      sx={{ width: 40, height: 40, mr: 2 }}
+                    >
+                      {user.username?.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <ListItemText
+                      primary={user.username}
+                      secondary={`Joined ${new Date(user.createdAt).toLocaleDateString()}`}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+              Not following anyone yet
+            </Typography>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Scroll to Top Button */}
       <Zoom in={showScrollTop}>

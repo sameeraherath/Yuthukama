@@ -9,8 +9,6 @@ import {
   Zoom,
   Chip,
   Fade,
-  Tabs,
-  Tab,
   Paper,
   Drawer,
   List,
@@ -28,7 +26,6 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 import useAuth from "../hooks/useAuth";
-import usePosts from "../hooks/usePosts";
 import SearchBar from "../components/SearchBar";
 import PostCard from "../components/PostCard";
 import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
@@ -45,38 +42,64 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import GroupIcon from "@mui/icons-material/Group";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import NotificationMenu from "../components/NotificationMenu";
 import AIChatBot from "../components/AIChatBot";
+import { fetchSavedPosts } from "../features/posts/postsAPI";
+import { useDispatch, useSelector } from "react-redux";
 
 /**
- * Modern social media home screen with three-column layout
+ * Saved posts page component that displays user's saved posts
  * @component
- * @returns {JSX.Element} The redesigned home screen with sidebar navigation and main feed
+ * @returns {JSX.Element} The saved posts page
  */
-const HomeScreen = () => {
+const SavedPage = () => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [searchTerm, setSearchTerm] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
   const [showAIChat, setShowAIChat] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [savedPosts, setSavedPosts] = useState([]);
 
   /**
    * Effect hook to redirect unauthenticated users to login
    */
   useEffect(() => {
-    console.log("HomeScreen - Auth state:", { isAuthenticated, user });
+    console.log("SavedPage - Auth state:", { isAuthenticated, user });
     if (!isAuthenticated) {
-      console.log("HomeScreen - Not authenticated, redirecting to login");
+      console.log("SavedPage - Not authenticated, redirecting to login");
       navigate("/login");
     }
   }, [isAuthenticated, navigate]);
 
-  const token = localStorage.getItem("token");
-  const { posts, error, loading } = usePosts(token);
+  /**
+   * Effect hook to fetch saved posts on component mount
+   */
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const result = await dispatch(fetchSavedPosts()).unwrap();
+        setSavedPosts(result.posts || []);
+      } catch (err) {
+        console.error("Error fetching saved posts:", err);
+        setError(err || "Failed to fetch saved posts");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchPosts();
+    }
+  }, [dispatch, isAuthenticated]);
 
   /**
    * Handle scroll event for scroll-to-top button
@@ -98,33 +121,25 @@ const HomeScreen = () => {
   };
 
   /**
-   * Filters posts based on search term and active tab
+   * Filters posts based on search term
    */
-  const filteredPosts = posts.filter((post) => {
+  const filteredPosts = savedPosts.filter((post) => {
     const matchesSearch = 
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Add tab-based filtering logic here if needed
     return matchesSearch;
   });
-
-  /**
-   * Handle tab change
-   */
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
 
   /**
    * Navigation items for sidebar
    */
   const navigationItems = [
-    { icon: <HomeIcon />, label: "Home", path: "/home", active: true },
-    { icon: <ExploreIcon />, label: "Explore", path: "/explore" },
+    { icon: <HomeIcon />, label: "Home", path: "/home", active: false },
+    { icon: <ExploreIcon />, label: "Explore", path: "/explore", active: false },
     { icon: <NotificationsIcon />, label: "Notifications", component: "notification" },
     { icon: <ChatIcon />, label: "Messages", path: "/messages" },
-    { icon: <BookmarkIcon />, label: "Saved", path: "/saved" },
+    { icon: <BookmarkIcon />, label: "Saved", path: "/saved", active: true },
     { icon: <PersonIcon />, label: "Profile", path: "/profile" },
     { icon: <SettingsIcon />, label: "Settings", path: "/settings" },
   ];
@@ -638,7 +653,7 @@ const HomeScreen = () => {
             color="#1DBF73"
             sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}
           >
-            Yuthukama
+            Saved Posts
           </Typography>
           <IconButton 
             onClick={() => navigate("/create-post")}
@@ -653,7 +668,7 @@ const HomeScreen = () => {
           </IconButton>
         </Box>
 
-        {/* Feed Content */}
+        {/* Saved Posts Content */}
         <Box sx={{ 
           flex: 1, 
           display: "flex", 
@@ -679,7 +694,7 @@ const HomeScreen = () => {
             maxWidth: { xs: "100%", sm: 600, md: 700 },
             minHeight: "fit-content",
           }}>
-            {/* Feed Tabs */}
+            {/* Saved Posts Header */}
             <Paper
               elevation={0}
               sx={{
@@ -688,33 +703,21 @@ const HomeScreen = () => {
                 borderRadius: 2,
                 border: "1px solid #e5e7eb",
                 overflow: "hidden",
+                p: 3,
               }}
             >
-              <Tabs
-                value={activeTab}
-                onChange={handleTabChange}
-                variant="fullWidth"
-                sx={{
-                  "& .MuiTab-root": {
-                    textTransform: "none",
-                    fontWeight: 600,
-                    fontSize: { xs: "0.875rem", sm: "0.95rem" },
-                    minWidth: "auto",
-                    px: { xs: 1, sm: 2 },
-                    py: 1.5,
-                  },
-                  "& .Mui-selected": {
-                    color: "#1DBF73",
-                  },
-                  "& .MuiTabs-indicator": {
-                    backgroundColor: "#1DBF73",
-                    height: 3,
-                  },
-                }}
-              >
-                <Tab label="For You" />
-                <Tab label="Following" />
-              </Tabs>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                <BookmarkIcon sx={{ color: "#1DBF73", fontSize: "2rem" }} />
+                <Box>
+                  <Typography variant="h4" fontWeight={700} color="#1DBF73">
+                    Saved Posts
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    Your collection of saved posts
+                  </Typography>
+                </Box>
+              </Box>
+              
             </Paper>
 
             {/* Search Bar */}
@@ -722,7 +725,7 @@ const HomeScreen = () => {
               <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             </Box>
 
-            {/* Posts Feed */}
+            {/* Saved Posts */}
             {error ? (
                 <Alert
                   severity="error"
@@ -744,7 +747,7 @@ const HomeScreen = () => {
                 width: "100%",
                 px: { xs: 1, sm: 0 }
               }}>
-                <EnhancedSkeleton variant="post" count={3} />
+                <EnhancedSkeleton variant="post" count={5} />
               </Box>
             ) : filteredPosts.length === 0 ? (
               <Box sx={{ px: { xs: 1, sm: 0 } }}>
@@ -754,7 +757,7 @@ const HomeScreen = () => {
                     onAction={
                       searchTerm
                         ? () => setSearchTerm("")
-                        : () => navigate("/create-post")
+                        : () => navigate("/home")
                     }
                   />
               </Box>
@@ -862,4 +865,4 @@ const HomeScreen = () => {
   );
 };
 
-export default HomeScreen;
+export default SavedPage;

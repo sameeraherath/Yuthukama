@@ -4,6 +4,7 @@
  */
 
 import Post from "../models/Post.js";
+import User from "../models/User.js";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import config from "../config/config.js";
 import { v4 as uuidv4 } from "uuid";
@@ -535,6 +536,80 @@ const postController = {
       res.status(500).json({ message: "Error fetching trending posts" });
     }
   },
+
+  /**
+   * Toggle save/unsave a post
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with updated saved posts
+   */
+  toggleSavePost: async (req, res) => {
+    try {
+      const post = await Post.findById(req.params.id);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isSaved = user.savedPosts.includes(post._id);
+
+      if (isSaved) {
+        user.savedPosts = user.savedPosts.filter(
+          (savedPostId) => savedPostId.toString() !== post._id.toString()
+        );
+      } else {
+        user.savedPosts.push(post._id);
+      }
+
+      await user.save();
+
+      res.json({
+        postId: post._id,
+        isSaved: !isSaved,
+        message: isSaved ? "Post unsaved" : "Post saved",
+      });
+    } catch (error) {
+      console.error("Error toggling save:", error);
+      res.status(500).json({ message: "Error toggling save" });
+    }
+  },
+
+  /**
+   * Get user's saved posts
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing saved posts
+   */
+  getSavedPosts: async (req, res) => {
+    try {
+      const user = await User.findById(req.user.id).populate({
+        path: "savedPosts",
+        populate: {
+          path: "user",
+          select: "username profilePicture",
+        },
+        options: {
+          sort: { createdAt: -1 },
+        },
+      });
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        count: user.savedPosts.length,
+        posts: user.savedPosts,
+      });
+    } catch (error) {
+      console.error("Error fetching saved posts:", error);
+      res.status(500).json({ message: "Error fetching saved posts" });
+    }
+  },
 };
 
 export { postController as default, postController };
@@ -549,4 +624,6 @@ export const {
   deleteComment,
   searchPosts,
   getTrendingPosts,
+  toggleSavePost,
+  getSavedPosts,
 } = postController;

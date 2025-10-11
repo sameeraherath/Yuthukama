@@ -20,13 +20,22 @@ const GlobalLoadingSpinner = ({ actions = [] }) => {
    * @type {boolean}
    */
   const loading = useSelector((state) => {
-    const loadingState = state.ui?.loading || {};
+    const uiLoadingState = state.ui?.loading || {};
+    const authLoading = state.auth?.loading || false;
 
     if (actions && actions.length > 0) {
-      return actions.some((action) => loadingState[action]);
+      // Check if any of the specified actions are loading
+      const uiActionLoading = actions.some((action) => uiLoadingState[action]);
+      // Check if auth actions are loading
+      const authActionLoading = actions.some((action) => 
+        action.includes('auth') && authLoading
+      );
+      return uiActionLoading || authActionLoading;
     }
 
-    return Object.values(loadingState).some((isLoading) => isLoading);
+    // Check both UI loading states and auth loading state
+    const uiLoading = Object.values(uiLoadingState).some((isLoading) => isLoading);
+    return uiLoading || authLoading;
   });
 
   return (

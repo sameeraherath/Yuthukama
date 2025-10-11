@@ -77,7 +77,7 @@ const MessageActions = ({ message, onEdit, onDelete, isSentByCurrentUser }) => {
         sx={{
           opacity: 0,
           transition: "opacity 0.2s",
-          ".message-container:hover &": {
+          "&:hover": {
             opacity: 1,
           },
         }}

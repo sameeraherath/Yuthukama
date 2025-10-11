@@ -119,6 +119,172 @@ export const fetchUserById = createAsyncThunk(
 );
 
 /**
+ * Async thunk for following a user
+ * @async
+ * @function followUser
+ * @param {string} userId - ID of the user to follow
+ * @param {Object} thunkAPI - Redux Thunk API object
+ * @returns {Promise<Object>} Success message
+ * @throws {Error} If follow operation fails
+ * @example
+ * // In a component
+ * await dispatch(followUser('user123'));
+ */
+export const followUser = createAsyncThunk(
+  "user/followUser",
+  async (userId, thunkAPI) => {
+    try {
+      const { data } = await axios.post(
+        `${API_BASE}/api/users/${userId}/follow`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      return { userId, message: data.message };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to follow user"
+      );
+    }
+  }
+);
+
+/**
+ * Async thunk for unfollowing a user
+ * @async
+ * @function unfollowUser
+ * @param {string} userId - ID of the user to unfollow
+ * @param {Object} thunkAPI - Redux Thunk API object
+ * @returns {Promise<Object>} Success message
+ * @throws {Error} If unfollow operation fails
+ * @example
+ * // In a component
+ * await dispatch(unfollowUser('user123'));
+ */
+export const unfollowUser = createAsyncThunk(
+  "user/unfollowUser",
+  async (userId, thunkAPI) => {
+    try {
+      const { data } = await axios.delete(
+        `${API_BASE}/api/users/${userId}/follow`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      return { userId, message: data.message };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to unfollow user"
+      );
+    }
+  }
+);
+
+/**
+ * Async thunk for fetching followers list
+ * @async
+ * @function fetchFollowers
+ * @param {string} userId - ID of the user
+ * @param {Object} thunkAPI - Redux Thunk API object
+ * @returns {Promise<Object>} Followers list
+ * @throws {Error} If fetching followers fails
+ * @example
+ * // In a component
+ * await dispatch(fetchFollowers('user123'));
+ */
+export const fetchFollowers = createAsyncThunk(
+  "user/fetchFollowers",
+  async (userId, thunkAPI) => {
+    try {
+      const { data } = await axios.get(
+        `${API_BASE}/api/users/${userId}/followers`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      return { userId, followers: data.followers, count: data.count };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch followers"
+      );
+    }
+  }
+);
+
+/**
+ * Async thunk for fetching following list
+ * @async
+ * @function fetchFollowing
+ * @param {string} userId - ID of the user
+ * @param {Object} thunkAPI - Redux Thunk API object
+ * @returns {Promise<Object>} Following list
+ * @throws {Error} If fetching following fails
+ * @example
+ * // In a component
+ * await dispatch(fetchFollowing('user123'));
+ */
+export const fetchFollowing = createAsyncThunk(
+  "user/fetchFollowing",
+  async (userId, thunkAPI) => {
+    try {
+      const { data } = await axios.get(
+        `${API_BASE}/api/users/${userId}/following`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      return { userId, following: data.following, count: data.count };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch following"
+      );
+    }
+  }
+);
+
+/**
+ * Async thunk for checking follow status
+ * @async
+ * @function checkFollowStatus
+ * @param {string} userId - ID of the user to check
+ * @param {Object} thunkAPI - Redux Thunk API object
+ * @returns {Promise<Object>} Follow status
+ * @throws {Error} If checking follow status fails
+ * @example
+ * // In a component
+ * await dispatch(checkFollowStatus('user123'));
+ */
+export const checkFollowStatus = createAsyncThunk(
+  "user/checkFollowStatus",
+  async (userId, thunkAPI) => {
+    try {
+      const { data } = await axios.get(
+        `${API_BASE}/api/users/${userId}/follow-status`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      return { userId, isFollowing: data.isFollowing };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to check follow status"
+      );
+    }
+  }
+);
+
+/**
  * Redux slice for user state management
  * @type {Object}
  * @property {string} name - Slice name
@@ -135,12 +301,18 @@ const userSlice = createSlice({
    * @property {string|null} error - Error message if any
    * @property {string} message - Success message
    * @property {Object|null} profileUser - User profile data for viewing other users
+   * @property {Array} followers - Followers list
+   * @property {Array} following - Following list
+   * @property {Object} followStatus - Follow status for different users
    */
   initialState: {
     loading: false,
     error: null,
     message: "",
     profileUser: null,
+    followers: [],
+    following: [],
+    followStatus: {},
   },
   reducers: {
     /**
@@ -207,6 +379,73 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.profileUser = null;
+      })
+      // Follow User Cases
+      .addCase(followUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(followUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload.message;
+        state.followStatus[action.payload.userId] = true;
+      })
+      .addCase(followUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Unfollow User Cases
+      .addCase(unfollowUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(unfollowUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload.message;
+        state.followStatus[action.payload.userId] = false;
+      })
+      .addCase(unfollowUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Fetch Followers Cases
+      .addCase(fetchFollowers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchFollowers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.followers = action.payload.followers;
+      })
+      .addCase(fetchFollowers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Fetch Following Cases
+      .addCase(fetchFollowing.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchFollowing.fulfilled, (state, action) => {
+        state.loading = false;
+        state.following = action.payload.following;
+      })
+      .addCase(fetchFollowing.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Check Follow Status Cases
+      .addCase(checkFollowStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(checkFollowStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        state.followStatus[action.payload.userId] = action.payload.isFollowing;
+      })
+      .addCase(checkFollowStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
