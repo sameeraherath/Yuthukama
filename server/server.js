@@ -169,6 +169,9 @@ app.use("/api/notifications", generalLimiter, notificationRoutes);
 // your `errorHandler.js` file.
 app.use(errorHandler);
 
+// Store active users for online status tracking
+const activeUsers = new Map();
+
 /**
  * Socket.IO connection handler
  * @param {Socket} socket - Socket.IO socket instance
@@ -177,10 +180,30 @@ io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
   // Store user ID with socket ID for notifications
-  socket.on("authenticate", (userId) => {
-    socket.userId = userId;
-    socket.join(`user_${userId}`);
-    console.log(`User ${userId} authenticated with socket ${socket.id}`);
+  socket.on("authenticate", async (userId) => {
+    try {
+      socket.userId = userId;
+      socket.join(`user_${userId}`);
+      
+      // Track active user
+      activeUsers.set(userId, {
+        socketId: socket.id,
+        lastSeen: new Date(),
+        status: 'online'
+      });
+
+      // Notify other users that this user is online
+      socket.broadcast.emit("user_status_change", {
+        userId,
+        status: 'online',
+        timestamp: new Date()
+      });
+
+      console.log(`User ${userId} authenticated with socket ${socket.id}`);
+    } catch (error) {
+      console.error("Error authenticating user:", error);
+      socket.emit("auth_error", { message: "Authentication failed" });
+    }
   });
 
   /**
@@ -190,6 +213,29 @@ io.on("connection", (socket) => {
   socket.on("join_room", (roomId) => {
     socket.join(roomId);
     console.log(`User ${socket.id} joined room: ${roomId}`);
+    
+    // Notify room members about user joining
+    socket.to(roomId).emit("user_joined_room", {
+      userId: socket.userId,
+      roomId,
+      timestamp: new Date()
+    });
+  });
+
+  /**
+   * Handles leaving chat rooms
+   * @param {string} roomId - ID of the chat room to leave
+   */
+  socket.on("leave_room", (roomId) => {
+    socket.leave(roomId);
+    console.log(`User ${socket.id} left room: ${roomId}`);
+    
+    // Notify room members about user leaving
+    socket.to(roomId).emit("user_left_room", {
+      userId: socket.userId,
+      roomId,
+      timestamp: new Date()
+    });
   });
 
   /**
@@ -203,7 +249,7 @@ io.on("connection", (socket) => {
    */
   socket.on("send_message", async (messageData) => {
     try {
-      const { roomId, sender, text, conversationId, messageId } = messageData;
+      const { roomId, sender, text, conversationId, messageId, tempId } = messageData;
 
       if (conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
         const newMessage = new Message({
@@ -227,10 +273,6 @@ io.on("connection", (socket) => {
         );
 
         if (recipient) {
-          // This line is where `notificationController` is used.
-          // Ensure `notificationController` is properly imported/defined.
-          // If it's a module, add: `import * as notificationController from './controllers/notificationController.js';`
-          // at the top of the file, adjusting the path as necessary.
           const notification = await notificationController.createNotification({
             recipient,
             sender,
@@ -241,16 +283,64 @@ io.on("connection", (socket) => {
           // Emit notification to recipient
           io.to(`user_${recipient}`).emit("notification", notification);
         }
+
+        // Emit message with database ID to confirm delivery
+        io.in(roomId).emit("receive_message", {
+          ...messageData,
+          _id: newMessage._id,
+          tempId, // Include tempId for client-side message matching
+          timestamp: newMessage.createdAt,
+          status: 'delivered'
+        });
+
+        // Emit delivery confirmation to sender
+        socket.emit("message_delivered", {
+          tempId,
+          messageId: newMessage._id,
+          timestamp: newMessage.createdAt
+        });
+
+        console.log(`Message sent to room ${roomId}: ${text}`);
       }
-
-      io.in(roomId).emit("receive_message", {
-        ...messageData,
-        timestamp: new Date(),
-      });
-
-      console.log(`Message sent to room ${roomId}: ${text}`);
     } catch (error) {
       console.error("Error saving message:", error);
+      
+      // Emit error to sender
+      socket.emit("message_error", {
+        tempId: messageData.tempId,
+        error: "Failed to send message"
+      });
+    }
+  });
+
+  /**
+   * Handles message read receipts
+   * @param {Object} data - Read receipt data
+   * @param {string} data.messageId - ID of the message that was read
+   * @param {string} data.conversationId - ID of the conversation
+   */
+  socket.on("mark_message_read", async (data) => {
+    try {
+      const { messageId, conversationId } = data;
+      
+      if (messageId && mongoose.Types.ObjectId.isValid(messageId)) {
+        await Message.findByIdAndUpdate(messageId, {
+          read: true,
+          readAt: new Date()
+        });
+
+        // Notify sender that message was read
+        const message = await Message.findById(messageId);
+        if (message && message.sender.toString() !== socket.userId) {
+          io.to(`user_${message.sender}`).emit("message_read", {
+            messageId,
+            readBy: socket.userId,
+            readAt: new Date()
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error marking message as read:", error);
     }
   });
 
@@ -261,7 +351,10 @@ io.on("connection", (socket) => {
    * @param {string} data.userId - ID of the typing user
    */
   socket.on("typing", (data) => {
-    socket.to(data.roomId).emit("typing", data);
+    socket.to(data.roomId).emit("typing", {
+      ...data,
+      timestamp: new Date()
+    });
   });
 
   /**
@@ -271,7 +364,52 @@ io.on("connection", (socket) => {
    * @param {string} data.userId - ID of the user who stopped typing
    */
   socket.on("stop_typing", (data) => {
-    socket.to(data.roomId).emit("stop_typing", data);
+    socket.to(data.roomId).emit("stop_typing", {
+      ...data,
+      timestamp: new Date()
+    });
+  });
+
+  /**
+   * Handles message reactions
+   * @param {Object} data - Reaction data
+   * @param {string} data.messageId - ID of the message
+   * @param {string} data.reaction - Reaction emoji
+   * @param {string} data.userId - ID of the user reacting
+   */
+  socket.on("add_reaction", async (data) => {
+    try {
+      const { messageId, reaction, userId, roomId } = data;
+      
+      if (messageId && mongoose.Types.ObjectId.isValid(messageId)) {
+        const message = await Message.findById(messageId);
+        if (message) {
+          // Add reaction to message (you might want to add a reactions field to Message model)
+          if (!message.reactions) {
+            message.reactions = [];
+          }
+          
+          const existingReaction = message.reactions.find(r => r.userId.toString() === userId);
+          if (existingReaction) {
+            existingReaction.reaction = reaction;
+          } else {
+            message.reactions.push({ userId, reaction, timestamp: new Date() });
+          }
+          
+          await message.save();
+          
+          // Emit reaction to room
+          io.in(roomId).emit("message_reaction", {
+            messageId,
+            reaction,
+            userId,
+            timestamp: new Date()
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error adding reaction:", error);
+    }
   });
 
   /**
@@ -279,6 +417,18 @@ io.on("connection", (socket) => {
    */
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
+    
+    if (socket.userId) {
+      // Update user status to offline
+      activeUsers.delete(socket.userId);
+      
+      // Notify other users that this user is offline
+      socket.broadcast.emit("user_status_change", {
+        userId: socket.userId,
+        status: 'offline',
+        timestamp: new Date()
+      });
+    }
   });
 });
 

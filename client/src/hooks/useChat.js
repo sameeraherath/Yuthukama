@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { io } from "socket.io-client";
 import { useDispatch } from "react-redux";
-import { addMessage, setTyping } from "../features/chat/chatSlice";
+import { addMessage, setTyping, updateMessageStatus, addReaction, updateUserStatus } from "../features/chat/chatSlice";
 
 /**
  * Socket.IO instance for real-time communication
@@ -20,6 +20,9 @@ let socket;
  * @property {Function} startTyping - Function to indicate typing start
  * @property {Function} stopTyping - Function to indicate typing stop
  * @property {boolean} isTyping - Whether the other user is typing
+ * @property {Function} markMessageAsRead - Function to mark message as read
+ * @property {Function} addReactionToMessage - Function to add reaction to message
+ * @property {Object} userStatus - Online status of users
  * @example
  * const { isConnected, sendMessage } = useChat(userId, receiverId, conversationId);
  *
@@ -28,9 +31,11 @@ let socket;
  */
 const useChat = (userId, receiverId, conversationId) => {
   const [isConnected, setIsConnected] = useState(false);
-  const [isTyping] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [connectionError, setConnectionError] = useState(null);
+  const [userStatus, setUserStatus] = useState({});
+  const [pendingMessages, setPendingMessages] = useState(new Map());
   const dispatch = useDispatch();
 
   const roomId =
@@ -182,23 +187,106 @@ const useChat = (userId, receiverId, conversationId) => {
       console.log("Received message:", message);
       if (message.sender !== userId) {
         dispatch(addMessage(message));
+        // Mark message as read automatically
+        if (message._id) {
+          markMessageAsRead(message._id);
+        }
       }
+    };
+
+    /**
+     * Handles message delivery confirmation
+     * @function
+     * @param {Object} data - Delivery confirmation data
+     */
+    const handleMessageDelivered = (data) => {
+      console.log("Message delivered:", data);
+      dispatch(updateMessageStatus({
+        tempId: data.tempId,
+        status: 'delivered',
+        messageId: data.messageId,
+        timestamp: data.timestamp
+      }));
+    };
+
+    /**
+     * Handles message read receipt
+     * @function
+     * @param {Object} data - Read receipt data
+     */
+    const handleMessageRead = (data) => {
+      console.log("Message read:", data);
+      dispatch(updateMessageStatus({
+        messageId: data.messageId,
+        status: 'read',
+        readBy: data.readBy,
+        readAt: data.readAt
+      }));
+    };
+
+    /**
+     * Handles user status changes
+     * @function
+     * @param {Object} data - User status data
+     */
+    const handleUserStatusChange = (data) => {
+      console.log("User status changed:", data);
+      setUserStatus(prev => ({
+        ...prev,
+        [data.userId]: {
+          status: data.status,
+          timestamp: data.timestamp
+        }
+      }));
+      dispatch(updateUserStatus(data));
+    };
+
+    /**
+     * Handles message reactions
+     * @function
+     * @param {Object} data - Reaction data
+     */
+    const handleMessageReaction = (data) => {
+      console.log("Message reaction:", data);
+      dispatch(addReaction(data));
+    };
+
+    /**
+     * Handles message errors
+     * @function
+     * @param {Object} data - Error data
+     */
+    const handleMessageError = (data) => {
+      console.error("Message error:", data);
+      dispatch(updateMessageStatus({
+        tempId: data.tempId,
+        status: 'error',
+        error: data.error
+      }));
     };
 
     /**
      * Handles typing indicator start
      * @function
+     * @param {Object} data - Typing data
      */
-    const handleTypingStart = () => {
-      dispatch(setTyping(true));
+    const handleTypingStart = (data) => {
+      if (data.userId !== userId) {
+        setIsTyping(true);
+        dispatch(setTyping(true));
+      }
     };
 
     /**
      * Handles typing indicator stop
      * @function
+     * @param {Object} data - Stop typing data
      */
-    const handleTypingStop = () => {
-      dispatch(setTyping(false));
+    const handleTypingStop = (data) => {
+      if (data.userId !== userId) {
+        setIsTyping(false);
+        dispatch(setTyping(false));
+      }
     };
 
     /**
@@ -219,6 +307,11 @@ const useChat = (userId, receiverId, conversationId) => {
     socket.on("reconnect_attempt", handleReconnectAttempt);
     socket.on("reconnect_failed", handleReconnectFailed);
     socket.on("receive_message", handleReceiveMessage);
+    socket.on("message_delivered", handleMessageDelivered);
+    socket.on("message_read", handleMessageRead);
+    socket.on("message_error", handleMessageError);
+    socket.on("user_status_change", handleUserStatusChange);
+    socket.on("message_reaction", handleMessageReaction);
     socket.on("typing", handleTypingStart);
     socket.on("stop_typing", handleTypingStop);
 
@@ -235,6 +328,11 @@ const useChat = (userId, receiverId, conversationId) => {
       socket.off("reconnect_attempt", handleReconnectAttempt);
       socket.off("reconnect_failed", handleReconnectFailed);
       socket.off("receive_message", handleReceiveMessage);
+      socket.off("message_delivered", handleMessageDelivered);
+      socket.off("message_read", handleMessageRead);
+      socket.off("message_error", handleMessageError);
+      socket.off("user_status_change", handleUserStatusChange);
+      socket.off("message_reaction", handleMessageReaction);
       socket.off("typing", handleTypingStart);
       socket.off("stop_typing", handleTypingStop);
     };
@@ -264,6 +362,7 @@ const useChat = (userId, receiverId, conversationId) => {
 
       socket.emit("join_room", roomId);
 
+      const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const messageData = {
         roomId,
         conversationId,
@@ -271,7 +370,15 @@ const useChat = (userId, receiverId, conversationId) => {
         text: text.trim(),
         timestamp: new Date().toISOString(),
         messageId: `${userId}_${Date.now()}`,
+        tempId,
+        status: 'sending'
       };
+
+      // Store pending message
+      setPendingMessages(prev => new Map(prev.set(tempId, messageData)));
+
+      // Add optimistic message to store
+      dispatch(addMessage(messageData));
 
       setTimeout(() => {
         socket.emit("send_message", messageData);
@@ -283,7 +390,7 @@ const useChat = (userId, receiverId, conversationId) => {
 
       return messageData;
     },
-    [isConnected, roomId, conversationId, userId]
+    [isConnected, roomId, conversationId, userId, dispatch]
   );
 
   /**
@@ -306,6 +413,37 @@ const useChat = (userId, receiverId, conversationId) => {
     }
   }, [isConnected, roomId, userId]);
 
+  /**
+   * Marks a message as read
+   * @function
+   * @param {string} messageId - ID of the message to mark as read
+   */
+  const markMessageAsRead = useCallback((messageId) => {
+    if (isConnected && messageId) {
+      socket.emit("mark_message_read", {
+        messageId,
+        conversationId
+      });
+    }
+  }, [isConnected, conversationId]);
+
+  /**
+   * Adds a reaction to a message
+   * @function
+   * @param {string} messageId - ID of the message
+   * @param {string} reaction - Reaction emoji
+   */
+  const addReactionToMessage = useCallback((messageId, reaction) => {
+    if (isConnected && messageId && reaction) {
+      socket.emit("add_reaction", {
+        messageId,
+        reaction,
+        userId,
+        roomId
+      });
+    }
+  }, [isConnected, userId, roomId]);
+
   return {
     isConnected,
     sendMessage,
@@ -314,6 +452,9 @@ const useChat = (userId, receiverId, conversationId) => {
     isTyping,
     connectionError,
     connectionAttempts,
+    markMessageAsRead,
+    addReactionToMessage,
+    userStatus,
   };
 };
 

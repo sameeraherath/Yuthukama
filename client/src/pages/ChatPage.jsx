@@ -9,6 +9,8 @@ import {
   editMessage,
   deleteMessage,
   markMessagesAsRead,
+  setCurrentConversation,
+  fetchConversations,
 } from "../features/chat/chatSlice";
 import { fetchUserById } from "../features/auth/userSlice";
 import useAuth from "../hooks/useAuth";
@@ -35,6 +37,9 @@ import DoneAllIcon from "@mui/icons-material/DoneAll";
 import CircleIcon from "@mui/icons-material/Circle";
 import MessageActions from "../components/MessageActions";
 import MessageAttachment from "../components/MessageAttachment";
+import MessageStatus from "../components/MessageStatus";
+import MessageReactions from "../components/MessageReactions";
+import OnlineStatus from "../components/OnlineStatus";
 import UserManagement from "../components/chat/UserManagement";
 import ChatAPI from "../features/chat/chatAPI";
 import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
@@ -95,6 +100,7 @@ const ChatPage = () => {
     isTyping,
     error,
     loading: chatLoading,
+    conversations,
   } = useSelector((state) => state.chat);
 
   const { profileUser } = useSelector((state) => state.user);
@@ -126,6 +132,7 @@ const ChatPage = () => {
     postOwner,
     conversationId,
     currentConversation: currentConversation?._id,
+    currentConversationParticipants: currentConversation?.participants,
     otherParticipant,
     receiverId,
     displayName,
@@ -137,10 +144,15 @@ const ChatPage = () => {
 
   const {
     isConnected,
+    sendMessage: sendSocketMessage,
     startTyping,
     stopTyping,
+    isTyping: socketTyping,
     connectionError: socketError,
     connectionAttempts,
+    markMessageAsRead,
+    addReactionToMessage,
+    userStatus,
   } = useChat(userId, receiverId, currentConversation?._id);
 
   console.log("Chat state:", {
@@ -156,6 +168,13 @@ const ChatPage = () => {
     userData: user,
   });
 
+  // Fetch conversations when component mounts
+  useEffect(() => {
+    if (isAuthenticated && userId && conversations.length === 0) {
+      dispatch(fetchConversations());
+    }
+  }, [dispatch, isAuthenticated, userId, conversations.length]);
+
   // Handle conversation and messages loading
   useEffect(() => {
     if (!isAuthenticated || authLoading || !userId) return;
@@ -163,6 +182,15 @@ const ChatPage = () => {
     const loadConversation = async () => {
       try {
         if (conversationId) {
+          // First, try to find the conversation in the existing conversations list
+          const existingConversation = conversations.find(c => c._id === conversationId);
+          
+          if (existingConversation) {
+            // Set the current conversation
+            dispatch(setCurrentConversation(existingConversation));
+          }
+          
+          // Then fetch messages
           await dispatch(fetchMessages(conversationId)).unwrap();
         } else if (userId && receiverId) {
           const conversation = await dispatch(
@@ -191,6 +219,7 @@ const ChatPage = () => {
     conversationId,
     isAuthenticated,
     authLoading,
+    conversations,
   ]);
 
   // Fetch user details if we don't have them
@@ -291,33 +320,43 @@ const ChatPage = () => {
       return;
     }
 
-    // Check if connected before sending
-    if (!isConnected && !selectedFile) {
-      setConnectionError("Cannot send message. Waiting for connection...");
-      return;
-    }
-
     setIsSending(true);
 
     try {
-      // Use REST API for sending messages with potential file attachments
-      const messageData = await ChatAPI.sendMessage(
-        currentConversation._id,
-        newMessage.trim(),
-        selectedFile
-      );
+      // Use WebSocket for real-time messaging if connected and no file attachment
+      if (isConnected && !selectedFile) {
+        const messageData = sendSocketMessage(newMessage.trim());
+        if (messageData) {
+          console.log("Message sent via WebSocket:", messageData);
+          setNewMessage("");
+          setConnectionError(null);
+          
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+            stopTyping();
+            typingTimeoutRef.current = null;
+          }
+        }
+      } else {
+        // Use REST API for messages with file attachments or when WebSocket is not connected
+        const messageData = await ChatAPI.sendMessage(
+          currentConversation._id,
+          newMessage.trim(),
+          selectedFile
+        );
 
-      if (messageData) {
-        console.log("Message sent successfully:", messageData);
-        dispatch(addMessage(messageData));
-        setNewMessage("");
-        handleClearFile();
-        setConnectionError(null); // Clear any connection errors on success
+        if (messageData) {
+          console.log("Message sent successfully:", messageData);
+          dispatch(addMessage(messageData));
+          setNewMessage("");
+          handleClearFile();
+          setConnectionError(null);
 
-        if (typingTimeoutRef.current) {
-          clearTimeout(typingTimeoutRef.current);
-          stopTyping();
-          typingTimeoutRef.current = null;
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+            stopTyping();
+            typingTimeoutRef.current = null;
+          }
         }
       }
     } catch (error) {
@@ -535,14 +574,26 @@ const ChatPage = () => {
                 </Typography>
               )}
 
-              {/* Read receipt for sent messages */}
-              {isSentByCurrentUser && message.read && (
-                <DoneAllIcon
-                  sx={{
-                    fontSize: 12,
-                    color: "#1DBF73",
-                  }}
+              {/* Message status indicator for sent messages */}
+              {isSentByCurrentUser && (
+                <MessageStatus
+                  status={message.status || (message.read ? 'read' : 'delivered')}
+                  timestamp={message.timestamp}
+                  readAt={message.readAt}
+                  readBy={message.readBy}
+                  error={message.error}
                 />
+              )}
+
+              {/* Message reactions */}
+              {message.reactions && message.reactions.length > 0 && (
+                <Box sx={{ px: 1.5, mt: 0.5 }}>
+                  <MessageReactions
+                    messageId={message._id}
+                    reactions={message.reactions}
+                    onAddReaction={addReactionToMessage}
+                  />
+                </Box>
               )}
             </Box>
           )}
@@ -674,6 +725,7 @@ const ChatPage = () => {
         <UserManagement
           user={otherParticipant || postOwner}
           conversation={currentConversation}
+          userStatus={userStatus}
           onBlockUser={(user) => {
             console.log("Block user:", user);
             // Implement block user functionality
@@ -755,7 +807,7 @@ const ChatPage = () => {
           ) : (
             <>
               {messages.map(renderMessage)}
-              {isTyping && (
+              {(isTyping || socketTyping) && (
                 <Box
                   sx={{
                     alignSelf: "flex-start",
@@ -942,8 +994,7 @@ const ChatPage = () => {
               onClick={handleSendMessage}
               disabled={
                 (!newMessage.trim() && !selectedFile) ||
-                isSending ||
-                (!isConnected && !selectedFile)
+                isSending
               }
               sx={{
                 backgroundColor: "#1DBF73",

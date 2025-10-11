@@ -194,6 +194,7 @@ const initialState = {
   loading: false,
   error: null,
   unreadCount: 0,
+  userStatus: {},
 };
 
 const chatSlice = createSlice({
@@ -327,6 +328,102 @@ const chatSlice = createSlice({
       state.unreadCount = action.payload;
     },
     /**
+     * Updates message status (delivered, read, error)
+     * @param {Object} state - Current state
+     * @param {Object} action - Action object containing status update
+     */
+    updateMessageStatus: (state, action) => {
+      const { tempId, messageId, status, timestamp, readBy, readAt, error } = action.payload;
+      
+      // Find message by tempId or messageId
+      const messageIndex = state.messages.findIndex(
+        (m) => m.tempId === tempId || m._id === messageId
+      );
+      
+      if (messageIndex !== -1) {
+        const message = state.messages[messageIndex];
+        
+        if (status === 'delivered') {
+          message.status = 'delivered';
+          message._id = messageId;
+          message.timestamp = timestamp;
+          delete message.tempId;
+        } else if (status === 'read') {
+          message.status = 'read';
+          message.read = true;
+          message.readBy = readBy;
+          message.readAt = readAt;
+        } else if (status === 'error') {
+          message.status = 'error';
+          message.error = error;
+        }
+      }
+    },
+
+    /**
+     * Adds a reaction to a message
+     * @param {Object} state - Current state
+     * @param {Object} action - Action object containing reaction data
+     */
+    addReaction: (state, action) => {
+      const { messageId, reaction, userId, timestamp } = action.payload;
+      
+      const messageIndex = state.messages.findIndex(
+        (m) => m._id === messageId
+      );
+      
+      if (messageIndex !== -1) {
+        const message = state.messages[messageIndex];
+        
+        if (!message.reactions) {
+          message.reactions = [];
+        }
+        
+        const existingReactionIndex = message.reactions.findIndex(
+          (r) => r.userId === userId
+        );
+        
+        if (existingReactionIndex !== -1) {
+          message.reactions[existingReactionIndex].reaction = reaction;
+          message.reactions[existingReactionIndex].timestamp = timestamp;
+        } else {
+          message.reactions.push({
+            userId,
+            reaction,
+            timestamp
+          });
+        }
+      }
+    },
+
+    /**
+     * Updates user online status
+     * @param {Object} state - Current state
+     * @param {Object} action - Action object containing user status
+     */
+    updateUserStatus: (state, action) => {
+      const { userId, status, timestamp } = action.payload;
+      
+      if (!state.userStatus) {
+        state.userStatus = {};
+      }
+      
+      state.userStatus[userId] = {
+        status,
+        timestamp
+      };
+    },
+
+    /**
+     * Sets the current conversation
+     * @param {Object} state - Current state
+     * @param {Object} action - Action object containing conversation
+     */
+    setCurrentConversation: (state, action) => {
+      state.currentConversation = action.payload;
+    },
+
+    /**
      * Resets the entire chat state to initial values
      * @returns {Object} Initial state
      */
@@ -374,6 +471,16 @@ const chatSlice = createSlice({
       .addCase(fetchMessages.fulfilled, (state, action) => {
         state.loading = false;
         state.messages = action.payload;
+        
+        // If we have messages, set the current conversation
+        if (action.payload.length > 0) {
+          const conversationId = action.payload[0].conversationId;
+          // Find the conversation in the conversations list
+          const conversation = state.conversations.find(c => c._id === conversationId);
+          if (conversation) {
+            state.currentConversation = conversation;
+          }
+        }
       })
       .addCase(fetchMessages.rejected, (state, action) => {
         state.loading = false;
@@ -447,5 +554,9 @@ export const {
   removeMessage,
   markLocalMessagesAsRead,
   setUnreadCount,
+  updateMessageStatus,
+  addReaction,
+  updateUserStatus,
+  setCurrentConversation,
 } = chatSlice.actions;
 export default chatSlice.reducer;

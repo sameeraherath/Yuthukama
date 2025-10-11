@@ -24,7 +24,9 @@ import {
   StarBorder as StarBorderIcon,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
+import { useSelector } from "react-redux";
 import useAuth from "../../hooks/useAuth";
+import OnlineStatus from "../OnlineStatus";
 
 /**
  * UserManagement component - Manages user interactions within conversations
@@ -37,14 +39,29 @@ import useAuth from "../../hooks/useAuth";
  * @param {Function} props.onRemoveUser - Callback when user is removed
  * @returns {JSX.Element} User management interface
  */
-const UserManagement = ({ user, conversation, onBlockUser, onReportUser, onRemoveUser }) => {
+const UserManagement = ({ user, conversation, userStatus: propUserStatus, onBlockUser, onReportUser, onRemoveUser }) => {
   const { user: currentUser } = useAuth();
+  const { userStatus: stateUserStatus } = useSelector((state) => state.chat);
+  
+  // Use prop userStatus if provided, otherwise fall back to state
+  const userStatus = propUserStatus || stateUserStatus;
   const [anchorEl, setAnchorEl] = useState(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
 
   const open = Boolean(anchorEl);
+
+  // Get real-time online status from WebSocket
+  const userStatusData = userStatus[user?._id];
+  const isOnline = userStatusData?.status === 'online';
+
+  // Debug logging
+  console.log("UserManagement props:", {
+    user,
+    userStatusData,
+    isOnline,
+    conversation
+  });
 
   useEffect(() => {
     // Check if user is favorited (you can implement this based on your data structure)
@@ -52,9 +69,6 @@ const UserManagement = ({ user, conversation, onBlockUser, onReportUser, onRemov
     
     // Check if user is blocked (you can implement this based on your data structure)
     setIsBlocked(false);
-    
-    // Simulate online status (you can implement real-time status)
-    setIsOnline(Math.random() > 0.5);
   }, [user]);
 
   /**
@@ -114,7 +128,17 @@ const UserManagement = ({ user, conversation, onBlockUser, onReportUser, onRemov
    * Get user display name
    */
   const getUserDisplayName = () => {
-    return user?.username || user?.email || "Unknown User";
+    if (!user) return "Loading...";
+    
+    // Try different name fields
+    const name = user.username || user.name || user.email || "Unknown User";
+    
+    // If it's still "Unknown User", try to get more info
+    if (name === "Unknown User") {
+      console.warn("User data missing name fields:", user);
+    }
+    
+    return name;
   };
 
   /**
@@ -241,15 +265,13 @@ const UserManagement = ({ user, conversation, onBlockUser, onReportUser, onRemov
               </Box>
             </Box>
             
-            <Typography
-              variant="body2"
-              sx={{
-                color: "#65676b",
-                fontSize: "0.8rem",
-              }}
-            >
-              {isOnline ? "Active now" : "Last seen recently"}
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <OnlineStatus 
+                userId={user?._id} 
+                username={getUserDisplayName()} 
+                showText={true}
+              />
+            </Box>
           </Box>
         </Box>
 
