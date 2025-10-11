@@ -241,7 +241,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
       variants={cardVariants}
       sx={{
         maxWidth: "100%",
-        borderRadius: 3,
+        borderRadius: { xs: 2, sm: 3 },
         boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
         overflow: "hidden",
         position: "relative",
@@ -265,15 +265,15 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
       )}
 
       {/* Header with user info */}
-      <Box sx={{ p: 3, pb: 2 }}>
-        <Box sx={{ display: "flex", gap: 2, alignItems: "center", justifyContent: "space-between" }}>
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center", flex: 1 }}>
+      <Box sx={{ p: { xs: 2, sm: 3 }, pb: { xs: 1.5, sm: 2 } }}>
+        <Box sx={{ display: "flex", gap: { xs: 1.5, sm: 2 }, alignItems: "center", justifyContent: "space-between" }}>
+          <Box sx={{ display: "flex", gap: { xs: 1.5, sm: 2 }, alignItems: "center", flex: 1, minWidth: 0 }}>
             <Avatar
               src={post.user?.avatar || post.user?.profilePicture}
               alt={post.user?.name || post.user?.username || "User"}
               sx={{ 
-                width: 48, 
-                height: 48,
+                width: { xs: 40, sm: 48 }, 
+                height: { xs: 40, sm: 48 },
                 border: "2px solid #f3f4f6",
                 cursor: "pointer",
                 transition: "all 0.2s ease-in-out",
@@ -283,14 +283,17 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
                 },
               }}
             />
-            <Box sx={{ flex: 1 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography
                 variant="subtitle1"
                 sx={{
                   fontWeight: 600,
                   color: "#1a1a1a",
-                  fontSize: "1rem",
+                  fontSize: { xs: "0.9rem", sm: "1rem" },
                   cursor: "pointer",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
                   "&:hover": {
                     color: "#1DBF73",
                   },
@@ -302,7 +305,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
                 variant="caption"
                 sx={{
                   color: "#9ca3af",
-                  fontSize: "0.875rem",
+                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
                 }}
               >
                 Posted {getTimeAgo(post.createdAt || new Date())}
@@ -315,28 +318,30 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
             size="small"
             sx={{
               color: "#9ca3af",
+              p: { xs: 0.5, sm: 1 },
               "&:hover": {
                 color: "#1DBF73",
                 backgroundColor: "#f0fdf4",
               },
             }}
           >
-            <Typography sx={{ fontSize: "1.2rem", fontWeight: 600 }}>⋯</Typography>
+            <Typography sx={{ fontSize: { xs: "1rem", sm: "1.2rem" }, fontWeight: 600 }}>⋯</Typography>
           </IconButton>
         </Box>
       </Box>
 
       {/* Post content */}
-      <CardContent sx={{ p: 3, pt: 0, pb: 2 }}>
+      <CardContent sx={{ p: { xs: 2, sm: 3 }, pt: 0, pb: { xs: 1.5, sm: 2 } }}>
         <Typography
           variant="body1"
           component="p"
           sx={{
             lineHeight: 1.6,
             color: "#1a1a1a",
-            fontSize: "1rem",
-            mb: 2,
+            fontSize: { xs: "0.9rem", sm: "1rem" },
+            mb: { xs: 1.5, sm: 2 },
             fontWeight: 400,
+            wordBreak: "break-word",
           }}
         >
           {renderDescriptionWithHashtags(post.description || post.title)}
@@ -345,7 +350,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
 
       {/* Post image */}
       <motion.div
-        whileHover={{ scale: 1.02 }}
+        whileHover={{ scale: { xs: 1, sm: 1.02 } }}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         style={{ overflow: "hidden" }}
       >
@@ -357,7 +362,8 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           sx={{
             objectFit: "cover",
             width: "100%",
-            maxHeight: 400,
+            maxHeight: { xs: 250, sm: 350, md: 400 },
+            height: { xs: 250, sm: 350, md: 400 },
           }}
         />
       </motion.div>
@@ -365,25 +371,32 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
       {/* Actions bar */}
       <CardActions
         sx={{
-          p: 3,
-          pt: 2,
+          p: { xs: 2, sm: 3 },
+          pt: { xs: 1.5, sm: 2 },
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           borderTop: "1px solid #f3f4f6",
           backgroundColor: "#fafafa",
+          flexWrap: "wrap",
+          gap: { xs: 1, sm: 0 },
         }}
       >
         <Box
-          sx={{ display: "flex", alignItems: "center", gap: 4 }}
+          sx={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: { xs: 2, sm: 4 },
+            flexWrap: "wrap",
+          }}
           role="group"
           aria-label="Post actions"
         >
           {/* Likes */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <motion.div
               whileTap={{ scale: 0.85 }}
-              whileHover={{ scale: 1.15 }}
+              whileHover={{ scale: { xs: 1, sm: 1.15 } }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
               <IconButton
@@ -391,7 +404,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
                 disabled={isLiking}
                 size="small"
                 sx={{ 
-                  p: 1,
+                  p: { xs: 0.5, sm: 1 },
                   borderRadius: 2,
                   "&:hover": {
                     backgroundColor: isLiked ? "rgba(239, 68, 68, 0.1)" : "rgba(16, 185, 129, 0.1)",
@@ -400,7 +413,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
                 {isLiking ? (
-                  <CircularProgress size={20} />
+                  <CircularProgress size={18} />
                 ) : (
                   <motion.div
                     initial={false}
@@ -412,11 +425,11 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
                   >
                     {isLiked ? (
                       <FavoriteIcon
-                        sx={{ width: 22, height: 22, color: "#ef4444" }}
+                        sx={{ width: { xs: 18, sm: 22 }, height: { xs: 18, sm: 22 }, color: "#ef4444" }}
                       />
                     ) : (
                       <FavoriteIcon
-                        sx={{ width: 22, height: 22, color: "#9ca3af" }}
+                        sx={{ width: { xs: 18, sm: 22 }, height: { xs: 18, sm: 22 }, color: "#9ca3af" }}
                       />
                     )}
                   </motion.div>
@@ -428,7 +441,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
               sx={{ 
                 color: "#4b5563", 
                 fontWeight: 600, 
-                fontSize: "0.9rem",
+                fontSize: { xs: "0.8rem", sm: "0.9rem" },
                 minWidth: "20px",
               }}
             >
@@ -437,12 +450,12 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           </Box>
 
           {/* Comments */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <IconButton
               onClick={handleExpandClick}
               size="small"
               sx={{ 
-                p: 1,
+                p: { xs: 0.5, sm: 1 },
                 borderRadius: 2,
                 "&:hover": {
                   backgroundColor: "rgba(16, 185, 129, 0.1)",
@@ -451,7 +464,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
               aria-label={expanded ? "Hide comments" : "Show comments"}
             >
               <ChatBubbleOutlineIcon
-                sx={{ width: 22, height: 22, color: "#9ca3af" }}
+                sx={{ width: { xs: 18, sm: 22 }, height: { xs: 18, sm: 22 }, color: "#9ca3af" }}
               />
             </IconButton>
             <Typography
@@ -459,7 +472,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
               sx={{ 
                 color: "#4b5563", 
                 fontWeight: 600, 
-                fontSize: "0.9rem",
+                fontSize: { xs: "0.8rem", sm: "0.9rem" },
                 minWidth: "20px",
               }}
             >
@@ -468,14 +481,14 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
           </Box>
 
           {/* Views */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <VisibilityIcon sx={{ width: 22, height: 22, color: "#9ca3af" }} />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <VisibilityIcon sx={{ width: { xs: 18, sm: 22 }, height: { xs: 18, sm: 22 }, color: "#9ca3af" }} />
             <Typography
               variant="body2"
               sx={{ 
                 color: "#4b5563", 
                 fontWeight: 600, 
-                fontSize: "0.9rem",
+                fontSize: { xs: "0.8rem", sm: "0.9rem" },
                 minWidth: "20px",
               }}
             >
@@ -485,7 +498,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
         </Box>
 
         {/* Right side actions */}
-        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+        <Box sx={{ display: "flex", gap: 0.5, alignItems: "center" }}>
           {!isOwner && <MessageButton user={post.user} />}
           {isOwner && showDeleteButton && (
             <IconButton
@@ -496,6 +509,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
               sx={{
                 color: "#9ca3af",
                 borderRadius: 2,
+                p: { xs: 0.5, sm: 1 },
                 "&:hover": {
                   color: COLORS.error,
                   backgroundColor: "rgba(239, 68, 68, 0.1)",
@@ -503,9 +517,9 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
               }}
             >
               {isDeleting ? (
-                <CircularProgress size={20} color="error" />
+                <CircularProgress size={18} color="error" />
               ) : (
-                <DeleteIcon sx={{ width: 20, height: 20 }} />
+                <DeleteIcon sx={{ width: { xs: 16, sm: 20 }, height: { xs: 16, sm: 20 } }} />
               )}
             </IconButton>
           )}
@@ -515,6 +529,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
             sx={{
               color: "#4b5563",
               borderRadius: 2,
+              p: { xs: 0.5, sm: 1 },
               "&:hover": {
                 backgroundColor: "#f3f4f6",
                 color: "#1DBF73",
@@ -522,9 +537,9 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
             }}
           >
             {isSaved ? (
-              <BookmarkIcon sx={{ width: 20, height: 20 }} />
+              <BookmarkIcon sx={{ width: { xs: 16, sm: 20 }, height: { xs: 16, sm: 20 } }} />
             ) : (
-              <BookmarkBorderIcon sx={{ width: 20, height: 20 }} />
+              <BookmarkBorderIcon sx={{ width: { xs: 16, sm: 20 }, height: { xs: 16, sm: 20 } }} />
             )}
           </IconButton>
         </Box>
@@ -532,7 +547,12 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
 
       {/* Comments section */}
       <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <CardContent sx={{ pt: 0, borderTop: "1px solid #f3f4f6" }}>
+        <CardContent sx={{ 
+          pt: 0, 
+          borderTop: "1px solid #f3f4f6",
+          p: { xs: 2, sm: 3 },
+          backgroundColor: "#fafafa",
+        }}>
           <Comments postId={post._id} comments={post.comments} />
         </CardContent>
       </Collapse>
