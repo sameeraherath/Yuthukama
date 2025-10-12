@@ -49,6 +49,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import NotificationMenu from "../components/NotificationMenu";
 import AIChatBot from "../components/AIChatBot";
+import RecommendedUsers from "../components/RecommendedUsers";
 
 /**
  * Modern social media home screen with three-column layout
@@ -828,7 +829,9 @@ const HomeScreen = () => {
           gap: { lg: 2.5, xl: 3 },
           maxWidth: 280,
         }}>
-                  </Box>
+          {/* Recommended Users */}
+          <RecommendedUsers />
+        </Box>
               </Box>
 
       {/* Scroll to Top Button */}

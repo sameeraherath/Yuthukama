@@ -153,16 +153,6 @@ const LoginPage = () => {
             Log in to your account to continue
           </Typography>
           
-          {/* Debug info */}
-          {process.env.NODE_ENV === "development" && (
-            <Box sx={{ mt: 2, p: 2, backgroundColor: "#f5f5f5", borderRadius: 2 }}>
-              <Typography variant="caption" color="text.secondary">
-                Debug: Auth State - isAuthenticated: {isAuthenticated ? "true" : "false"}, 
-                User: {user ? user.username : "null"}, 
-                Loading: {loading ? "true" : "false"}
-              </Typography>
-            </Box>
-          )}
         </Box>
 
         <AnimatePresence mode="wait">

@@ -16,6 +16,7 @@ import {
   getFollowers,
   getFollowing,
   getFollowStatus,
+  getRecommendedUsers,
 } from "../controllers/userController.js";
 import multer from "multer";
 
@@ -75,6 +76,15 @@ router.put(
  * @returns {Object} JSON response containing matching users
  */
 router.get("/search", protect, searchUsers);
+
+/**
+ * @route GET /api/users/recommended
+ * @desc Get recommended users to follow
+ * @access Private
+ * @param {number} [req.query.limit] - Limit results (default: 10)
+ * @returns {Object} JSON response containing recommended users
+ */
+router.get("/recommended", protect, getRecommendedUsers);
 
 
 /**

@@ -469,6 +469,56 @@ const userController = {
       res.status(500).json({ message: "Error checking follow status" });
     }
   },
+
+  /**
+   * Gets recommended users for the current user to follow
+   * @param {Object} req - Express request object
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user._id - Current user's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing recommended users
+   * @throws {Error} If fetching recommended users fails
+   * @example
+   * // Route: GET /api/users/recommended
+   */
+  getRecommendedUsers: async (req, res) => {
+    try {
+      const currentUserId = req.user._id;
+      const { limit = 10 } = req.query;
+
+      // Get current user's following list
+      const currentUser = await User.findById(currentUserId).select('following');
+      const followingIds = currentUser.following;
+
+      // Get users that the current user is not following and not themselves
+      const recommendedUsers = await User.find({
+        _id: { 
+          $nin: [...followingIds, currentUserId] 
+        },
+        role: 'user' // Only recommend regular users, not admins
+      })
+      .select('username profilePicture followers createdAt')
+      .sort({ followers: -1, createdAt: -1 }) // Sort by follower count and recency
+      .limit(parseInt(limit));
+
+      // Add follower count to each user
+      const usersWithStats = recommendedUsers.map(user => ({
+        _id: user._id,
+        username: user.username,
+        profilePicture: user.profilePicture,
+        followersCount: user.followers.length,
+        createdAt: user.createdAt
+      }));
+
+      res.json({
+        count: usersWithStats.length,
+        users: usersWithStats,
+      });
+    } catch (error) {
+      console.error("Error getting recommended users:", error);
+      res.status(500).json({ message: "Error getting recommended users" });
+    }
+  },
 };
 
 export { userController as default };
@@ -483,4 +533,5 @@ export const {
   getFollowers,
   getFollowing,
   getFollowStatus,
+  getRecommendedUsers,
 } = userController;

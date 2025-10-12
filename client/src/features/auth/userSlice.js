@@ -285,6 +285,39 @@ export const checkFollowStatus = createAsyncThunk(
 );
 
 /**
+ * Async thunk for fetching recommended users
+ * @async
+ * @function fetchRecommendedUsers
+ * @param {number} limit - Number of recommended users to fetch
+ * @param {Object} thunkAPI - Redux Thunk API object
+ * @returns {Promise<Object>} Recommended users list
+ * @throws {Error} If fetching recommended users fails
+ * @example
+ * // In a component
+ * await dispatch(fetchRecommendedUsers(10));
+ */
+export const fetchRecommendedUsers = createAsyncThunk(
+  "user/fetchRecommendedUsers",
+  async (limit = 10, thunkAPI) => {
+    try {
+      const { data } = await axios.get(
+        `${API_BASE}/api/users/recommended?limit=${limit}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      return { users: data.users, count: data.count };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch recommended users"
+      );
+    }
+  }
+);
+
+/**
  * Redux slice for user state management
  * @type {Object}
  * @property {string} name - Slice name
@@ -303,6 +336,7 @@ const userSlice = createSlice({
    * @property {Object|null} profileUser - User profile data for viewing other users
    * @property {Array} followers - Followers list
    * @property {Array} following - Following list
+   * @property {Array} recommendedUsers - Recommended users list
    * @property {Object} followStatus - Follow status for different users
    */
   initialState: {
@@ -312,6 +346,7 @@ const userSlice = createSlice({
     profileUser: null,
     followers: [],
     following: [],
+    recommendedUsers: [],
     followStatus: {},
   },
   reducers: {
@@ -444,6 +479,19 @@ const userSlice = createSlice({
         state.followStatus[action.payload.userId] = action.payload.isFollowing;
       })
       .addCase(checkFollowStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Fetch Recommended Users Cases
+      .addCase(fetchRecommendedUsers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchRecommendedUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.recommendedUsers = action.payload.users;
+      })
+      .addCase(fetchRecommendedUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
