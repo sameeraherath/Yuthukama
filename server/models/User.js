@@ -83,6 +83,29 @@ const UserSchema = new mongoose.Schema({
       default: [],
     },
   ],
+  notificationPreferences: {
+    email: {
+      likes: { type: Boolean, default: true },
+      comments: { type: Boolean, default: true },
+      follows: { type: Boolean, default: true },
+      mentions: { type: Boolean, default: true },
+      messages: { type: Boolean, default: true },
+    },
+    push: {
+      likes: { type: Boolean, default: true },
+      comments: { type: Boolean, default: true },
+      follows: { type: Boolean, default: true },
+      mentions: { type: Boolean, default: true },
+      messages: { type: Boolean, default: true },
+    },
+    inApp: {
+      likes: { type: Boolean, default: true },
+      comments: { type: Boolean, default: true },
+      follows: { type: Boolean, default: true },
+      mentions: { type: Boolean, default: true },
+      messages: { type: Boolean, default: true },
+    },
+  },
   createdAt: {
     type: Date,
     default: Date.now,

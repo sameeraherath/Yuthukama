@@ -6,6 +6,7 @@
 import User from "../models/User.js";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import config from "../config/config.js";
+import notificationController from "./notificationController.js";
 
 /**
  * AWS S3 client instance for handling profile picture uploads
@@ -295,6 +296,14 @@ const userController = {
         { new: true }
       );
 
+      // Create notification for follow
+      await notificationController.createNotification({
+        recipient: id,
+        sender: currentUserId,
+        type: "follow",
+        content: "started following you",
+      });
+
       res.json({ message: "Successfully followed user" });
     } catch (error) {
       console.error("Error following user:", error);
@@ -519,6 +528,62 @@ const userController = {
       res.status(500).json({ message: "Error getting recommended users" });
     }
   },
+
+  /**
+   * Updates user's notification preferences
+   * @param {Object} req - Express request object
+   * @param {Object} req.body - Request body containing notification preferences
+   * @param {Object} req.user - Authenticated user object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with updated preferences
+   */
+  updateNotificationPreferences: async (req, res) => {
+    try {
+      const { notificationPreferences } = req.body;
+      
+      const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { notificationPreferences },
+        { new: true, select: 'notificationPreferences' }
+      );
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        message: "Notification preferences updated successfully",
+        notificationPreferences: user.notificationPreferences
+      });
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ message: "Error updating notification preferences" });
+    }
+  },
+
+  /**
+   * Gets user's notification preferences
+   * @param {Object} req - Express request object
+   * @param {Object} req.user - Authenticated user object
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response with user's notification preferences
+   */
+  getNotificationPreferences: async (req, res) => {
+    try {
+      const user = await User.findById(req.user._id).select('notificationPreferences');
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        notificationPreferences: user.notificationPreferences
+      });
+    } catch (error) {
+      console.error("Error getting notification preferences:", error);
+      res.status(500).json({ message: "Error getting notification preferences" });
+    }
+  },
 };
 
 export { userController as default };
@@ -534,4 +599,6 @@ export const {
   getFollowing,
   getFollowStatus,
   getRecommendedUsers,
+  updateNotificationPreferences,
+  getNotificationPreferences,
 } = userController;

@@ -363,7 +363,7 @@ const SettingsPage = () => {
         initial="hidden"
         animate="visible"
       >
-        <Box sx={{ maxWidth: 800, mx: "auto" }}>
+        <Box sx={{ maxWidth: 800, mx: "auto", pb: 4 }}>
           {/* Header */}
           <motion.div variants={itemVariants}>
             <Typography
@@ -782,10 +782,12 @@ const SettingsPage = () => {
           <motion.div variants={itemVariants}>
             <Card
               sx={{
+                mb: 3,
                 borderRadius: 3,
                 boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
                 overflow: "hidden",
                 border: "2px solid #fecaca",
+                
               }}
             >
               <CardHeader

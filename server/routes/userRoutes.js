@@ -17,6 +17,8 @@ import {
   getFollowing,
   getFollowStatus,
   getRecommendedUsers,
+  updateNotificationPreferences,
+  getNotificationPreferences,
 } from "../controllers/userController.js";
 import multer from "multer";
 
@@ -85,6 +87,24 @@ router.get("/search", protect, searchUsers);
  * @returns {Object} JSON response containing recommended users
  */
 router.get("/recommended", protect, getRecommendedUsers);
+
+/**
+ * @route GET /api/users/notification-preferences
+ * @desc Get user's notification preferences
+ * @access Private
+ * @returns {Object} JSON response containing notification preferences
+ */
+router.get("/notification-preferences", protect, getNotificationPreferences);
+
+/**
+ * @route PUT /api/users/notification-preferences
+ * @desc Update user's notification preferences
+ * @access Private
+ * @param {Object} req.body - Request body
+ * @param {Object} req.body.notificationPreferences - Notification preferences object
+ * @returns {Object} JSON response with updated preferences
+ */
+router.put("/notification-preferences", protect, updateNotificationPreferences);
 
 
 /**

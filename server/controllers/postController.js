@@ -9,6 +9,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import config from "../config/config.js";
 import { v4 as uuidv4 } from "uuid";
 import notificationController from "../controllers/notificationController.js";
+import { createMentionNotifications } from "../utils/mentionUtils.js";
 
 /**
  * AWS S3 client instance for handling file uploads
@@ -95,6 +96,10 @@ const postController = {
       });
 
       await post.save();
+
+      // Create mention notifications for @mentions in title and description
+      const content = `${title} ${description}`;
+      await createMentionNotifications(content, req.user.id, post._id);
 
       const populatedPost = await Post.findById(post._id).populate(
         "user",
@@ -312,6 +317,9 @@ const postController = {
           relatedPost: post._id,
         });
       }
+
+      // Create mention notifications for @mentions in comment content
+      await createMentionNotifications(content, req.user.id, post._id);
 
       // Populate the newly added comment's user information
       const populatedPost = await Post.findById(post._id)

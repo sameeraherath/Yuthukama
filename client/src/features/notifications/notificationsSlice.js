@@ -42,6 +42,45 @@ export const markAllNotificationsAsRead = createAsyncThunk(
   }
 );
 
+// Async thunk for deleting a notification
+export const deleteNotification = createAsyncThunk(
+  "notifications/deleteNotification",
+  async (notificationId, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(`/api/notifications/${notificationId}`);
+      return { notificationId, data: response.data };
+    } catch (error) {
+      return rejectWithValue(error.response.data.message);
+    }
+  }
+);
+
+// Async thunk for deleting all notifications
+export const deleteAllNotifications = createAsyncThunk(
+  "notifications/deleteAllNotifications",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete("/api/notifications");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data.message);
+    }
+  }
+);
+
+// Async thunk for cleaning up old notifications
+export const cleanupOldNotifications = createAsyncThunk(
+  "notifications/cleanupOldNotifications",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete("/api/notifications/cleanup");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data.message);
+    }
+  }
+);
+
 const notificationsSlice = createSlice({
   name: "notifications",
   initialState: {
@@ -49,6 +88,7 @@ const notificationsSlice = createSlice({
     unreadCount: 0,
     loading: false,
     error: null,
+    pagination: null,
   },
   reducers: {
     addNotification: (state, action) => {
@@ -69,8 +109,15 @@ const notificationsSlice = createSlice({
       })
       .addCase(fetchNotifications.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
-        state.unreadCount = action.payload.filter((n) => !n.isRead).length;
+        // Handle both old format (array) and new format (object with pagination)
+        if (Array.isArray(action.payload)) {
+          state.items = action.payload;
+          state.unreadCount = action.payload.filter((n) => !n.isRead).length;
+        } else {
+          state.items = action.payload.notifications;
+          state.unreadCount = action.payload.notifications.filter((n) => !n.isRead).length;
+          state.pagination = action.payload.pagination;
+        }
       })
       .addCase(fetchNotifications.rejected, (state, action) => {
         state.loading = false;
@@ -90,6 +137,22 @@ const notificationsSlice = createSlice({
           notification.isRead = true;
         });
         state.unreadCount = 0;
+      })
+      .addCase(deleteNotification.fulfilled, (state, action) => {
+        const notificationId = action.payload.notificationId;
+        const notification = state.items.find((n) => n._id === notificationId);
+        if (notification && !notification.isRead) {
+          state.unreadCount -= 1;
+        }
+        state.items = state.items.filter((n) => n._id !== notificationId);
+      })
+      .addCase(deleteAllNotifications.fulfilled, (state) => {
+        state.items = [];
+        state.unreadCount = 0;
+      })
+      .addCase(cleanupOldNotifications.fulfilled, (state, action) => {
+        // Refresh notifications after cleanup
+        // This would typically trigger a refetch
       });
   },
 });

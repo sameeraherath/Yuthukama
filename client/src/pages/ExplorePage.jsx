@@ -20,6 +20,7 @@ import {
   IconButton,
   Avatar,
   Badge,
+  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 // eslint-disable-next-line no-unused-vars
@@ -45,10 +46,23 @@ import CloseIcon from "@mui/icons-material/Close";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import GroupIcon from "@mui/icons-material/Group";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import CommentIcon from "@mui/icons-material/Comment";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import MessageIcon from "@mui/icons-material/Message";
+import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { formatDistanceToNow } from "date-fns";
 import NotificationMenu from "../components/NotificationMenu";
 import AIChatBot from "../components/AIChatBot";
 import { fetchTrendingPosts } from "../features/posts/postsAPI";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification,
+} from "../features/notifications/notificationsSlice";
 
 /**
  * Explore page component that displays trending/popular posts
@@ -63,9 +77,13 @@ const ExplorePage = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [trendingPosts, setTrendingPosts] = useState([]);
+  const { items: notifications, unreadCount, loading: notificationsLoading } = useSelector(
+    (state) => state.notifications
+  );
 
   /**
    * Effect hook to redirect unauthenticated users to login
@@ -100,6 +118,66 @@ const ExplorePage = () => {
       fetchPosts();
     }
   }, [dispatch, isAuthenticated]);
+
+  // Fetch notifications when drawer opens
+  useEffect(() => {
+    if (showNotifications) {
+      dispatch(fetchNotifications());
+    }
+  }, [showNotifications, dispatch]);
+
+  // Helper functions for notifications
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case "like":
+        return <FavoriteIcon sx={{ color: "#e91e63" }} />;
+      case "comment":
+        return <CommentIcon sx={{ color: "#2196f3" }} />;
+      case "follow":
+        return <PersonAddIcon sx={{ color: "#4caf50" }} />;
+      case "message":
+        return <MessageIcon sx={{ color: "#ff9800" }} />;
+      case "mention":
+        return <AlternateEmailIcon sx={{ color: "#9c27b0" }} />;
+      default:
+        return <NotificationsIcon />;
+    }
+  };
+
+  const handleNotificationClick = async (notification) => {
+    if (!notification.isRead) {
+      await dispatch(markNotificationAsRead(notification._id));
+    }
+
+    // Navigate based on notification type
+    switch (notification.type) {
+      case "like":
+      case "comment":
+      case "mention":
+        if (notification.relatedPost) {
+          navigate(`/post/${notification.relatedPost._id}`);
+        }
+        break;
+      case "follow":
+        navigate(`/profile/${notification.sender._id}`);
+        break;
+      case "message":
+        navigate(`/messages/${notification.sender._id}`);
+        break;
+      default:
+        break;
+    }
+    setShowNotifications(false);
+  };
+
+  const handleDeleteNotification = async (e, notificationId) => {
+    e.stopPropagation();
+    await dispatch(deleteNotification(notificationId));
+  };
+
+  const handleMarkAllAsRead = async () => {
+    await dispatch(markAllNotificationsAsRead());
+  };
 
   /**
    * Handle scroll event for scroll-to-top button
@@ -488,7 +566,8 @@ const ExplorePage = () => {
                 <ListItemButton
                   onClick={() => {
                     if (item.component === "notification") {
-                      // Handle notification click
+                      setShowNotifications(true);
+                      setMobileDrawerOpen(false);
                       return;
                     }
                     navigate(item.path);
@@ -621,59 +700,13 @@ const ExplorePage = () => {
           minHeight: "calc(100vh - 64px)",
         }}
       >
-        {/* Mobile Header */}
-            <Box
-              sx={{
-            display: { xs: "flex", md: "none" },
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: { xs: 1.5, sm: 2 },
-            backgroundColor: "white",
-            borderBottom: "1px solid #e5e7eb",
-                position: "sticky",
-                top: 64,
-                zIndex: 10,
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <IconButton 
-            onClick={() => setMobileDrawerOpen(true)}
-            sx={{ 
-              p: 1,
-              "&:hover": {
-                backgroundColor: "#f0fdf4",
-              }
-            }}
-          >
-            <MenuIcon sx={{ color: "#1DBF73" }} />
-          </IconButton>
-          <Typography 
-            variant="h6" 
-            fontWeight={700} 
-            color="#1DBF73"
-            sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}
-          >
-            Explore
-          </Typography>
-          <IconButton 
-            onClick={() => navigate("/create-post")}
-            sx={{ 
-              p: 1,
-              "&:hover": {
-                backgroundColor: "#f0fdf4",
-              }
-            }}
-          >
-            <AddIcon sx={{ color: "#1DBF73" }} />
-          </IconButton>
-        </Box>
 
         {/* Explore Content */}
         <Box sx={{ 
           flex: 1, 
           display: "flex", 
           justifyContent: "center", 
-          p: { xs: 1, sm: 2, md: 3 },
+          p: { xs: 2, sm: 3, md: 3 },
           overflowY: "auto",
           "&::-webkit-scrollbar": {
             width: "6px",
@@ -718,32 +751,6 @@ const ExplorePage = () => {
                 </Box>
               </Box>
               
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                <Chip 
-                  label="🔥 Trending" 
-                  sx={{ 
-                    backgroundColor: "#fef3c7", 
-                    color: "#92400e",
-                    fontWeight: 600,
-                  }} 
-                />
-                <Chip 
-                  label="⭐ Top Posts" 
-                  sx={{ 
-                    backgroundColor: "#dbeafe", 
-                    color: "#1e40af",
-                    fontWeight: 600,
-                  }} 
-                />
-                <Chip 
-                  label="📈 Most Liked" 
-                  sx={{ 
-                    backgroundColor: "#f0fdf4", 
-                    color: "#166534",
-                    fontWeight: 600,
-                  }} 
-                />
-              </Box>
             </Paper>
 
             {/* Search Bar */}
@@ -765,16 +772,37 @@ const ExplorePage = () => {
                   <Typography variant="body2">{error}</Typography>
                 </Alert>
             ) : loading ? (
-              <Box sx={{ 
-                display: "flex", 
-                flexDirection: "column", 
-                gap: { xs: 1.5, sm: 2 },
-                alignItems: "center",
-                width: "100%",
-                px: { xs: 1, sm: 0 }
-              }}>
-                <EnhancedSkeleton variant="post" count={5} />
-              </Box>
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <Box sx={{ 
+                  display: "flex", 
+                  flexDirection: "column", 
+                  gap: { xs: 1.5, sm: 2 },
+                  alignItems: "center",
+                  width: "100%",
+                  px: { xs: 1, sm: 0 }
+                }}>
+                  <AnimatePresence mode="popLayout">
+                    {[1, 2, 3, 4, 5].map((index) => (
+                      <motion.div
+                        key={index}
+                        variants={itemVariants}
+                        layout
+                        initial="hidden"
+                        animate="visible"
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ delay: index * 0.05 }}
+                        style={{ width: "100%" }}
+                      >
+                        <EnhancedSkeleton variant="post" count={1} />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </Box>
+              </motion.div>
             ) : filteredPosts.length === 0 ? (
               <Box sx={{ px: { xs: 1, sm: 0 } }}>
                   <EmptyState
@@ -885,6 +913,133 @@ const ExplorePage = () => {
           <KeyboardArrowUpIcon sx={{ fontSize: { xs: "1.2rem", sm: "1.5rem" } }} />
         </Fab>
       </Zoom>
+      
+      {/* Notification Drawer */}
+      <Drawer
+        anchor="right"
+        open={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        sx={{
+          "& .MuiDrawer-paper": {
+            width: { xs: "100%", sm: 400 },
+            maxWidth: "100vw",
+          },
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: "#1DBF73" }}>
+              Notifications
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              {unreadCount > 0 && (
+                <IconButton size="small" onClick={handleMarkAllAsRead} title="Mark all as read">
+                  <NotificationsIcon />
+                </IconButton>
+              )}
+              <IconButton onClick={() => setShowNotifications(false)}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          
+          {notificationsLoading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+              <CircularProgress size={24} sx={{ color: "#1DBF73" }} />
+            </Box>
+          ) : notifications.length > 0 ? (
+            <List sx={{ p: 0 }}>
+              {notifications.map((notification) => (
+                <ListItem
+                  key={notification._id}
+                  disablePadding
+                  sx={{ mb: 1 }}
+                >
+                  <ListItemButton
+                    onClick={() => handleNotificationClick(notification)}
+                    sx={{
+                      borderRadius: 2,
+                      bgcolor: notification.isRead ? "transparent" : "#f0fdf4",
+                      border: notification.isRead ? "none" : "1px solid #1DBF73",
+                      py: 1.5,
+                      px: 2,
+                      transition: "all 0.2s ease-in-out",
+                      "&:hover": {
+                        backgroundColor: "#f0fdf4",
+                        transform: "translateX(4px)",
+                      },
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 40 }}>
+                      {notification.sender?.profilePicture ? (
+                        <Avatar
+                          src={notification.sender.profilePicture}
+                          sx={{ width: 32, height: 32 }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            bgcolor: "#1DBF73",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {getNotificationIcon(notification.type)}
+                        </Box>
+                      )}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                            {notification.content}
+                          </Typography>
+                          {!notification.isRead && (
+                            <Box
+                              sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                bgcolor: "#1DBF73",
+                              }}
+                            />
+                          )}
+                        </Box>
+                      }
+                      secondary={
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDistanceToNow(new Date(notification.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </Typography>
+                      }
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleDeleteNotification(e, notification._id)}
+                      sx={{ ml: 1 }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Box sx={{ p: 2, textAlign: "center" }}>
+              <Typography variant="body2" color="text.secondary">
+                No notifications
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </Drawer>
+      
       {/* AI Chatbot */}
       {showAIChat && <AIChatBot onClose={() => setShowAIChat(false)} />}
     </Box>

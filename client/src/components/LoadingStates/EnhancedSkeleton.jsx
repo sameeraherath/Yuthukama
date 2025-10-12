@@ -40,8 +40,7 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
    * Post card skeleton with image and content
    */
   const PostSkeleton = () => (
-    <motion.div variants={itemVariants}>
-      <Card
+    <Card
         sx={{
           maxWidth: "100%",
           borderRadius: { xs: 2, sm: 3 },
@@ -197,15 +196,13 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
           </Box>
         </Box>
       </Card>
-    </motion.div>
   );
 
   /**
    * Profile card skeleton with avatar and info
    */
   const ProfileSkeleton = () => (
-    <motion.div variants={itemVariants}>
-      <Card
+    <Card
         sx={{
           borderRadius: BORDER_RADIUS.large,
           boxShadow: SHADOWS.card,
@@ -249,15 +246,13 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
           />
         </Box>
       </Card>
-    </motion.div>
   );
 
   /**
    * Chat message skeleton with alternating alignment
    */
   const ChatSkeleton = () => (
-    <motion.div variants={itemVariants}>
-      <Stack spacing={2} sx={{ p: 2 }}>
+    <Stack spacing={2} sx={{ p: 2 }}>
         {[...Array(3)].map((_, idx) => (
           <Box
             key={idx}
@@ -285,15 +280,13 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
           </Box>
         ))}
       </Stack>
-    </motion.div>
   );
 
   /**
    * Comment skeleton with avatar and text
    */
   const CommentSkeleton = () => (
-    <motion.div variants={itemVariants}>
-      <Box sx={{ display: "flex", gap: 2, p: 2 }}>
+    <Box sx={{ display: "flex", gap: 2, p: 2 }}>
         <Skeleton variant="circular" width={40} height={40} animation="wave" />
         <Box sx={{ flex: 1 }}>
           <Skeleton variant="text" width="30%" animation="wave" />
@@ -301,15 +294,13 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
           <Skeleton variant="text" width="90%" animation="wave" />
         </Box>
       </Box>
-    </motion.div>
   );
 
   /**
    * List item skeleton for user lists
    */
   const ListSkeleton = () => (
-    <motion.div variants={itemVariants}>
-      <Box sx={{ display: "flex", gap: 2, alignItems: "center", p: 2 }}>
+    <Box sx={{ display: "flex", gap: 2, alignItems: "center", p: 2 }}>
         <Skeleton variant="circular" width={48} height={48} animation="wave" />
         <Box sx={{ flex: 1 }}>
           <Skeleton
@@ -322,15 +313,13 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
         </Box>
         <Skeleton variant="rounded" width={60} height={30} animation="wave" />
       </Box>
-    </motion.div>
   );
 
   /**
    * Article card skeleton for articles section
    */
   const ArticleSkeleton = () => (
-    <motion.div variants={itemVariants}>
-      <Card
+    <Card
         sx={{
           borderRadius: BORDER_RADIUS.large,
           boxShadow: SHADOWS.card,
@@ -370,7 +359,6 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
           </Box>
         </CardContent>
       </Card>
-    </motion.div>
   );
 
   // Select skeleton component based on variant
@@ -396,9 +384,14 @@ const EnhancedSkeleton = ({ variant = "post", count = 1 }) => {
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible">
       {[...Array(count)].map((_, index) => (
-        <Box key={index} sx={{ mb: count > 1 ? 2 : 0 }}>
+        <motion.div
+          key={index}
+          variants={itemVariants}
+          style={{ width: "100%" }}
+          sx={{ mb: count > 1 ? 2 : 0 }}
+        >
           {getSkeletonComponent()}
-        </Box>
+        </motion.div>
       ))}
     </motion.div>
   );

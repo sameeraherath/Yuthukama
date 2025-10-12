@@ -13,6 +13,7 @@ import {
   List,
   ListItem,
   ListItemButton,
+  CircularProgress,
 } from "@mui/material";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
@@ -28,11 +29,26 @@ import ExploreIcon from "@mui/icons-material/Explore";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import CommentIcon from "@mui/icons-material/Comment";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import MessageIcon from "@mui/icons-material/Message";
+import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CloseIcon from "@mui/icons-material/Close";
+import { formatDistanceToNow } from "date-fns";
 import PostDialog from "./PostDialog";
 import LogoutDialog from "./LogoutDialog";
+import AIChatBot from "./AIChatBot";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  fetchNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification,
+} from "../features/notifications/notificationsSlice";
 
 /**
  * Navigation bar component that provides main navigation and actions
@@ -46,10 +62,69 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const dispatch = useDispatch();
+  const { items: notifications, unreadCount, loading: notificationsLoading } = useSelector(
+    (state) => state.notifications
+  );
   const { user } = useSelector((state) => state.auth);
   const isAdmin = user?.role === "admin";
+
+  // Helper functions for notifications
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case "like":
+        return <FavoriteIcon sx={{ color: "#e91e63" }} />;
+      case "comment":
+        return <CommentIcon sx={{ color: "#2196f3" }} />;
+      case "follow":
+        return <PersonAddIcon sx={{ color: "#4caf50" }} />;
+      case "message":
+        return <MessageIcon sx={{ color: "#ff9800" }} />;
+      case "mention":
+        return <AlternateEmailIcon sx={{ color: "#9c27b0" }} />;
+      default:
+        return <NotificationsIcon />;
+    }
+  };
+
+  const handleNotificationClick = async (notification) => {
+    if (!notification.isRead) {
+      await dispatch(markNotificationAsRead(notification._id));
+    }
+
+    // Navigate based on notification type
+    switch (notification.type) {
+      case "like":
+      case "comment":
+      case "mention":
+        if (notification.relatedPost) {
+          navigate(`/post/${notification.relatedPost._id}`);
+        }
+        break;
+      case "follow":
+        navigate(`/profile/${notification.sender._id}`);
+        break;
+      case "message":
+        navigate(`/messages/${notification.sender._id}`);
+        break;
+      default:
+        break;
+    }
+    setShowNotifications(false);
+  };
+
+  const handleDeleteNotification = async (e, notificationId) => {
+    e.stopPropagation();
+    await dispatch(deleteNotification(notificationId));
+  };
+
+  const handleMarkAllAsRead = async () => {
+    await dispatch(markAllNotificationsAsRead());
+  };
 
   /**
    * Opens the post creation dialog
@@ -296,7 +371,8 @@ const Navbar = () => {
                   <ListItemButton
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      // Handle notification click - could open notification panel
+                      setShowNotifications(true);
+                      dispatch(fetchNotifications());
                     }}
                   >
                     <ListItemIcon>
@@ -357,7 +433,7 @@ const Navbar = () => {
                   <ListItemButton
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      // Handle AI Assistant click - could open AI chat
+                      setShowAIChat(true);
                     }}
                   >
                     <ListItemIcon>
@@ -407,6 +483,132 @@ const Navbar = () => {
         </Box>
       </Drawer>
 
+      {/* Notification Drawer */}
+      <Drawer
+        anchor="right"
+        open={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        sx={{
+          "& .MuiDrawer-paper": {
+            width: { xs: "100%", sm: 400 },
+            maxWidth: "100vw",
+          },
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: "#1DBF73" }}>
+              Notifications
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              {unreadCount > 0 && (
+                <IconButton size="small" onClick={handleMarkAllAsRead} title="Mark all as read">
+                  <NotificationsIcon />
+                </IconButton>
+              )}
+              <IconButton onClick={() => setShowNotifications(false)}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          
+          {notificationsLoading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+              <CircularProgress size={24} sx={{ color: "#1DBF73" }} />
+            </Box>
+          ) : notifications.length > 0 ? (
+            <List sx={{ p: 0 }}>
+              {notifications.map((notification) => (
+                <ListItem
+                  key={notification._id}
+                  disablePadding
+                  sx={{ mb: 1 }}
+                >
+                  <ListItemButton
+                    onClick={() => handleNotificationClick(notification)}
+                    sx={{
+                      borderRadius: 2,
+                      bgcolor: notification.isRead ? "transparent" : "#f0fdf4",
+                      border: notification.isRead ? "none" : "1px solid #1DBF73",
+                      py: 1.5,
+                      px: 2,
+                      transition: "all 0.2s ease-in-out",
+                      "&:hover": {
+                        backgroundColor: "#f0fdf4",
+                        transform: "translateX(4px)",
+                      },
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 40 }}>
+                      {notification.sender?.profilePicture ? (
+                        <Avatar
+                          src={notification.sender.profilePicture}
+                          sx={{ width: 32, height: 32 }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            bgcolor: "#1DBF73",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {getNotificationIcon(notification.type)}
+                        </Box>
+                      )}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                            {notification.content}
+                          </Typography>
+                          {!notification.isRead && (
+                            <Box
+                              sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                bgcolor: "#1DBF73",
+                              }}
+                            />
+                          )}
+                        </Box>
+                      }
+                      secondary={
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDistanceToNow(new Date(notification.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </Typography>
+                      }
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleDeleteNotification(e, notification._id)}
+                      sx={{ ml: 1 }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Box sx={{ p: 2, textAlign: "center" }}>
+              <Typography variant="body2" color="text.secondary">
+                No notifications
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </Drawer>
+
       {/* Dialogs */}
       <LogoutDialog
         open={logoutConfirmOpen}
@@ -418,6 +620,7 @@ const Navbar = () => {
         handleClose={handleClose}
         handlePostSubmit={handlePostSubmit}
       />
+      {showAIChat && <AIChatBot onClose={() => setShowAIChat(false)} />}
     </div>
   );
 };

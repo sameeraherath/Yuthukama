@@ -27,7 +27,7 @@ import Message from "./models/Message.js";
 import Conversation from "./models/Conversation.js";
 import mongoose from "mongoose";
 import adminRoutes from "./routes/adminRoutes.js";
-import * as notificationController from "./controllers/notificationController.js";
+import notificationController, { setSocketIO } from "./controllers/notificationController.js";
 
 dotenv.config();
 connectDb();
@@ -77,6 +77,9 @@ const io = new Server(httpServer, {
   pingTimeout: 5000,
   pingInterval: 10000,
 });
+
+// Set Socket.IO instance in notification controller for broadcasting
+setSocketIO(io);
 
 /**
  * Multer instance for handling file uploads
@@ -273,15 +276,12 @@ io.on("connection", (socket) => {
         );
 
         if (recipient) {
-          const notification = await notificationController.createNotification({
+          await notificationController.createNotification({
             recipient,
             sender,
             type: "message",
-            content: "You have a new message",
+            content: "sent you a message",
           });
-
-          // Emit notification to recipient
-          io.to(`user_${recipient}`).emit("notification", notification);
         }
 
         // Emit message with database ID to confirm delivery
