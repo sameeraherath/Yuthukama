@@ -801,52 +801,6 @@ const ProfilePage = () => {
           minHeight: "calc(100vh - 64px)",
         }}
       >
-        {/* Mobile Header */}
-        <Box
-          sx={{
-            display: { xs: "flex", md: "none" },
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: { xs: 1.5, sm: 2 },
-            backgroundColor: "white",
-            borderBottom: "1px solid #e5e7eb",
-            position: "sticky",
-            top: 64,
-            zIndex: 10,
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <IconButton 
-            onClick={() => setMobileDrawerOpen(true)}
-            sx={{ 
-              p: 1,
-              "&:hover": {
-                backgroundColor: "#f0fdf4",
-              }
-            }}
-          >
-            <MenuIcon sx={{ color: "#1DBF73" }} />
-          </IconButton>
-          <Typography 
-            variant="h6" 
-            fontWeight={700} 
-            color="#1DBF73"
-            sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}
-          >
-            Yuthukama
-          </Typography>
-          <IconButton 
-            onClick={() => navigate("/create-post")}
-            sx={{ 
-              p: 1,
-              "&:hover": {
-                backgroundColor: "#f0fdf4",
-              }
-            }}
-          >
-            <AddIcon sx={{ color: "#1DBF73" }} />
-          </IconButton>
-        </Box>
 
         {/* Profile Content */}
         <Box sx={{ 

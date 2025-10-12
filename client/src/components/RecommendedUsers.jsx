@@ -141,7 +141,15 @@ const RecommendedUsers = () => {
             </Typography>
           </Box>
         ) : (
-          <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
+          <Box sx={{ 
+            maxHeight: 400, 
+            overflowY: "auto",
+            "&::-webkit-scrollbar": {
+              display: "none",
+            },
+            scrollbarWidth: "none", // Firefox
+            msOverflowStyle: "none", // IE and Edge
+          }}>
             {recommendedUsers.map((recommendedUser, index) => {
               const isFollowing = isUserFollowed(recommendedUser._id);
               const isCurrentUser = recommendedUser._id === user?._id;

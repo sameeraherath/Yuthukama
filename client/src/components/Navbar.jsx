@@ -24,6 +24,10 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import HomeIcon from "@mui/icons-material/Home";
 import ChatIcon from "@mui/icons-material/Chat";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import ExploreIcon from "@mui/icons-material/Explore";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PostDialog from "./PostDialog";
 import LogoutDialog from "./LogoutDialog";
 import { useNavigate } from "react-router-dom";
@@ -279,12 +283,26 @@ const Navbar = () => {
 
                 <ListItem disablePadding>
                   <ListItemButton
-                    onClick={() => handleMobileNavigation("/profile")}
+                    onClick={() => handleMobileNavigation("/explore")}
                   >
                     <ListItemIcon>
-                      <AccountCircleIcon sx={{ color: "#1DBF73" }} />
+                      <ExploreIcon sx={{ color: "#1DBF73" }} />
                     </ListItemIcon>
-                    <ListItemText primary="Profile" />
+                    <ListItemText primary="Explore" />
+                  </ListItemButton>
+                </ListItem>
+
+                <ListItem disablePadding>
+                  <ListItemButton
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      // Handle notification click - could open notification panel
+                    }}
+                  >
+                    <ListItemIcon>
+                      <NotificationsIcon sx={{ color: "#1DBF73" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Notifications" />
                   </ListItemButton>
                 </ListItem>
 
@@ -301,6 +319,28 @@ const Navbar = () => {
 
                 <ListItem disablePadding>
                   <ListItemButton
+                    onClick={() => handleMobileNavigation("/saved")}
+                  >
+                    <ListItemIcon>
+                      <BookmarkIcon sx={{ color: "#1DBF73" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Saved" />
+                  </ListItemButton>
+                </ListItem>
+
+                <ListItem disablePadding>
+                  <ListItemButton
+                    onClick={() => handleMobileNavigation("/profile")}
+                  >
+                    <ListItemIcon>
+                      <AccountCircleIcon sx={{ color: "#1DBF73" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Profile" />
+                  </ListItemButton>
+                </ListItem>
+
+                <ListItem disablePadding>
+                  <ListItemButton
                     onClick={() => {
                       setMobileMenuOpen(false);
                       handleClickOpen();
@@ -310,6 +350,20 @@ const Navbar = () => {
                       <PostAddIcon sx={{ color: "#1DBF73" }} />
                     </ListItemIcon>
                     <ListItemText primary="Create Post" />
+                  </ListItemButton>
+                </ListItem>
+
+                <ListItem disablePadding>
+                  <ListItemButton
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      // Handle AI Assistant click - could open AI chat
+                    }}
+                  >
+                    <ListItemIcon>
+                      <SmartToyIcon sx={{ color: "#1DBF73" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="AI Assistant" />
                   </ListItemButton>
                 </ListItem>
 
