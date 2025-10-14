@@ -46,9 +46,21 @@ import {
   Chip,
   Tabs,
   Tab,
+  Card,
+  CardContent,
+  CardMedia,
+  LinearProgress,
+  Tooltip,
+  Fade,
+  Backdrop,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
 import HomeIcon from "@mui/icons-material/Home";
 import PersonIcon from "@mui/icons-material/Person";
@@ -58,7 +70,6 @@ import ExploreIcon from "@mui/icons-material/Explore";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
@@ -81,6 +92,10 @@ const ProfilePage = () => {
   const { user } = useAuth();
   const { userId } = useParams();
   const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [editingUsername, setEditingUsername] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -202,9 +217,28 @@ const ProfilePage = () => {
    * @param {Event} e - File input change event
    */
   const handleFileChange = (e) => {
-    console.log("Selected file:", e.target.files[0]);
-    setFile(e.target.files[0]);
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      console.log("Selected file:", selectedFile);
+      setFile(selectedFile);
+      
+      // Create preview URL
+      const url = URL.createObjectURL(selectedFile);
+      setPreviewUrl(url);
+      setShowProfileDialog(true);
+    }
   };
+
+  /**
+   * Cleans up preview URL when component unmounts or file changes
+   */
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   /**
    * Handles profile picture upload
@@ -213,16 +247,58 @@ const ProfilePage = () => {
    */
   const handleUpload = async () => {
     if (!file) return;
+    
+    setIsUploading(true);
+    setUploadProgress(0);
+    
     console.log("Uploading file:", file);
     const formData = new FormData();
     formData.append("profilePic", file);
+    
     try {
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
       const result = await dispatch(updateProfilePicture(formData));
       console.log("Profile picture update result:", result);
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      
+      // Clean up after successful upload
+      setTimeout(() => {
       setFile(null);
+        setPreviewUrl(null);
+        setShowProfileDialog(false);
+        setIsUploading(false);
+        setUploadProgress(0);
+      }, 1000);
+      
     } catch (error) {
       console.error("Error updating profile picture:", error);
+      setIsUploading(false);
+      setUploadProgress(0);
     }
+  };
+
+  /**
+   * Cancels profile picture upload
+   * @function
+   */
+  const handleCancelUpload = () => {
+    setFile(null);
+    setPreviewUrl(null);
+    setShowProfileDialog(false);
+    setIsUploading(false);
+    setUploadProgress(0);
   };
 
   /**
@@ -824,156 +900,146 @@ const ProfilePage = () => {
           },
         }}>
           <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper
-        sx={{ p: 4, mb: 4, borderRadius: 4, textAlign: "center", boxShadow: 1 }}
+      {/* Modern Profile Header Card */}
+      <Card
+        sx={{
+          mb: 4,
+          borderRadius: 4,
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
+          background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+          border: "1px solid rgba(29, 191, 115, 0.1)",
+          overflow: "hidden",
+        }}
+      >
+        <CardContent sx={{ p: 0 }}>
+          {/* Profile Picture Section */}
+          <Box
+            sx={{
+              position: "relative",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              p: 3,
+              background: "linear-gradient(135deg, #1DBF73 0%, #169c5f 100%)",
+              color: "white",
+            }}
       >
         <Box sx={{ position: "relative", display: "inline-block", mb: 2 }}>
           <Avatar
             src={displayUser?.profilePicture || "/uploads/profile-pics/default.jpg"}
             sx={{
-              width: 154,
-              height: 154,
-              border: "4px solid #1dbf73",
-              boxShadow: 1,
+                  width: 120,
+                  height: 120,
+                  border: "4px solid rgba(255, 255, 255, 0.3)",
+                  boxShadow: "0 6px 24px rgba(0, 0, 0, 0.2)",
+                  backdropFilter: "blur(10px)",
+                  transition: "all 0.3s ease-in-out",
+                  "&:hover": {
+                    transform: "scale(1.05)",
+                    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+                  },
             }}
           />
           {isViewingOwnProfile && (
+                <Tooltip title="Update Profile Picture" arrow>
             <label htmlFor="profile-pic-upload">
               <input
-                accept="image/jpeg,image/png"
+                      accept="image/jpeg,image/png,image/webp"
                 style={{ display: "none" }}
                 id="profile-pic-upload"
                 type="file"
                 onChange={handleFileChange}
               />
-              <Box
-                sx={{
-                  position: "absolute",
-                  bottom: 8,
-                  right: 8,
-                  bgcolor: "rgba(0,0,0,0.7)",
-                  borderRadius: "50%",
-                  p: 1.2,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "background 0.2s",
-                  "&:hover": { bgcolor: "#1dbf73" },
-                }}
-              >
-                <CameraAltIcon sx={{ color: "#fff" }} />
-              </Box>
+               <Box
+                 sx={{
+                   position: "absolute",
+                   bottom: 6,
+                   right: 6,
+                   bgcolor: "rgba(255, 255, 255, 0.9)",
+                   borderRadius: "50%",
+                   p: 0.8,
+                   cursor: "pointer",
+                   display: "flex",
+                   alignItems: "center",
+                   justifyContent: "center",
+                   transition: "all 0.3s ease-in-out",
+                   backdropFilter: "blur(10px)",
+                   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                   "&:hover": {
+                     bgcolor: "#1DBF73",
+                     transform: "scale(1.1)",
+                     boxShadow: "0 3px 12px rgba(0, 0, 0, 0.3)",
+                     "& .MuiSvgIcon-root": {
+                       color: "white",
+                     },
+                   },
+                 }}
+               >
+                 <PhotoCameraIcon sx={{ color: "#1DBF73", fontSize: "1rem", transition: "color 0.3s ease-in-out" }} />
+               </Box>
             </label>
+                </Tooltip>
           )}
         </Box>
-        {file && isViewingOwnProfile && (
-          <Button
-            variant="contained"
-            color="success"
-            onClick={handleUpload}
-            sx={{
-              mb: 2,
-              fontWeight: "bold",
-              textTransform: "none",
-              borderRadius: 5,
-              px: 4,
-              backgroundColor: "#1dbf73",
-              boxShadow: 1,
-            }}
-          >
-            Update Profile Picture
-          </Button>
-        )}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            mt: 2,
-            justifyContent: "center",
-          }}
-        >
-          {editingUsername && isViewingOwnProfile ? (
-            <>
-              <TextField
-                label="New Username"
-                value={newUsername}
-                onChange={(e) => setNewUsername(e.target.value)}
-                variant="outlined"
-                size="small"
-                sx={{
-                  minWidth: 180,
-                  "& .MuiOutlinedInput-root": { borderRadius: "25px" },
-                  "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                    borderColor: "#1DBF73",
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#1DBF73" },
-                }}
-                autoFocus
-              />
-              <Button
-                variant="contained"
-                color="success"
-                sx={{
-                  fontWeight: "bold",
-                  textTransform: "none",
-                  borderRadius: 5,
-                  px: 3,
-                  backgroundColor: "#1dbf73",
-                }}
-                onClick={handleUsernameChange}
-                disabled={!newUsername}
-              >
-                Update
-              </Button>
-              <Button
-                variant="outlined"
-                color="inherit"
-                sx={{ textTransform: "none", borderRadius: 5, px: 3 }}
-                onClick={handleCancelEdit}
-              >
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <>
+
+            {/* User Info Section */}
+            <Box sx={{ textAlign: "center", mb: 1 }}>
               <Typography
                 variant="h4"
                 component="h1"
-                gutterBottom
-                sx={{ mb: 0, fontWeight: 600 }}
+            sx={{
+                  fontWeight: 700,
+                  fontSize: { xs: "1.5rem", sm: "1.8rem", md: "2rem" },
+                  mb: 0.5,
+                  textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                }}
               >
                 {displayUser?.username || displayUser?.name || "Unknown User"}
               </Typography>
-              {isViewingOwnProfile && (
-                <IconButton
-                  aria-label="Edit Username"
+              <Typography
+                variant="body1"
+          sx={{
+                  opacity: 0.9,
+                  fontWeight: 400,
+                  fontSize: { xs: "0.9rem", sm: "1rem" },
+                }}
+              >
+                {displayUser?.email}
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Action Buttons Section */}
+          <Box sx={{ p: 2, bgcolor: "white" }}>
+            {isViewingOwnProfile && (
+              <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 2 }}>
+                <Button
+                variant="outlined"
+                  startIcon={<EditIcon />}
                   onClick={handleEditUsername}
-                  size="small"
-                  sx={{ ml: 1 }}
+                sx={{
+                    borderRadius: 2,
+                    px: 2,
+                    py: 0.8,
+                    borderColor: "#1DBF73",
+                    color: "#1DBF73",
+                    fontWeight: 600,
+                    textTransform: "none",
+                    fontSize: "0.9rem",
+                    "&:hover": {
+                      borderColor: "#169c5f",
+                      backgroundColor: "rgba(29, 191, 115, 0.04)",
+                    },
+                  }}
                 >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-            </>
-          )}
+                  Edit Profile
+              </Button>
         </Box>
-        {(message || userError) && (
-          <Alert
-            severity={userError ? "error" : "success"}
-            sx={{ mt: 2, width: "100%", borderRadius: 2, fontWeight: 500 }}
-          >
-            {userError || message}
-          </Alert>
-        )}
-        <Typography variant="body1" sx={{ mt: 3, color: "#555" }}>
-          Email: <b>{displayUser?.email}</b>
-        </Typography>
+            )}
         
         {/* Follow/Unfollow Button and Stats */}
         {!isViewingOwnProfile && (
-          <Box sx={{ mt: 3, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
             <Button
               variant={followStatus[userId] ? "outlined" : "contained"}
               color="success"
@@ -981,64 +1047,352 @@ const ProfilePage = () => {
               disabled={userLoading}
               startIcon={followStatus[userId] ? <PersonRemoveIcon /> : <PersonAddIcon />}
               sx={{
-                fontWeight: "bold",
+                    fontWeight: 600,
                 textTransform: "none",
-                borderRadius: 5,
-                px: 4,
+                    borderRadius: 2,
+                    px: 3,
                 py: 1,
-                backgroundColor: followStatus[userId] ? "transparent" : "#1dbf73",
-                borderColor: "#1dbf73",
-                color: followStatus[userId] ? "#1dbf73" : "white",
+                    fontSize: "0.9rem",
+                    backgroundColor: followStatus[userId] ? "transparent" : "#1DBF73",
+                    borderColor: "#1DBF73",
+                    color: followStatus[userId] ? "#1DBF73" : "white",
+                    boxShadow: followStatus[userId] ? "none" : "0 3px 12px rgba(29, 191, 115, 0.3)",
                 "&:hover": {
                   backgroundColor: followStatus[userId] ? "#f0fdf4" : "#169c5f",
-                  borderColor: "#1dbf73",
+                      borderColor: "#1DBF73",
+                      boxShadow: followStatus[userId] ? "0 2px 6px rgba(29, 191, 115, 0.2)" : "0 4px 16px rgba(29, 191, 115, 0.4)",
+                      transform: "translateY(-1px)",
                 },
+                    transition: "all 0.3s ease-in-out",
               }}
             >
               {followStatus[userId] ? "Unfollow" : "Follow"}
             </Button>
             
             {/* Followers and Following Stats */}
-            <Box sx={{ display: "flex", gap: 3, mt: 1 }}>
+                <Box sx={{ display: "flex", gap: 1.5 }}>
               <Chip
                 icon={<PeopleIcon />}
                 label={`${followers?.length || 0} Followers`}
                 onClick={handleOpenFollowers}
+                    size="small"
                 sx={{
                   cursor: "pointer",
                   backgroundColor: "#f0fdf4",
-                  color: "#1dbf73",
-                  border: "1px solid #1dbf73",
+                      color: "#1DBF73",
+                      border: "1px solid #1DBF73",
+                      fontWeight: 600,
+                      fontSize: "0.8rem",
                   "&:hover": {
                     backgroundColor: "#e0f2e9",
+                        transform: "translateY(-1px)",
+                        boxShadow: "0 3px 8px rgba(29, 191, 115, 0.2)",
                   },
+                      transition: "all 0.3s ease-in-out",
                 }}
               />
               <Chip
                 icon={<PeopleIcon />}
                 label={`${following?.length || 0} Following`}
                 onClick={handleOpenFollowing}
+                    size="small"
                 sx={{
                   cursor: "pointer",
                   backgroundColor: "#f0fdf4",
-                  color: "#1dbf73",
-                  border: "1px solid #1dbf73",
+                      color: "#1DBF73",
+                      border: "1px solid #1DBF73",
+                      fontWeight: 600,
+                      fontSize: "0.8rem",
                   "&:hover": {
                     backgroundColor: "#e0f2e9",
+                        transform: "translateY(-1px)",
+                        boxShadow: "0 3px 8px rgba(29, 191, 115, 0.2)",
                   },
+                      transition: "all 0.3s ease-in-out",
                 }}
               />
             </Box>
           </Box>
         )}
-      </Paper>
 
-      <Paper elevation={1} sx={{ p: 3, mb: 4, borderRadius: 4 }}>
-        <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+            {/* Success/Error Messages */}
+            {(message || userError) && (
+              <Fade in={!!(message || userError)}>
+                <Alert
+                  severity={userError ? "error" : "success"}
+                  sx={{
+                    mt: 2,
+                    borderRadius: 3,
+                    fontWeight: 500,
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                  }}
+                >
+                  {userError || message}
+                </Alert>
+              </Fade>
+            )}
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Modern Profile Picture Upload Dialog */}
+      <Dialog
+        open={showProfileDialog}
+        onClose={handleCancelUpload}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            boxShadow: "0 16px 48px rgba(0, 0, 0, 0.15)",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(135deg, #1DBF73 0%, #169c5f 100%)",
+            color: "white",
+            textAlign: "center",
+            fontWeight: 700,
+            fontSize: "1.5rem",
+            py: 3,
+          }}
+        >
+          Update Profile Picture
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          <Box sx={{ textAlign: "center" }}>
+            {/* Preview Section */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, fontSize: "1.1rem" }}>
+                Preview
+              </Typography>
+              <Avatar
+                src={previewUrl}
+                sx={{
+                  width: 100,
+                  height: 100,
+                  mx: "auto",
+                  border: "3px solid #1DBF73",
+                  boxShadow: "0 6px 20px rgba(29, 191, 115, 0.3)",
+                }}
+              />
+            </Box>
+
+            {/* Upload Progress */}
+            {isUploading && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: "0.85rem" }}>
+                  Uploading... {uploadProgress}%
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={uploadProgress}
+                  sx={{
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: "#f0fdf4",
+                    "& .MuiLinearProgress-bar": {
+                      backgroundColor: "#1DBF73",
+                      borderRadius: 3,
+                    },
+                  }}
+                />
+              </Box>
+            )}
+
+            {/* File Info */}
+            {file && (
+              <Box
+                sx={{
+                  p: 1.5,
+                  bgcolor: "#f8fafc",
+                  borderRadius: 2,
+                  border: "1px solid #e5e7eb",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, fontSize: "0.8rem" }}>
+                  Selected File:
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600, fontSize: "0.9rem" }}>
+                  {file.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
+                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                </Typography>
+              </Box>
+            )}
+
+            {/* Instructions */}
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: "0.85rem" }}>
+              Choose a clear, high-quality image for your profile picture. 
+              Supported formats: JPEG, PNG, WebP
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1.5 }}>
+          <Button
+            onClick={handleCancelUpload}
+            variant="outlined"
+            disabled={isUploading}
+            startIcon={<CloseIcon />}
+            sx={{
+              borderRadius: 2,
+              px: 2,
+              py: 0.8,
+              fontWeight: 600,
+              textTransform: "none",
+              fontSize: "0.9rem",
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleUpload}
+            variant="contained"
+            disabled={!file || isUploading}
+            startIcon={isUploading ? <CircularProgress size={16} color="inherit" /> : <CloudUploadIcon />}
+            sx={{
+              borderRadius: 2,
+              px: 2,
+              py: 0.8,
+              fontWeight: 600,
+              textTransform: "none",
+              fontSize: "0.9rem",
+              backgroundColor: "#1DBF73",
+              boxShadow: "0 3px 12px rgba(29, 191, 115, 0.3)",
+              "&:hover": {
+                backgroundColor: "#169c5f",
+                boxShadow: "0 4px 16px rgba(29, 191, 115, 0.4)",
+              },
+            }}
+          >
+            {isUploading ? "Uploading..." : "Upload Picture"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Username Edit Dialog */}
+      <Dialog
+        open={editingUsername}
+        onClose={handleCancelEdit}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            boxShadow: "0 16px 48px rgba(0, 0, 0, 0.15)",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(135deg, #1DBF73 0%, #169c5f 100%)",
+            color: "white",
+            textAlign: "center",
+            fontWeight: 700,
+            fontSize: "1.5rem",
+            py: 3,
+          }}
+        >
+          Edit Username
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          <TextField
+            label="New Username"
+            value={newUsername}
+            onChange={(e) => setNewUsername(e.target.value)}
+            variant="outlined"
+            fullWidth
+            autoFocus
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                "&.Mui-focused fieldset": {
+                  borderColor: "#1DBF73",
+                },
+              },
+              "& .MuiInputLabel-root.Mui-focused": {
+                color: "#1DBF73",
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1.5 }}>
+          <Button
+            onClick={handleCancelEdit}
+            variant="outlined"
+            sx={{
+              borderRadius: 2,
+              px: 2,
+              py: 0.8,
+              fontWeight: 600,
+              textTransform: "none",
+              fontSize: "0.9rem",
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleUsernameChange}
+            variant="contained"
+            disabled={!newUsername}
+            startIcon={<CheckIcon />}
+            sx={{
+              borderRadius: 2,
+              px: 2,
+              py: 0.8,
+              fontWeight: 600,
+              textTransform: "none",
+              fontSize: "0.9rem",
+              backgroundColor: "#1DBF73",
+              boxShadow: "0 3px 12px rgba(29, 191, 115, 0.3)",
+              "&:hover": {
+                backgroundColor: "#169c5f",
+                boxShadow: "0 4px 16px rgba(29, 191, 115, 0.4)",
+              },
+            }}
+          >
+            Update Username
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modern Posts Section */}
+      <Card
+        sx={{
+          mb: 4,
+          borderRadius: 4,
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
+          background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+          border: "1px solid rgba(29, 191, 115, 0.1)",
+          overflow: "hidden",
+        }}
+      >
+        <CardContent sx={{ p: 0 }}>
+          <Box
+            sx={{
+              p: 3,
+              background: "linear-gradient(135deg, #1DBF73 0%, #169c5f 100%)",
+              color: "white",
+            }}
+          >
+            <Typography variant="h5" sx={{ fontWeight: 700, textAlign: "center" }}>
           {isViewingOwnProfile ? "Your Posts" : `${displayUser?.username || displayUser?.name || "User"}'s Posts`}
         </Typography>
+          </Box>
+          <Box sx={{ p: 2 }}>
         {postsError && (
-          <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 2, 
+                  borderRadius: 2,
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                }}
+              >
             {postsError}
           </Alert>
         )}
@@ -1059,42 +1413,114 @@ const ProfilePage = () => {
                     setDeleteDialogOpen(true);
                   }
                 }}
-                sx={{ boxShadow: 2, borderRadius: 3 }}
+                    sx={{ 
+                      boxShadow: "0 4px 16px rgba(0, 0, 0, 0.08)", 
+                      borderRadius: 3,
+                      border: "1px solid rgba(29, 191, 115, 0.1)",
+                      transition: "all 0.3s ease-in-out",
+                      "&:hover": {
+                        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+                        transform: "translateY(-2px)",
+                      },
+                    }}
               />
             ))}
           </Box>
         ) : (
-          <Typography variant="body1" sx={{ color: "#888", mt: 2 }}>
-            {isViewingOwnProfile ? "You haven't posted anything yet." : `${displayUser?.username || displayUser?.name || "User"} hasn't posted anything yet.`}
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    color: "#6b7280", 
+                    fontWeight: 500,
+                    mb: 1,
+                    fontSize: "1rem",
+                  }}
+                >
+                  {isViewingOwnProfile ? "No posts yet" : "No posts available"}
           </Typography>
-        )}
-      </Paper>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: "#9ca3af",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  {isViewingOwnProfile 
+                    ? "Start sharing your thoughts with the community!" 
+                    : `${displayUser?.username || displayUser?.name || "User"} hasn't shared anything yet.`
+                  }
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </CardContent>
+      </Card>
 
+      {/* Modern Delete Post Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
-        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+        PaperProps={{ 
+          sx: { 
+            borderRadius: 4, 
+            boxShadow: "0 16px 48px rgba(0, 0, 0, 0.15)",
+            overflow: "hidden",
+          } 
+        }}
       >
-        <DialogTitle sx={{ fontWeight: 600 }}>Delete Post</DialogTitle>
-        <DialogContent>
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+            color: "white",
+            textAlign: "center",
+            fontWeight: 700,
+            fontSize: "1.5rem",
+            py: 3,
+          }}
+        >
+          Delete Post
+        </DialogTitle>
+        <DialogContent sx={{ p: 4, textAlign: "center" }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
           Are you sure you want to delete this post?
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            This action cannot be undone.
+          </Typography>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 3, gap: 2 }}>
           <Button
             onClick={() => setDeleteDialogOpen(false)}
-            color="inherit"
             variant="outlined"
-            sx={{ borderRadius: 2 }}
+            sx={{
+              borderRadius: 3,
+              px: 3,
+              py: 1,
+              fontWeight: 600,
+              textTransform: "none",
+            }}
           >
             Cancel
           </Button>
           <Button
             onClick={handleDeletePost}
-            color="error"
             variant="contained"
-            sx={{ borderRadius: 2 }}
+            color="error"
+            startIcon={<DeleteIcon />}
+            sx={{
+              borderRadius: 3,
+              px: 3,
+              py: 1,
+              fontWeight: 600,
+              textTransform: "none",
+              boxShadow: "0 4px 16px rgba(239, 68, 68, 0.3)",
+              "&:hover": {
+                boxShadow: "0 6px 20px rgba(239, 68, 68, 0.4)",
+              },
+            }}
           >
-            Delete
+            Delete Post
           </Button>
         </DialogActions>
       </Dialog>
@@ -1102,37 +1528,68 @@ const ProfilePage = () => {
         </Box>
       </Box>
 
-      {/* Followers Dialog */}
+      {/* Modern Followers Dialog */}
       <Dialog
         open={followersDialogOpen}
         onClose={() => setFollowersDialogOpen(false)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
+        PaperProps={{ 
+          sx: { 
+            borderRadius: 4,
+            boxShadow: "0 16px 48px rgba(0, 0, 0, 0.15)",
+            overflow: "hidden",
+          } 
+        }}
       >
-        <DialogTitle sx={{ fontWeight: 600, textAlign: "center" }}>
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(135deg, #1DBF73 0%, #169c5f 100%)",
+            color: "white",
+            textAlign: "center",
+            fontWeight: 700,
+            fontSize: "1.5rem",
+            py: 3,
+          }}
+        >
           Followers
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: 0 }}>
           {followers?.length > 0 ? (
-            <List>
+            <List sx={{ p: 2 }}>
               {followers.map((follower) => (
-                <ListItem key={follower._id} sx={{ px: 0 }}>
+                <ListItem key={follower._id} sx={{ px: 0, mb: 1 }}>
                   <ListItemButton
                     onClick={() => {
                       navigate(`/profile/${follower._id}`);
                       setFollowersDialogOpen(false);
                     }}
-                    sx={{ borderRadius: 2 }}
+                    sx={{ 
+                      borderRadius: 3,
+                      transition: "all 0.3s ease-in-out",
+                      "&:hover": {
+                        backgroundColor: "#f0fdf4",
+                        transform: "translateX(4px)",
+                      },
+                    }}
                   >
                     <Avatar
                       src={follower.profilePicture}
-                      sx={{ width: 40, height: 40, mr: 2 }}
+                      sx={{ 
+                        width: 48, 
+                        height: 48, 
+                        mr: 2,
+                        border: "2px solid #1DBF73",
+                      }}
                     >
                       {follower.username?.charAt(0).toUpperCase()}
                     </Avatar>
                     <ListItemText
-                      primary={follower.username}
+                      primary={
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                          {follower.username}
+                        </Typography>
+                      }
                       secondary={`Joined ${new Date(follower.createdAt).toLocaleDateString()}`}
                     />
                   </ListItemButton>
@@ -1140,44 +1597,80 @@ const ProfilePage = () => {
               ))}
             </List>
           ) : (
-            <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+            <Box sx={{ textAlign: "center", py: 6 }}>
+              <Typography variant="h6" sx={{ color: "#6b7280", fontWeight: 500 }}>
               No followers yet
             </Typography>
+              <Typography variant="body2" sx={{ color: "#9ca3af" }}>
+                Start connecting with others to build your community!
+              </Typography>
+            </Box>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Following Dialog */}
+      {/* Modern Following Dialog */}
       <Dialog
         open={followingDialogOpen}
         onClose={() => setFollowingDialogOpen(false)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
+        PaperProps={{ 
+          sx: { 
+            borderRadius: 4,
+            boxShadow: "0 16px 48px rgba(0, 0, 0, 0.15)",
+            overflow: "hidden",
+          } 
+        }}
       >
-        <DialogTitle sx={{ fontWeight: 600, textAlign: "center" }}>
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(135deg, #1DBF73 0%, #169c5f 100%)",
+            color: "white",
+            textAlign: "center",
+            fontWeight: 700,
+            fontSize: "1.5rem",
+            py: 3,
+          }}
+        >
           Following
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: 0 }}>
           {following?.length > 0 ? (
-            <List>
+            <List sx={{ p: 2 }}>
               {following.map((user) => (
-                <ListItem key={user._id} sx={{ px: 0 }}>
+                <ListItem key={user._id} sx={{ px: 0, mb: 1 }}>
                   <ListItemButton
                     onClick={() => {
                       navigate(`/profile/${user._id}`);
                       setFollowingDialogOpen(false);
                     }}
-                    sx={{ borderRadius: 2 }}
+                    sx={{ 
+                      borderRadius: 3,
+                      transition: "all 0.3s ease-in-out",
+                      "&:hover": {
+                        backgroundColor: "#f0fdf4",
+                        transform: "translateX(4px)",
+                      },
+                    }}
                   >
                     <Avatar
                       src={user.profilePicture}
-                      sx={{ width: 40, height: 40, mr: 2 }}
+                      sx={{ 
+                        width: 48, 
+                        height: 48, 
+                        mr: 2,
+                        border: "2px solid #1DBF73",
+                      }}
                     >
                       {user.username?.charAt(0).toUpperCase()}
                     </Avatar>
                     <ListItemText
-                      primary={user.username}
+                      primary={
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                          {user.username}
+                        </Typography>
+                      }
                       secondary={`Joined ${new Date(user.createdAt).toLocaleDateString()}`}
                     />
                   </ListItemButton>
@@ -1185,9 +1678,14 @@ const ProfilePage = () => {
               ))}
             </List>
           ) : (
-            <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+            <Box sx={{ textAlign: "center", py: 6 }}>
+              <Typography variant="h6" sx={{ color: "#6b7280", fontWeight: 500 }}>
               Not following anyone yet
             </Typography>
+              <Typography variant="body2" sx={{ color: "#9ca3af" }}>
+                Discover interesting people to follow!
+              </Typography>
+            </Box>
           )}
         </DialogContent>
       </Dialog>

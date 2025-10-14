@@ -31,6 +31,7 @@ import SearchBar from "../components/SearchBar";
 import PostCard from "../components/PostCard";
 import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
 import EmptyState from "../components/EmptyState";
+import PostDialog from "../components/PostDialog";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import AddIcon from "@mui/icons-material/Add";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -78,6 +79,7 @@ const SavedPage = () => {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showPostDialog, setShowPostDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [savedPosts, setSavedPosts] = useState([]);
@@ -177,6 +179,17 @@ const SavedPage = () => {
 
   const handleMarkAllAsRead = async () => {
     await dispatch(markAllNotificationsAsRead());
+  };
+
+  /**
+   * Handles post submission and resets form
+   * @function
+   * @param {Object} values - Form values
+   * @param {Object} actions - Form actions
+   */
+  const handlePostSubmit = (values, actions) => {
+    actions.resetForm();
+    setShowPostDialog(false);
   };
 
   /**
@@ -811,7 +824,7 @@ const SavedPage = () => {
                     onAction={
                       searchTerm
                         ? () => setSearchTerm("")
-                        : () => navigate("/home")
+                        : () => setShowPostDialog(true)
                     }
                   />
               </Box>
@@ -1042,6 +1055,13 @@ const SavedPage = () => {
       
       {/* AI Chatbot */}
       {showAIChat && <AIChatBot onClose={() => setShowAIChat(false)} />}
+      
+      {/* Post Dialog */}
+      <PostDialog
+        open={showPostDialog}
+        handleClose={() => setShowPostDialog(false)}
+        handlePostSubmit={handlePostSubmit}
+      />
     </Box>
   );
 };

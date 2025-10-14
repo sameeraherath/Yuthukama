@@ -34,6 +34,7 @@ import SearchBar from "../components/SearchBar";
 import PostCard from "../components/PostCard";
 import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
 import EmptyState from "../components/EmptyState";
+import PostDialog from "../components/PostDialog";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import AddIcon from "@mui/icons-material/Add";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -80,6 +81,7 @@ const HomeScreen = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showPostDialog, setShowPostDialog] = useState(false);
   const dispatch = useDispatch();
   const { items: notifications, unreadCount, loading: notificationsLoading } = useSelector(
     (state) => state.notifications
@@ -154,6 +156,17 @@ const HomeScreen = () => {
 
   const handleMarkAllAsRead = async () => {
     await dispatch(markAllNotificationsAsRead());
+  };
+
+  /**
+   * Handles post submission and resets form
+   * @function
+   * @param {Object} values - Form values
+   * @param {Object} actions - Form actions
+   */
+  const handlePostSubmit = (values, actions) => {
+    actions.resetForm();
+    setShowPostDialog(false);
   };
 
   const token = localStorage.getItem("token");
@@ -811,7 +824,7 @@ const HomeScreen = () => {
                     onAction={
                       searchTerm
                         ? () => setSearchTerm("")
-                        : () => navigate("/create-post")
+                        : () => setShowPostDialog(true)
                     }
                   />
               </Box>
@@ -1044,6 +1057,13 @@ const HomeScreen = () => {
       
       {/* AI Chatbot */}
       {showAIChat && <AIChatBot onClose={() => setShowAIChat(false)} />}
+      
+      {/* Post Dialog */}
+      <PostDialog
+        open={showPostDialog}
+        handleClose={() => setShowPostDialog(false)}
+        handlePostSubmit={handlePostSubmit}
+      />
     </Box>
   );
 };
