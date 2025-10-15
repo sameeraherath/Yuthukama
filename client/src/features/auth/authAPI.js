@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { tokenManager } from "../../utils/tokenManager.js";
 import { setToken, setUser, clearAuthData } from "../../utils/authUtils";
 
 const API_BASE = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
@@ -46,7 +47,7 @@ export const loginUser = createAsyncThunk(
       }
 
       console.log("Login successful, storing token and user data");
-      setToken(data.token);
+      tokenManager.setToken(data.token);
       setUser(data);
 
       return data;
@@ -123,7 +124,7 @@ export const registerUser = createAsyncThunk(
       );
 
       console.log("Registration successful, storing token and user data");
-      setToken(data.token);
+      tokenManager.setToken(data.token);
       setUser(data);
 
       return data;
@@ -197,11 +198,11 @@ export const logoutUser = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       await axios.post(`${API_BASE}/api/auth/logout`);
-      clearAuthData();
+      tokenManager.clearToken();
       return true;
     } catch (error) {
       console.error("Logout error:", error);
-      clearAuthData(); // Clear data even if API call fails
+      tokenManager.clearToken(); // Clear data even if API call fails
       return thunkAPI.rejectWithValue("Logout failed");
     }
   }
@@ -222,7 +223,7 @@ export const checkUserSession = createAsyncThunk(
   "auth/checkUserSession",
   async (_, thunkAPI) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = await tokenManager.getToken();
       console.log("checkUserSession - Token:", token);
 
       if (!token) {
@@ -232,9 +233,6 @@ export const checkUserSession = createAsyncThunk(
 
       console.log("checkUserSession - Making API request to check session");
       const { data } = await axios.get(`${API_BASE}/api/auth/check`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         withCredentials: true, // Ensure cookies are sent
       });
       console.log("checkUserSession - Server response:", data);
@@ -247,7 +245,7 @@ export const checkUserSession = createAsyncThunk(
       
       // Only clear auth data if it's a real authentication error
       if (error.response?.status === 401) {
-        clearAuthData();
+        tokenManager.clearToken();
         return thunkAPI.rejectWithValue("Session expired");
       }
       

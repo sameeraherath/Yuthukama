@@ -50,6 +50,7 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 import NotificationMenu from "../components/NotificationMenu";
 import AIChatBot from "../components/AIChatBot";
 import { fetchSavedPosts } from "../features/posts/postsAPI";
+import { likePost } from "../features/posts/postsSlice";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import CommentIcon from "@mui/icons-material/Comment";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -175,6 +176,30 @@ const SavedPage = () => {
   const handleDeleteNotification = async (e, notificationId) => {
     e.stopPropagation();
     await dispatch(deleteNotification(notificationId));
+  };
+
+  const handlePostLike = async (postId) => {
+    try {
+      await dispatch(likePost(postId)).unwrap();
+      // Update the local state to reflect the like change
+      setSavedPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            // Toggle the like status
+            const isLiked = post.likes.includes(user.id);
+            return {
+              ...post,
+              likes: isLiked 
+                ? post.likes.filter(id => id !== user.id)
+                : [...post.likes, user.id]
+            };
+          }
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
   };
 
   const handleMarkAllAsRead = async () => {
@@ -854,7 +879,7 @@ const SavedPage = () => {
                         transition={{ delay: index * 0.05 }}
                         style={{ width: "100%" }}
                       >
-                        <PostCard post={post} />
+                        <PostCard post={post} onLike={handlePostLike} />
                       </motion.div>
                     ))}
                   </AnimatePresence>

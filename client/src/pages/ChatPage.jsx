@@ -11,6 +11,7 @@ import {
   markMessagesAsRead,
   setCurrentConversation,
   fetchConversations,
+  removeUserFromConversation,
 } from "../features/chat/chatSlice";
 import { fetchUserById } from "../features/auth/userSlice";
 import useAuth from "../hooks/useAuth";
@@ -43,6 +44,7 @@ import OnlineStatus from "../components/OnlineStatus";
 import UserManagement from "../components/chat/UserManagement";
 import ChatAPI from "../features/chat/chatAPI";
 import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
+import axios from "../utils/axiosConfig";
 
 /**
  * Chat page component for real-time messaging between users
@@ -188,6 +190,18 @@ const ChatPage = () => {
           if (existingConversation) {
             // Set the current conversation
             dispatch(setCurrentConversation(existingConversation));
+          } else {
+            // If conversation not found in list, fetch it directly
+            try {
+              const response = await axios.get(`/api/chat/conversations/${conversationId}`, {
+                withCredentials: true,
+              });
+              if (response.data) {
+                dispatch(setCurrentConversation(response.data));
+              }
+            } catch (error) {
+              console.error("Failed to fetch conversation:", error);
+            }
           }
           
           // Then fetch messages
@@ -734,9 +748,28 @@ const ChatPage = () => {
             console.log("Report user:", user);
             // Implement report user functionality
           }}
-          onRemoveUser={(user) => {
-            console.log("Remove user:", user);
-            // Implement remove user functionality
+          onRemoveUser={async (user) => {
+            try {
+              if (!currentConversation?._id) {
+                console.error("No current conversation found");
+                return;
+              }
+
+              const result = await dispatch(removeUserFromConversation({
+                conversationId: currentConversation._id,
+                userId: user._id
+              })).unwrap();
+
+              if (result.conversationDeleted) {
+                // If conversation was deleted, navigate back to messages list
+                navigate("/messages");
+              } else {
+                // If user was removed but conversation still exists, show success message
+                console.log("User removed from conversation successfully");
+              }
+            } catch (error) {
+              console.error("Failed to remove user from conversation:", error);
+            }
           }}
         />
 

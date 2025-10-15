@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { tokenManager } from "../../utils/tokenManager.js";
 
 const API_BASE = import.meta.env.VITE_SERVER_URL;
 
@@ -18,7 +19,7 @@ export const fetchPosts = createAsyncThunk(
   "posts/fetchPosts",
   async (_, thunkAPI) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = await tokenManager.getToken();
 
       if (!token) {
         return thunkAPI.rejectWithValue(
@@ -27,9 +28,6 @@ export const fetchPosts = createAsyncThunk(
       }
 
       const { data } = await axios.get(`${API_BASE}/api/posts`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         withCredentials: true,
       });
       return data;
@@ -55,11 +53,17 @@ export const createPost = createAsyncThunk(
   "posts/createPost",
   async (postData, thunkAPI) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = await tokenManager.getToken();
+      
+      if (!token) {
+        return thunkAPI.rejectWithValue(
+          "Authentication required. Please log in."
+        );
+      }
+
       const { data } = await axios.post(`${API_BASE}/api/posts`, postData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          ...(token && { Authorization: `Bearer ${token}` }),
         },
         withCredentials: true,
       });
@@ -84,10 +88,16 @@ export const deletePost = createAsyncThunk(
   "posts/deletePost",
   async (postId, thunkAPI) => {
     try {
+      const token = await tokenManager.getToken();
+      
+      if (!token) {
+        return thunkAPI.rejectWithValue(
+          "Authentication required. Please log in."
+        );
+      }
+
       await axios.delete(`${API_BASE}/api/posts/${postId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        withCredentials: true,
       });
       return postId;
     } catch (error) {
@@ -99,32 +109,25 @@ export const deletePost = createAsyncThunk(
 );
 
 /**
- * Likes a post by ID
- * @async
- * @function likePost
- * @param {string} postId - ID of the post to like
- * @returns {Promise<Object>} Updated post data
- * @throws {Error} If liking the post fails
- */
-export const likePost = async (postId) => {
-  const response = await axios.put(`${API_BASE}/api/posts/${postId}/like`);
-  return response.data;
-};
-
-/**
  * Adds a comment to a post
  */
 export const addComment = createAsyncThunk(
   "posts/addComment",
   async ({ postId, content }, thunkAPI) => {
     try {
+      const token = await tokenManager.getToken();
+      
+      if (!token) {
+        return thunkAPI.rejectWithValue(
+          "Authentication required. Please log in."
+        );
+      }
+
       const { data } = await axios.post(
         `${API_BASE}/api/posts/${postId}/comments`,
         { content },
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          withCredentials: true,
         }
       );
       return data;
@@ -143,12 +146,18 @@ export const deleteComment = createAsyncThunk(
   "posts/deleteComment",
   async ({ postId, commentId }, thunkAPI) => {
     try {
+      const token = await tokenManager.getToken();
+      
+      if (!token) {
+        return thunkAPI.rejectWithValue(
+          "Authentication required. Please log in."
+        );
+      }
+
       const { data } = await axios.delete(
         `${API_BASE}/api/posts/${postId}/comments/${commentId}`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          withCredentials: true,
         }
       );
       return data;
@@ -174,7 +183,7 @@ export const fetchTrendingPosts = createAsyncThunk(
   "posts/fetchTrendingPosts",
   async ({ limit = 5, days = 7 }, thunkAPI) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = await tokenManager.getToken();
 
       if (!token) {
         return thunkAPI.rejectWithValue(
@@ -184,9 +193,7 @@ export const fetchTrendingPosts = createAsyncThunk(
 
       const { data } = await axios.get(`${API_BASE}/api/posts/trending`, {
         params: { limit, days },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       });
       return data;
     } catch (error) {
@@ -206,10 +213,14 @@ export const fetchTrendingPosts = createAsyncThunk(
  * @throws {Error} If saving the post fails
  */
 export const toggleSavePost = async (postId) => {
+  const token = await tokenManager.getToken();
+  
+  if (!token) {
+    throw new Error("Authentication required. Please log in.");
+  }
+
   const response = await axios.put(`${API_BASE}/api/posts/${postId}/save`, {}, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
+    withCredentials: true,
   });
   return response.data;
 };
@@ -225,7 +236,7 @@ export const fetchSavedPosts = createAsyncThunk(
   "posts/fetchSavedPosts",
   async (_, thunkAPI) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = await tokenManager.getToken();
 
       if (!token) {
         return thunkAPI.rejectWithValue(
@@ -234,9 +245,7 @@ export const fetchSavedPosts = createAsyncThunk(
       }
 
       const { data } = await axios.get(`${API_BASE}/api/posts/saved`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       });
       return data;
     } catch (error) {
@@ -262,7 +271,7 @@ export const reportPost = createAsyncThunk(
   "posts/reportPost",
   async ({ postId, reason, description }, thunkAPI) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = await tokenManager.getToken();
 
       if (!token) {
         return thunkAPI.rejectWithValue(
@@ -274,9 +283,7 @@ export const reportPost = createAsyncThunk(
         `${API_BASE}/api/posts/${postId}/report`,
         { reason, description },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials: true,
         }
       );
       return data;

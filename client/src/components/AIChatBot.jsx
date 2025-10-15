@@ -10,6 +10,7 @@ import {
 import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import CloseIcon from "@mui/icons-material/Close";
+import { tokenManager } from "../utils/tokenManager.js";
 
 const PRIMARY_COLOR = "#404145";
 const ACCENT_COLOR = "#00b14f";
@@ -33,7 +34,7 @@ const AIChatBot = ({ onClose }) => {
     setIsLoading(true);
     setMessage("");
     try {
-      const token = localStorage.getItem("token");
+      const token = await tokenManager.getToken();
       if (!token) {
         throw new Error("No authentication token found");
       }

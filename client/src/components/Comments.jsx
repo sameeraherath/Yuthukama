@@ -39,10 +39,22 @@ const Comments = ({ postId, comments = [] }) => {
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Client-side validation
     if (!newComment.trim()) {
       dispatch(
         showToast({
           message: "Comment cannot be empty",
+          severity: "warning",
+        })
+      );
+      return;
+    }
+
+    if (newComment.length > 1000) {
+      dispatch(
+        showToast({
+          message: "Comment must be 1000 characters or less",
           severity: "warning",
         })
       );
@@ -140,8 +152,10 @@ const Comments = ({ postId, comments = [] }) => {
             disabled={isSubmitting}
             inputProps={{
               "aria-label": "Comment text",
-              maxLength: 500,
+              maxLength: 1000,
             }}
+            helperText={`${newComment.length}/1000 characters`}
+            error={newComment.length > 1000}
             sx={{
               "& .MuiOutlinedInput-root": {
                 borderRadius: BORDER_RADIUS.large,
@@ -157,7 +171,7 @@ const Comments = ({ postId, comments = [] }) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={!newComment.trim() || isSubmitting}
+            disabled={!newComment.trim() || newComment.length > 1000 || isSubmitting}
             aria-label="Post comment"
             sx={{
               bgcolor: COLORS.primary,

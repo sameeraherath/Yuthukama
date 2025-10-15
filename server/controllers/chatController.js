@@ -99,6 +99,45 @@ export const getConversationMessages = async (req, res) => {
 };
 
 /**
+ * Retrieves a specific conversation by ID
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.conversationId - ID of the conversation
+ * @param {Object} req.user - Authenticated user object
+ * @param {string} req.user._id - User's ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing conversation details
+ * @throws {Error} If conversation retrieval fails or user is not authorized
+ * @example
+ * // Route: GET /api/chat/conversations/:conversationId
+ * // Returns conversation details if user is a participant
+ */
+export const getConversationById = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      return res.status(400).json({ message: "Invalid conversation ID" });
+    }
+
+    const conversation = await Conversation.findById(conversationId)
+      .populate("participants", "username profilePicture");
+
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    if (!conversation.participants.some(p => p._id.toString() === req.user._id.toString())) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    res.json(conversation);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
  * Gets an existing conversation or creates a new one between two users
  * @param {Object} req - Express request object
  * @param {Object} req.params - Request parameters
@@ -137,6 +176,75 @@ export const getOrCreateConversation = async (req, res) => {
     }
 
     res.json(conversation);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Removes a user from a conversation
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.conversationId - ID of the conversation
+ * @param {string} req.params.userId - ID of the user to remove
+ * @param {Object} req.user - Authenticated user object
+ * @param {string} req.user._id - User's ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing success message
+ * @throws {Error} If user removal fails or user is not authorized
+ * @example
+ * // Route: DELETE /api/chat/conversations/:conversationId/users/:userId
+ * // Removes the specified user from the conversation
+ */
+export const removeUserFromConversation = async (req, res) => {
+  try {
+    const { conversationId, userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      return res.status(400).json({ message: "Invalid conversation ID" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    // Check if the requesting user is a participant
+    if (!conversation.participants.includes(req.user._id)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    // Check if the user to remove is a participant
+    if (!conversation.participants.includes(userId)) {
+      return res.status(400).json({ message: "User is not in this conversation" });
+    }
+
+    // Remove the user from the conversation
+    conversation.participants = conversation.participants.filter(
+      participantId => participantId.toString() !== userId
+    );
+
+    // If only one participant remains, delete the conversation
+    if (conversation.participants.length <= 1) {
+      await Conversation.findByIdAndDelete(conversationId);
+      await Message.deleteMany({ conversationId });
+      return res.json({ 
+        message: "User removed and conversation deleted", 
+        conversationDeleted: true 
+      });
+    }
+
+    // Save the updated conversation
+    await conversation.save();
+
+    res.json({ 
+      message: "User removed from conversation successfully",
+      conversationDeleted: false
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

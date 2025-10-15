@@ -84,7 +84,7 @@ const MotionCard = motion(Card);
  *   onDelete={(id) => console.log('Post deleted:', id)}
  * />
  */
-const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
+const PostCard = ({ post, onDelete, showDeleteButton = true, onLike }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -309,7 +309,13 @@ const PostCard = ({ post, onDelete, showDeleteButton = true }) => {
     setError(null);
 
     const [err] = await handleAsync(async () => {
-      await dispatch(likePost(post._id)).unwrap();
+      if (onLike) {
+        // Use custom like handler if provided
+        await onLike(post._id);
+      } else {
+        // Use default Redux like handler
+        await dispatch(likePost(post._id)).unwrap();
+      }
     }, "PostCard.handleLike");
 
     if (err) {

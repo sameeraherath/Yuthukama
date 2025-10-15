@@ -53,6 +53,14 @@ export const getErrorType = (error) => {
  * @returns {string} User-friendly error message
  */
 export const getErrorMessage = (error) => {
+  // Check for validation errors with detailed field messages
+  if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+    const fieldErrors = error.response.data.errors
+      .map(err => `${err.field}: ${err.message}`)
+      .join(', ');
+    return fieldErrors;
+  }
+
   // Check for custom error messages
   if (error.response?.data?.message) {
     return error.response.data.message;

@@ -9,7 +9,9 @@ import { protect } from "../middleware/authMiddleware.js";
 import {
   getUserConversations,
   getConversationMessages,
+  getConversationById,
   getOrCreateConversation,
+  removeUserFromConversation,
   sendMessage,
   deleteMessage,
   editMessage,
@@ -53,6 +55,23 @@ router.get("/", protect, getUserConversations);
  * @param {string} receiverId - ID of the other user
  */
 router.get("/user/:receiverId", protect, getOrCreateConversation);
+
+/**
+ * @route GET /api/chat/conversations/:conversationId
+ * @desc Get a specific conversation by ID
+ * @access Private
+ * @param {string} conversationId - ID of the conversation
+ */
+router.get("/conversations/:conversationId", protect, getConversationById);
+
+/**
+ * @route DELETE /api/chat/conversations/:conversationId/users/:userId
+ * @desc Remove a user from a conversation
+ * @access Private
+ * @param {string} conversationId - ID of the conversation
+ * @param {string} userId - ID of the user to remove
+ */
+router.delete("/conversations/:conversationId/users/:userId", protect, removeUserFromConversation);
 
 /**
  * @route GET /api/chat/:conversationId/messages

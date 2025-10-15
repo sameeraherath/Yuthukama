@@ -1,19 +1,35 @@
 /**
  * Authentication utility functions
+ * @deprecated Use tokenManager from './tokenManager.js' for new code
  */
+
+import { tokenManager } from './tokenManager.js';
 
 /**
  * Validates if a token is expired
  * @param {string} token - JWT token
  * @returns {boolean} True if token is valid
+ * @deprecated Use tokenManager.validateToken() instead
  */
-export const isTokenValid = (token) => {
+export const isTokenValid = async (token) => {
   if (!token) return false;
 
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.warn('Invalid JWT format - expected 3 parts, got', parts.length);
+      return false;
+    }
+    
+    if (!parts[0] || !parts[1] || !parts[2]) {
+      console.warn('JWT parts are empty');
+      return false;
+    }
+    
+    const payload = JSON.parse(atob(parts[1]));
     return payload.exp * 1000 > Date.now();
-  } catch {
+  } catch (error) {
+    console.warn('Token validation failed:', error.message);
     return false;
   }
 };
@@ -34,10 +50,10 @@ export const getSafeUser = () => {
 
 /**
  * Clears all auth data
+ * @deprecated Use tokenManager.clearToken() instead
  */
 export const clearAuthData = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+  tokenManager.clearToken();
 };
 
 /**
@@ -55,23 +71,17 @@ export const setUser = (user) => {
 /**
  * Safely stores token
  * @param {string} token - JWT token to store
+ * @deprecated Use tokenManager.setToken() instead
  */
 export const setToken = (token) => {
-  try {
-    localStorage.setItem("token", token);
-  } catch (error) {
-    console.error("Failed to store token:", error);
-  }
+  tokenManager.setToken(token);
 };
 
 /**
  * Gets token from localStorage
  * @returns {string|null} Token or null
+ * @deprecated Use tokenManager.getTokenSync() instead
  */
 export const getToken = () => {
-  try {
-    return localStorage.getItem("token");
-  } catch {
-    return null;
-  }
+  return tokenManager.getTokenSync();
 };

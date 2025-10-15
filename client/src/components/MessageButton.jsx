@@ -1,6 +1,8 @@
 import { Button } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { getOrCreateConversation } from "../features/chat/chatSlice";
 
 /**
  * Button component for initiating a chat with a post owner
@@ -15,17 +17,28 @@ import { useNavigate } from "react-router-dom";
  */
 const MessageButton = ({ user }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   /**
-   * Navigates to modern chat page with post owner data
+   * Navigates to chat with post owner by creating or finding conversation
    * @function
    */
-  const handleClick = () => {
-    navigate("/messages", {
-      state: {
-        postOwner: user,
-      },
-    });
+  const handleClick = async () => {
+    try {
+      // Get or create conversation with the post owner
+      const conversation = await dispatch(getOrCreateConversation(user._id)).unwrap();
+      
+      // Navigate to the conversation
+      navigate(`/messages/${conversation._id}`);
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      // Fallback: navigate to messages page with state
+      navigate("/messages", {
+        state: {
+          postOwner: user,
+        },
+      });
+    }
   };
 
   return (

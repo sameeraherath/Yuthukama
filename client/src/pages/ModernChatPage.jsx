@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import {
   Box,
   Grid,
@@ -11,6 +12,7 @@ import {
 import ConversationList from "../components/chat/ConversationList";
 import ChatPage from "./ChatPage";
 import useAuth from "../hooks/useAuth";
+import { getOrCreateConversation } from "../features/chat/chatSlice";
 
 /**
  * ModernChatPage - Modern messaging interface with conversation list and chat window
@@ -20,6 +22,8 @@ import useAuth from "../hooks/useAuth";
 const ModernChatPage = () => {
   const { conversationId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -37,6 +41,23 @@ const ModernChatPage = () => {
       });
     }
   }, [isAuthenticated, authLoading, navigate]);
+
+  // Handle postOwner from MessageButton navigation
+  useEffect(() => {
+    const postOwner = location.state?.postOwner;
+    if (postOwner && !conversationId) {
+      // Create conversation with post owner
+      const createConversation = async () => {
+        try {
+          const conversation = await dispatch(getOrCreateConversation(postOwner._id)).unwrap();
+          navigate(`/messages/${conversation._id}`, { replace: true });
+        } catch (error) {
+          console.error("Error creating conversation with post owner:", error);
+        }
+      };
+      createConversation();
+    }
+  }, [location.state, conversationId, dispatch, navigate]);
 
   // Handle URL changes - clear selected conversation when no conversationId
   useEffect(() => {

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { tokenManager } from "../../utils/tokenManager.js";
 import {
   fetchPosts,
   createPost,
@@ -23,10 +24,16 @@ export const fetchUserPosts = createAsyncThunk(
   "posts/fetchUserPosts",
   async (userId, thunkAPI) => {
     try {
+      const token = await tokenManager.getToken();
+      
+      if (!token) {
+        return thunkAPI.rejectWithValue(
+          "Authentication required. Please log in."
+        );
+      }
+
       const { data } = await axios.get(`${API_BASE}/api/posts/user/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        withCredentials: true,
       });
       return data;
     } catch (error) {
@@ -49,13 +56,19 @@ export const likePost = createAsyncThunk(
   "posts/likePost",
   async (postId, thunkAPI) => {
     try {
+      const token = await tokenManager.getToken();
+      
+      if (!token) {
+        return thunkAPI.rejectWithValue(
+          "Authentication required. Please log in."
+        );
+      }
+
       const { data } = await axios.put(
         `${API_BASE}/api/posts/${postId}/like`,
         {},
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          withCredentials: true,
         }
       );
       return { postId, likes: data.likes };

@@ -176,6 +176,35 @@ export const getUnreadCount = createAsyncThunk(
 );
 
 /**
+ * Async thunk for removing a user from a conversation
+ * @async
+ * @function removeUserFromConversation
+ * @param {Object} params - Parameters object
+ * @param {string} params.conversationId - ID of the conversation
+ * @param {string} params.userId - ID of the user to remove
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If the API request fails
+ */
+export const removeUserFromConversation = createAsyncThunk(
+  "chat/removeUserFromConversation",
+  async ({ conversationId, userId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(
+        `/api/chat/conversations/${conversationId}/users/${userId}`,
+        {
+          withCredentials: true,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to remove user from conversation"
+      );
+    }
+  }
+);
+
+/**
  * Initial state for the chat slice
  * @type {Object}
  * @property {Array} messages - Array of chat messages
@@ -540,6 +569,50 @@ const chatSlice = createSlice({
 
       .addCase(getUnreadCount.fulfilled, (state, action) => {
         state.unreadCount = action.payload.unreadCount || 0;
+      })
+
+      .addCase(removeUserFromConversation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(removeUserFromConversation.fulfilled, (state, action) => {
+        state.loading = false;
+        
+        // If conversation was deleted, clear current conversation and remove from list
+        if (action.payload.conversationDeleted) {
+          state.currentConversation = null;
+          state.conversations = state.conversations.filter(
+            c => c._id !== action.meta.arg.conversationId
+          );
+          state.messages = [];
+        } else {
+          // Update the conversation in the list
+          const conversationIndex = state.conversations.findIndex(
+            c => c._id === action.meta.arg.conversationId
+          );
+          if (conversationIndex !== -1) {
+            state.conversations[conversationIndex] = {
+              ...state.conversations[conversationIndex],
+              participants: state.conversations[conversationIndex].participants.filter(
+                p => p._id !== action.meta.arg.userId
+              )
+            };
+          }
+          
+          // Update current conversation if it's the one being modified
+          if (state.currentConversation?._id === action.meta.arg.conversationId) {
+            state.currentConversation = {
+              ...state.currentConversation,
+              participants: state.currentConversation.participants.filter(
+                p => p._id !== action.meta.arg.userId
+              )
+            };
+          }
+        }
+      })
+      .addCase(removeUserFromConversation.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

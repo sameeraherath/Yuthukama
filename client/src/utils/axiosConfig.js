@@ -4,9 +4,9 @@
  */
 
 import axios from "axios";
-import { store } from "../store/store";
-import { forceLogout } from "../features/auth/authSlice";
-import { isTokenValid } from "./authUtils";
+import { tokenManager } from "./tokenManager.js";
+import { store } from "../store/store.js";
+import { forceLogout } from "../features/auth/authSlice.js";
 
 /**
  * Base URL for API requests
@@ -40,20 +40,14 @@ const RETRY_DELAY = 1000; // 1 second
  * @throws {Error} If request configuration is invalid
  */
 axios.interceptors.request.use(
-  (config) => {
+  async (config) => {
     // Enable credentials for all requests
     config.withCredentials = true;
 
-    const token = localStorage.getItem("token");
-
-    // Check token validity before making request
+    // Get token using centralized token manager
+    const token = await tokenManager.getToken();
+    
     if (token) {
-      if (!isTokenValid(token)) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        store.dispatch(forceLogout());
-        return Promise.reject(new Error("Token expired"));
-      }
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -122,9 +116,12 @@ axios.interceptors.response.use(
         case 401: {
           // Token expired or invalid
           console.log("Authentication error - token expired or invalid");
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          store.dispatch(forceLogout());
+          tokenManager.clearToken();
+          
+          // Dispatch logout action to update Redux state
+          if (store && store.dispatch) {
+            store.dispatch(forceLogout());
+          }
 
           // Only redirect if not already on auth pages
           const currentPath = window.location.pathname;

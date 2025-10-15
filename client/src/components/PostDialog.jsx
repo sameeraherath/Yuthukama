@@ -18,6 +18,7 @@ import { useDispatch } from "react-redux";
 import { addPost } from "../features/posts/postsSlice";
 import { COLORS, BORDER_RADIUS, COMMON_STYLES } from "../utils/styleConstants";
 import { handleAsync, getErrorMessage, logError } from "../utils/errorHandler";
+import { tokenManager } from "../utils/tokenManager.js";
 import { showToast } from "../features/ui/uiSlice";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useState } from "react";
@@ -78,14 +79,18 @@ const PostDialog = ({ open, handleClose, handlePostSubmit: parentSubmit }) => {
     }
 
     const [error, data] = await handleAsync(async () => {
-      const token = localStorage.getItem("token");
+      const token = await tokenManager.getToken();
+      
+      if (!token) {
+        throw new Error("Authentication required. Please log in.");
+      }
+
       const response = await axios.post(
         `${import.meta.env.VITE_SERVER_URL}/api/posts`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            ...(token && { Authorization: `Bearer ${token}` }),
           },
           withCredentials: true,
           onUploadProgress: (progressEvent) => {
