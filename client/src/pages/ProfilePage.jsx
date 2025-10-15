@@ -98,6 +98,13 @@ const ProfilePage = () => {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [editingUsername, setEditingUsername] = useState(false);
+  const [showEditProfileDialog, setShowEditProfileDialog] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    username: "",
+    email: ""
+  });
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -320,6 +327,115 @@ const ProfilePage = () => {
   const handleEditUsername = () => {
     setEditingUsername(true);
     setNewUsername(user?.username || "");
+  };
+
+  /**
+   * Initiates comprehensive profile editing mode
+   * @function
+   */
+  const handleEditProfile = () => {
+    setEditFormData({
+      username: user?.username || "",
+      email: user?.email || ""
+    });
+    setShowEditProfileDialog(true);
+  };
+
+  /**
+   * Handles form data changes in edit profile dialog
+   * @function
+   */
+  const handleFormDataChange = (field) => (e) => {
+    const value = e.target.value;
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [field]: ""
+      }));
+    }
+  };
+
+  /**
+   * Validates form data
+   * @function
+   */
+  const validateForm = () => {
+    const errors = {};
+    
+    // Username validation
+    if (!editFormData.username.trim()) {
+      errors.username = "Username is required";
+    } else if (editFormData.username.length < 3) {
+      errors.username = "Username must be at least 3 characters";
+    } else if (editFormData.username.length > 20) {
+      errors.username = "Username must be less than 20 characters";
+    } else if (!/^[a-zA-Z0-9_]+$/.test(editFormData.username)) {
+      errors.username = "Username can only contain letters, numbers, and underscores";
+    }
+    
+    // Email validation
+    if (!editFormData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editFormData.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  /**
+   * Handles profile update submission
+   * @async
+   * @function
+   */
+  const handleProfileUpdate = async () => {
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Update username if changed
+      if (editFormData.username !== user?.username) {
+        await dispatch(updateUsername(editFormData.username));
+      }
+      
+      // Update email if changed
+      if (editFormData.email !== user?.email) {
+        // Here you would add email update logic
+        // For now, we'll just show a message
+        console.log("Email update would be implemented here:", editFormData.email);
+      }
+      
+      setShowEditProfileDialog(false);
+      setFormErrors({});
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /**
+   * Cancels profile editing
+   * @function
+   */
+  const handleCancelProfileEdit = () => {
+    setShowEditProfileDialog(false);
+    setEditFormData({
+      username: "",
+      email: ""
+    });
+    setFormErrors({});
+    setIsSubmitting(false);
   };
 
   /**
@@ -1016,7 +1132,7 @@ const ProfilePage = () => {
                 <Button
                 variant="outlined"
                   startIcon={<EditIcon />}
-                  onClick={handleEditUsername}
+                  onClick={handleEditProfile}
                 sx={{
                     borderRadius: 2,
                     px: 2,
@@ -1356,6 +1472,255 @@ const ProfilePage = () => {
             }}
           >
             Update Username
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Comprehensive Edit Profile Dialog */}
+      <Dialog
+        open={showEditProfileDialog}
+        onClose={handleCancelProfileEdit}
+        maxWidth="sm"
+        fullWidth
+        fullScreen={window.innerWidth < 768}
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 0, sm: 4 },
+            boxShadow: { xs: "none", sm: "0 16px 48px rgba(0, 0, 0, 0.15)" },
+            overflow: "hidden",
+            maxHeight: { xs: "100vh", sm: "85vh" },
+            margin: { xs: 0, sm: "auto" },
+            width: { xs: "100%", sm: "95%", md: "500px" },
+            height: { xs: "100%", sm: "auto" },
+            maxWidth: { xs: "100%", sm: "500px" },
+            mx: { xs: 0, sm: 2 },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(135deg, #1DBF73 0%, #169c5f 100%)",
+            color: "white",
+            textAlign: "center",
+            fontWeight: 700,
+            fontSize: { xs: "1.1rem", sm: "1.5rem" },
+            py: { xs: 3, sm: 3 },
+            px: { xs: 2, sm: 3 },
+            position: "sticky",
+            top: 0,
+            zIndex: 1,
+            minHeight: { xs: "70px", sm: "auto" },
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          Edit Profile
+        </DialogTitle>
+        <DialogContent 
+          sx={{ 
+            p: { xs: 2, sm: 4 },
+            pt: { xs: 5, sm: 5 },
+            pb: { xs: 2, sm: 3 },
+            overflowY: "auto",
+            flex: 1,
+            minHeight: { xs: "calc(100vh - 140px)", sm: "auto" },
+            "&::-webkit-scrollbar": {
+              width: "6px",
+            },
+            "&::-webkit-scrollbar-track": {
+              backgroundColor: "transparent",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "#e5e7eb",
+              borderRadius: "3px",
+            },
+            "&::-webkit-scrollbar-thumb:hover": {
+              backgroundColor: "#d1d5db",
+            },
+          }}
+        >
+          <Box sx={{ 
+            display: "flex", 
+            flexDirection: "column", 
+            gap: { xs: 2.5, sm: 3.5 },
+            mt: { xs: 2, sm: 2 },
+            px: { xs: 1, sm: 0 }
+          }}>
+              {/* Username Field */}
+              <TextField
+                label="Username"
+                value={editFormData.username}
+                onChange={handleFormDataChange("username")}
+                variant="outlined"
+                fullWidth
+                required
+                error={!!formErrors.username}
+                helperText={formErrors.username}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 3,
+                    fontSize: { xs: "16px", sm: "14px" },
+                    minHeight: { xs: "56px", sm: "56px" },
+                    "&.Mui-focused fieldset": {
+                      borderColor: formErrors.username ? "#ef4444" : "#1DBF73",
+                      borderWidth: 2,
+                    },
+                    "&.Mui-error fieldset": {
+                      borderColor: "#ef4444",
+                      borderWidth: 2,
+                    },
+                    "& input": {
+                      padding: { xs: "16px 14px", sm: "14px" },
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: { xs: "16px", sm: "14px" },
+                    transform: { xs: "translate(14px, 16px) scale(1)", sm: "translate(14px, -9px) scale(0.75)" },
+                    "&.Mui-focused": {
+                      transform: { xs: "translate(14px, 8px) scale(0.75)", sm: "translate(14px, -9px) scale(0.75)" },
+                    },
+                    "&.MuiFormLabel-filled": {
+                      transform: { xs: "translate(14px, 8px) scale(0.75)", sm: "translate(14px, -9px) scale(0.75)" },
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: formErrors.username ? "#ef4444" : "#1DBF73",
+                  },
+                  "& .MuiInputLabel-root.Mui-error": {
+                    color: "#ef4444",
+                  },
+                  "& .MuiFormHelperText-root": {
+                    fontSize: { xs: "13px", sm: "12px" },
+                    marginLeft: { xs: "14px", sm: "14px" },
+                  },
+                }}
+              />
+
+              {/* Email Field */}
+              <TextField
+                label="Email"
+                value={editFormData.email}
+                onChange={handleFormDataChange("email")}
+                variant="outlined"
+                fullWidth
+                type="email"
+                required
+                error={!!formErrors.email}
+                helperText={formErrors.email}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 3,
+                    fontSize: { xs: "16px", sm: "14px" },
+                    minHeight: { xs: "56px", sm: "56px" },
+                    "&.Mui-focused fieldset": {
+                      borderColor: formErrors.email ? "#ef4444" : "#1DBF73",
+                      borderWidth: 2,
+                    },
+                    "&.Mui-error fieldset": {
+                      borderColor: "#ef4444",
+                      borderWidth: 2,
+                    },
+                    "& input": {
+                      padding: { xs: "16px 14px", sm: "14px" },
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: { xs: "16px", sm: "14px" },
+                    transform: { xs: "translate(14px, 16px) scale(1)", sm: "translate(14px, -9px) scale(0.75)" },
+                    "&.Mui-focused": {
+                      transform: { xs: "translate(14px, 8px) scale(0.75)", sm: "translate(14px, -9px) scale(0.75)" },
+                    },
+                    "&.MuiFormLabel-filled": {
+                      transform: { xs: "translate(14px, 8px) scale(0.75)", sm: "translate(14px, -9px) scale(0.75)" },
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: formErrors.email ? "#ef4444" : "#1DBF73",
+                  },
+                  "& .MuiInputLabel-root.Mui-error": {
+                    color: "#ef4444",
+                  },
+                  "& .MuiFormHelperText-root": {
+                    fontSize: { xs: "13px", sm: "12px" },
+                    marginLeft: { xs: "14px", sm: "14px" },
+                  },
+                }}
+              />
+            </Box>
+        </DialogContent>
+        <DialogActions sx={{ 
+          p: { xs: 2, sm: 4 }, 
+          pt: { xs: 1.5, sm: 3 },
+          pb: { xs: 2, sm: 3 },
+          gap: { xs: 1.5, sm: 2.5 }, 
+          borderTop: "1px solid #e5e7eb",
+          position: "sticky",
+          bottom: 0,
+          backgroundColor: "white",
+          zIndex: 1,
+          flexDirection: { xs: "column", sm: "row" },
+          px: { xs: 2, sm: 3 },
+        }}>
+          <Button
+            onClick={handleCancelProfileEdit}
+            variant="outlined"
+            startIcon={<CloseIcon />}
+            sx={{
+              borderRadius: 3,
+              px: { xs: 3, sm: 3 },
+              py: { xs: 1.5, sm: 1 },
+              fontWeight: 600,
+              textTransform: "none",
+              fontSize: { xs: "16px", sm: "14px" },
+              borderColor: "#6b7280",
+              color: "#6b7280",
+              width: { xs: "100%", sm: "auto" },
+              minHeight: { xs: "52px", sm: "44px" },
+              borderWidth: { xs: "2px", sm: "1px" },
+              "&:hover": {
+                borderColor: "#374151",
+                backgroundColor: "#f9fafb",
+                borderWidth: { xs: "2px", sm: "1px" },
+              },
+              "&:active": {
+                transform: "scale(0.98)",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleProfileUpdate}
+            variant="contained"
+            startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : <CheckIcon />}
+            disabled={isSubmitting}
+            sx={{
+              borderRadius: 3,
+              px: { xs: 3, sm: 3 },
+              py: { xs: 1.5, sm: 1 },
+              fontWeight: 600,
+              textTransform: "none",
+              fontSize: { xs: "16px", sm: "14px" },
+              backgroundColor: "#1DBF73",
+              boxShadow: { xs: "0 4px 12px rgba(29, 191, 115, 0.3)", sm: "0 3px 12px rgba(29, 191, 115, 0.3)" },
+              width: { xs: "100%", sm: "auto" },
+              minHeight: { xs: "52px", sm: "44px" },
+              "&:hover": {
+                backgroundColor: "#169c5f",
+                boxShadow: { xs: "0 6px 16px rgba(29, 191, 115, 0.4)", sm: "0 4px 16px rgba(29, 191, 115, 0.4)" },
+              },
+              "&:active": {
+                transform: "scale(0.98)",
+                boxShadow: { xs: "0 2px 8px rgba(29, 191, 115, 0.3)", sm: "0 2px 8px rgba(29, 191, 115, 0.3)" },
+              },
+              "&:disabled": {
+                backgroundColor: "#9ca3af",
+                boxShadow: "none",
+              },
+            }}
+          >
+            {isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
         </DialogActions>
       </Dialog>
