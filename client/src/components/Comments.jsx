@@ -171,6 +171,7 @@ const Comments = ({ postId, comments = [] }) => {
           <Button
             type="submit"
             variant="contained"
+            size="small"
             disabled={!newComment.trim() || newComment.length > 1000 || isSubmitting}
             aria-label="Post comment"
             sx={{
@@ -180,11 +181,14 @@ const Comments = ({ postId, comments = [] }) => {
               },
               borderRadius: BORDER_RADIUS.large,
               textTransform: "none",
-              minWidth: 80,
+              minWidth: 60,
+              height: 32,
+              fontSize: "0.75rem",
+              px: 1.5,
             }}
           >
             {isSubmitting ? (
-              <CircularProgress size={24} color="inherit" />
+              <CircularProgress size={16} color="inherit" />
             ) : (
               "Post"
             )}
