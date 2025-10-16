@@ -499,6 +499,7 @@ const chatSlice = createSlice({
       })
       .addCase(fetchMessages.fulfilled, (state, action) => {
         state.loading = false;
+        console.log("Fetched messages:", action.payload);
         state.messages = action.payload;
         
         // If we have messages, set the current conversation

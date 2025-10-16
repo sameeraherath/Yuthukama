@@ -264,6 +264,17 @@ io.on("connection", (socket) => {
         });
         await newMessage.save();
 
+        console.log(`Saved message to database:`, {
+          id: newMessage._id,
+          conversationId,
+          sender,
+          text,
+          timestamp: newMessage.createdAt
+        });
+
+        // Populate sender information for proper display
+        await newMessage.populate("sender", "username profilePicture");
+
         await Conversation.findByIdAndUpdate(conversationId, {
           lastMessage: text,
           lastMessageTimestamp: new Date(),
@@ -284,13 +295,14 @@ io.on("connection", (socket) => {
           });
         }
 
-        // Emit message with database ID to confirm delivery
+        // Emit message with database ID and populated sender info to confirm delivery
         io.in(roomId).emit("receive_message", {
           ...messageData,
           _id: newMessage._id,
           tempId, // Include tempId for client-side message matching
           timestamp: newMessage.createdAt,
-          status: 'delivered'
+          status: 'delivered',
+          sender: newMessage.sender // Include populated sender information
         });
 
         // Emit delivery confirmation to sender

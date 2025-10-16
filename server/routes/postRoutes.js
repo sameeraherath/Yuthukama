@@ -13,6 +13,8 @@ import {
   toggleSavePost,
   getSavedPosts,
   reportPost,
+  getFollowingPosts,
+  getForYouPosts,
 } from "../controllers/postController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import {
@@ -126,6 +128,26 @@ router.get("/trending", protect, getTrendingPosts);
  * @returns {Object} JSON response containing saved posts
  */
 router.get("/saved", protect, getSavedPosts);
+
+/**
+ * @route GET /api/posts/following
+ * @desc Get posts from users that the current user follows
+ * @access Private
+ * @param {number} [req.query.limit] - Limit results (default: 20)
+ * @param {number} [req.query.page] - Page number (default: 1)
+ * @returns {Object} JSON response containing posts from followed users
+ */
+router.get("/following", protect, getFollowingPosts);
+
+/**
+ * @route GET /api/posts/for-you
+ * @desc Get personalized "For You" feed with algorithmic recommendations
+ * @access Private
+ * @param {number} [req.query.limit] - Limit results (default: 20)
+ * @param {number} [req.query.page] - Page number (default: 1)
+ * @returns {Object} JSON response containing recommended posts
+ */
+router.get("/for-you", protect, getForYouPosts);
 
 /**
  * @route POST /api/posts/:id/report

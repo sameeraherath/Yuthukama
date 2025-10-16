@@ -29,7 +29,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 import useAuth from "../hooks/useAuth";
-import usePosts from "../hooks/usePosts";
+import useFeed from "../hooks/useFeed";
 import SearchBar from "../components/SearchBar";
 import PostCard from "../components/PostCard";
 import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
@@ -79,6 +79,10 @@ const HomeScreen = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  
+  // Feed types mapping
+  const feedTypes = ['forYou', 'following'];
+  const currentFeedType = feedTypes[activeTab] || 'forYou';
   const [showAIChat, setShowAIChat] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showPostDialog, setShowPostDialog] = useState(false);
@@ -169,8 +173,8 @@ const HomeScreen = () => {
     setShowPostDialog(false);
   };
 
-  const token = localStorage.getItem("token");
-  const { posts, error, loading } = usePosts(token);
+  // Use the new feed hook
+  const { posts, error, loading } = useFeed(currentFeedType);
 
   /**
    * Handle scroll event for scroll-to-top button
@@ -192,14 +196,16 @@ const HomeScreen = () => {
   };
 
   /**
-   * Filters posts based on search term and active tab
+   * Filters posts based on search term
+   * Note: Feed type filtering is now handled by the useFeed hook
    */
   const filteredPosts = posts.filter((post) => {
+    if (!searchTerm) return true;
+    
     const matchesSearch = 
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Add tab-based filtering logic here if needed
     return matchesSearch;
   });
 
@@ -208,6 +214,8 @@ const HomeScreen = () => {
    */
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+    // The useFeed hook will automatically fetch the new feed type
+    // when currentFeedType changes due to activeTab change
   };
 
   /**

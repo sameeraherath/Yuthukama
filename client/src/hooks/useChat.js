@@ -51,9 +51,23 @@ const useChat = (userId, receiverId, conversationId) => {
    */
   useEffect(() => {
     if (!userId || !receiverId) {
-      console.log("Missing userId or receiverId, skipping socket connection");
+      console.log("Missing userId or receiverId, skipping socket connection", {
+        userId,
+        receiverId,
+        userIdType: typeof userId,
+        receiverIdType: typeof receiverId
+      });
       return;
     }
+
+    console.log("useChat hook initialized with:", {
+      userId,
+      receiverId,
+      conversationId,
+      roomId,
+      userIdType: typeof userId,
+      receiverIdType: typeof receiverId
+    });
 
     // Add connection timeout
     const connectionTimeout = setTimeout(() => {
@@ -95,6 +109,12 @@ const useChat = (userId, receiverId, conversationId) => {
       setConnectionError(null);
       setConnectionAttempts(0);
       clearTimeout(connectionTimeout);
+
+      // Authenticate the socket connection with user ID
+      if (userId) {
+        console.log("Authenticating socket with user ID:", userId);
+        socket.emit("authenticate", userId);
+      }
 
       if (roomId) {
         joinRoom();
@@ -154,6 +174,13 @@ const useChat = (userId, receiverId, conversationId) => {
       console.log("Reconnected after", attemptNumber, "attempts");
       setConnectionError(null);
       setConnectionAttempts(0);
+      
+      // Re-authenticate after reconnection
+      if (userId) {
+        console.log("Re-authenticating socket with user ID:", userId);
+        socket.emit("authenticate", userId);
+      }
+      
       if (roomId) {
         joinRoom();
       }
@@ -185,7 +212,18 @@ const useChat = (userId, receiverId, conversationId) => {
      */
     const handleReceiveMessage = (message) => {
       console.log("Received message:", message);
-      if (message.sender !== userId) {
+      console.log("Message sender comparison:", {
+        messageSender: message.sender,
+        messageSenderType: typeof message.sender,
+        userId: userId,
+        userIdType: typeof userId,
+        senderId: message.sender?._id || message.sender,
+        senderIdType: typeof (message.sender?._id || message.sender)
+      });
+      
+      // Handle both ObjectId and string formats for sender comparison
+      const senderId = message.sender?._id || message.sender;
+      if (senderId?.toString() !== userId?.toString()) {
         dispatch(addMessage(message));
         // Mark message as read automatically
         if (message._id) {
@@ -346,6 +384,15 @@ const useChat = (userId, receiverId, conversationId) => {
    */
   const sendMessage = useCallback(
     (text) => {
+      console.log("sendMessage called with:", {
+        text,
+        isConnected,
+        roomId,
+        conversationId,
+        userId,
+        socketConnected: socket?.connected
+      });
+
       if (!isConnected || !text.trim() || !roomId) {
         console.log("Cannot send message - conditions not met:", {
           isConnected,
@@ -373,6 +420,8 @@ const useChat = (userId, receiverId, conversationId) => {
         tempId,
         status: 'sending'
       };
+
+      console.log("Prepared message data:", messageData);
 
       // Store pending message
       setPendingMessages(prev => new Map(prev.set(tempId, messageData)));

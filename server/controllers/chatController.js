@@ -79,9 +79,20 @@ export const getConversationMessages = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const messages = await Message.find({ conversationId }).sort({
-      createdAt: 1,
-    });
+    const messages = await Message.find({ conversationId })
+      .populate("sender", "username profilePicture")
+      .sort({
+        createdAt: 1,
+      });
+
+    console.log(`Fetched ${messages.length} messages for conversation ${conversationId}:`, 
+      messages.map(m => ({ 
+        id: m._id, 
+        text: m.text, 
+        sender: m.sender?.username || 'Unknown',
+        timestamp: m.createdAt 
+      }))
+    );
 
     await Message.updateMany(
       {
@@ -340,7 +351,7 @@ export const sendMessage = async (req, res) => {
     conversation.lastMessageTimestamp = new Date();
     await conversation.save();
 
-    // Populate sender details
+    // Populate sender details for proper response
     await message.populate("sender", "username profilePicture");
 
     res.status(201).json(message);
@@ -445,6 +456,7 @@ export const editMessage = async (req, res) => {
     message.editedAt = new Date();
     await message.save();
 
+    // Populate sender details for proper response
     await message.populate("sender", "username profilePicture");
 
     res.json(message);

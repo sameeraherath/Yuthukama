@@ -54,7 +54,7 @@ import axios from "../utils/axiosConfig";
  * // In App.jsx
  * <Route path="/chat/:conversationId?" element={<ChatPage />} />
  */
-const ChatPage = () => {
+const ChatPage = ({ selectedConversation, onBack }) => {
   console.log("ChatPage component rendered");
   const location = useLocation();
   const navigate = useNavigate();
@@ -133,6 +133,8 @@ const ChatPage = () => {
     locationState: location.state,
     postOwner,
     conversationId,
+    selectedConversation: selectedConversation?._id,
+    selectedConversationParticipants: selectedConversation?.participants,
     currentConversation: currentConversation?._id,
     currentConversationParticipants: currentConversation?.participants,
     otherParticipant,
@@ -184,23 +186,30 @@ const ChatPage = () => {
     const loadConversation = async () => {
       try {
         if (conversationId) {
-          // First, try to find the conversation in the existing conversations list
-          const existingConversation = conversations.find(c => c._id === conversationId);
-          
-          if (existingConversation) {
-            // Set the current conversation
-            dispatch(setCurrentConversation(existingConversation));
+          // First, use selectedConversation if available and matches conversationId
+          if (selectedConversation && selectedConversation._id === conversationId) {
+            console.log("Using selectedConversation:", selectedConversation);
+            dispatch(setCurrentConversation(selectedConversation));
           } else {
-            // If conversation not found in list, fetch it directly
-            try {
-              const response = await axios.get(`/api/chat/conversations/${conversationId}`, {
-                withCredentials: true,
-              });
-              if (response.data) {
-                dispatch(setCurrentConversation(response.data));
+            // Try to find the conversation in the existing conversations list
+            const existingConversation = conversations.find(c => c._id === conversationId);
+            
+            if (existingConversation) {
+              console.log("Using existing conversation from list:", existingConversation);
+              dispatch(setCurrentConversation(existingConversation));
+            } else {
+              // If conversation not found in list, fetch it directly
+              console.log("Fetching conversation directly from API");
+              try {
+                const response = await axios.get(`/api/chat/conversations/${conversationId}`, {
+                  withCredentials: true,
+                });
+                if (response.data) {
+                  dispatch(setCurrentConversation(response.data));
+                }
+              } catch (error) {
+                console.error("Failed to fetch conversation:", error);
               }
-            } catch (error) {
-              console.error("Failed to fetch conversation:", error);
             }
           }
           
@@ -234,6 +243,7 @@ const ChatPage = () => {
     isAuthenticated,
     authLoading,
     conversations,
+    selectedConversation,
   ]);
 
   // Fetch user details if we don't have them
@@ -461,7 +471,20 @@ const ChatPage = () => {
    */
   const renderMessage = (message, index) => {
     const currentUserId = userId;
-    const isSentByCurrentUser = message.sender === currentUserId;
+    
+    // Handle both ObjectId and string formats for sender comparison
+    const senderId = message.sender?._id || message.sender;
+    const isSentByCurrentUser = senderId?.toString() === currentUserId?.toString();
+
+    console.log("Message alignment debug:", {
+      messageId: message._id,
+      senderId: senderId,
+      currentUserId: currentUserId,
+      isSentByCurrentUser: isSentByCurrentUser,
+      senderType: typeof senderId,
+      userIdType: typeof currentUserId,
+      messageSender: message.sender
+    });
 
     return (
       <Box
@@ -481,10 +504,10 @@ const ChatPage = () => {
         {/* Show avatar for received messages */}
         {!isSentByCurrentUser && (
           <Avatar
-            src={otherParticipant?.profilePicture || postOwner?.profilePicture}
+            src={message.sender?.profilePicture || otherParticipant?.profilePicture || postOwner?.profilePicture}
             sx={{ width: 32, height: 32, mt: 0.5 }}
           >
-            {displayName.charAt(0).toUpperCase()}
+            {(message.sender?.username || displayName).charAt(0).toUpperCase()}
           </Avatar>
         )}
 

@@ -39,7 +39,8 @@ const postController = {
     try {
       const posts = await Post.find()
         .sort({ createdAt: -1 })
-        .populate("user", "username profilePicture");
+        .populate("user", "username profilePicture")
+        .populate("comments.user", "username profilePicture");
       res.json(posts);
     } catch (error) {
       console.error("Error fetching posts:", error);
@@ -129,7 +130,8 @@ const postController = {
       const { userId } = req.params;
       const posts = await Post.find({ user: userId })
         .sort({ createdAt: -1 })
-        .populate("user", "username profilePicture");
+        .populate("user", "username profilePicture")
+        .populate("comments.user", "username profilePicture");
       res.json(posts);
     } catch (error) {
       res.status(500).json({ message: "Error fetching user posts" });
@@ -446,6 +448,42 @@ const postController = {
         },
         { $unwind: "$user" },
         {
+          $lookup: {
+            from: "users",
+            localField: "comments.user",
+            foreignField: "_id",
+            as: "commentUsers",
+          },
+        },
+        {
+          $addFields: {
+            comments: {
+              $map: {
+                input: "$comments",
+                as: "comment",
+                in: {
+                  $mergeObjects: [
+                    "$$comment",
+                    {
+                      user: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: "$commentUsers",
+                              cond: { $eq: ["$$this._id", "$$comment.user"] },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+        {
           $project: {
             title: 1,
             description: 1,
@@ -518,6 +556,42 @@ const postController = {
           },
         },
         { $unwind: "$user" },
+        {
+          $lookup: {
+            from: "users",
+            localField: "comments.user",
+            foreignField: "_id",
+            as: "commentUsers",
+          },
+        },
+        {
+          $addFields: {
+            comments: {
+              $map: {
+                input: "$comments",
+                as: "comment",
+                in: {
+                  $mergeObjects: [
+                    "$$comment",
+                    {
+                      user: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: "$commentUsers",
+                              cond: { $eq: ["$$this._id", "$$comment.user"] },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
         {
           $project: {
             title: 1,
@@ -596,10 +670,16 @@ const postController = {
     try {
       const user = await User.findById(req.user.id).populate({
         path: "savedPosts",
-        populate: {
-          path: "user",
-          select: "username profilePicture",
-        },
+        populate: [
+          {
+            path: "user",
+            select: "username profilePicture",
+          },
+          {
+            path: "comments.user",
+            select: "username profilePicture",
+          },
+        ],
         options: {
           sort: { createdAt: -1 },
         },
@@ -680,6 +760,185 @@ const postController = {
       res.status(500).json({ message: "Error reporting post" });
     }
   },
+
+  /**
+   * Gets posts from users that the current user follows (Following feed)
+   * @param {Object} req - Express request object
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user.id - Current user's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing posts from followed users
+   * @throws {Error} If fetching following posts fails
+   */
+  getFollowingPosts: async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { limit = 20, page = 1 } = req.query;
+      const limitNum = Math.min(parseInt(limit) || 20, 50);
+      const skip = (parseInt(page) - 1) * limitNum;
+
+      // Get current user's following list
+      const currentUser = await User.findById(userId).select('following');
+      const followingIds = currentUser.following;
+
+      if (followingIds.length === 0) {
+        return res.json({
+          posts: [],
+          count: 0,
+          pagination: {
+            currentPage: parseInt(page),
+            totalPages: 0,
+            totalCount: 0,
+            hasNextPage: false,
+            hasPrevPage: false,
+            limit: limitNum
+          }
+        });
+      }
+
+      // Get total count for pagination
+      const totalCount = await Post.countDocuments({
+        user: { $in: followingIds }
+      });
+
+      // Get posts from followed users
+      const posts = await Post.find({
+        user: { $in: followingIds }
+      })
+        .sort({ createdAt: -1 })
+        .populate("user", "username profilePicture")
+        .populate("comments.user", "username profilePicture")
+        .skip(skip)
+        .limit(limitNum);
+
+      const totalPages = Math.ceil(totalCount / limitNum);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
+      res.json({
+        posts,
+        count: posts.length,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalCount,
+          hasNextPage,
+          hasPrevPage,
+          limit: limitNum
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching following posts:", error);
+      res.status(500).json({ message: "Error fetching following posts" });
+    }
+  },
+
+  /**
+   * Gets personalized "For You" feed with algorithmic recommendations
+   * @param {Object} req - Express request object
+   * @param {Object} req.user - Authenticated user object
+   * @param {string} req.user.id - Current user's ID
+   * @param {Object} res - Express response object
+   * @returns {Object} JSON response containing recommended posts
+   * @throws {Error} If fetching for you posts fails
+   */
+  getForYouPosts: async (req, res) => {
+    try {
+      console.log('=== getForYouPosts START ===');
+      const userId = req.user.id;
+      const { limit = 20, page = 1 } = req.query;
+      const limitNum = Math.min(parseInt(limit) || 20, 50);
+      const skip = (parseInt(page) - 1) * limitNum;
+
+      console.log('Processing with userId:', userId, 'limit:', limitNum, 'skip:', skip);
+
+      // Validate userId format
+      if (!userId || typeof userId !== 'string') {
+        console.error('Invalid userId:', userId);
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      // Get current user's following list
+      console.log('Fetching user from database...');
+      const currentUser = await User.findById(userId).select('following');
+      
+      if (!currentUser) {
+        console.error('User not found:', userId);
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log('User found, following count:', currentUser.following?.length || 0);
+      const followingIds = currentUser.following || [];
+
+      // Simple approach: Get posts from followed users first, then other posts
+      let posts = [];
+      
+      if (followingIds.length > 0) {
+        console.log('Fetching posts from followed users...');
+        // Get posts from followed users
+        const followingPosts = await Post.find({
+          user: { $in: followingIds }
+        })
+          .sort({ createdAt: -1 })
+          .populate("user", "username profilePicture")
+          .populate("comments.user", "username profilePicture")
+          .limit(limitNum);
+        
+        posts = followingPosts;
+        console.log('Found', posts.length, 'posts from followed users');
+      }
+
+      // If we need more posts or no following posts, get recent posts
+      if (posts.length < limitNum) {
+        console.log('Need more posts, fetching recent posts...');
+        const remainingLimit = limitNum - posts.length;
+        const excludeUserIds = [...followingIds, userId]; // Exclude followed users and self
+        
+        const recentPosts = await Post.find({
+          user: { $nin: excludeUserIds }
+        })
+          .sort({ createdAt: -1 })
+          .populate("user", "username profilePicture")
+          .populate("comments.user", "username profilePicture")
+          .limit(remainingLimit);
+        
+        posts = [...posts, ...recentPosts];
+        console.log('Total posts after adding recent:', posts.length);
+      }
+
+      // Get total count for pagination
+      const totalCount = await Post.countDocuments();
+
+      const totalPages = Math.ceil(totalCount / limitNum);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
+      console.log('getForYouPosts - Returning posts:', posts.length);
+
+      res.json({
+        posts,
+        count: posts.length,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalCount,
+          hasNextPage,
+          hasPrevPage,
+          limit: limitNum
+        }
+      });
+    } catch (error) {
+      console.error("=== getForYouPosts ERROR ===");
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+      console.error("Error name:", error.name);
+      
+      res.status(500).json({ 
+        message: "Error fetching for you posts",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  },
 };
 
 export { postController as default, postController };
@@ -697,4 +956,6 @@ export const {
   toggleSavePost,
   getSavedPosts,
   reportPost,
+  getFollowingPosts,
+  getForYouPosts,
 } = postController;

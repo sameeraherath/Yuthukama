@@ -7,6 +7,8 @@ import {
   deletePost,
   addComment,
   deleteComment,
+  fetchFollowingPosts,
+  fetchForYouPosts,
 } from "./postsAPI";
 
 const API_BASE = import.meta.env.VITE_SERVER_URL;
@@ -85,14 +87,20 @@ export const likePost = createAsyncThunk(
  * @type {Object}
  * @property {Array} userPosts - Array of posts by the current user
  * @property {Array} allPosts - Array of all posts
+ * @property {Array} followingPosts - Array of posts from followed users
+ * @property {Array} forYouPosts - Array of personalized recommended posts
  * @property {string|null} error - Error message if any
  * @property {Object|null} currentPost - Currently selected post
+ * @property {string} currentFeedType - Current active feed type ('all', 'following', 'forYou')
  */
 const initialState = {
   userPosts: [],
   allPosts: [],
+  followingPosts: [],
+  forYouPosts: [],
   error: null,
   currentPost: null,
+  currentFeedType: 'all',
 };
 
 /**
@@ -128,6 +136,14 @@ const postsSlice = createSlice({
       if (action.payload.user === action.payload.userId) {
         state.userPosts = [action.payload, ...state.userPosts];
       }
+    },
+    /**
+     * Sets the current feed type
+     * @param {Object} state - Current state
+     * @param {Object} action - Action object containing the feed type
+     */
+    setCurrentFeedType: (state, action) => {
+      state.currentFeedType = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -170,11 +186,20 @@ const postsSlice = createSlice({
         state.error = null;
       })
       .addCase(deletePost.fulfilled, (state, action) => {
+        const postId = action.payload;
+        
+        // Remove post from ALL feed types
         state.userPosts = state.userPosts.filter(
-          (post) => post._id !== action.payload
+          (post) => post._id !== postId
         );
         state.allPosts = state.allPosts.filter(
-          (post) => post._id !== action.payload
+          (post) => post._id !== postId
+        );
+        state.followingPosts = state.followingPosts.filter(
+          (post) => post._id !== postId
+        );
+        state.forYouPosts = state.forYouPosts.filter(
+          (post) => post._id !== postId
         );
       })
       .addCase(deletePost.rejected, (state, action) => {
@@ -186,16 +211,20 @@ const postsSlice = createSlice({
       })
       .addCase(likePost.fulfilled, (state, action) => {
         const { postId, likes } = action.payload;
-        // Update post in allPosts
-        const post = state.allPosts.find((p) => p._id === postId);
-        if (post) {
-          post.likes = likes;
-        }
-        // Update post in userPosts if it exists there
-        const userPost = state.userPosts.find((p) => p._id === postId);
-        if (userPost) {
-          userPost.likes = likes;
-        }
+        
+        // Helper function to update post likes in any array
+        const updatePostLikes = (postsArray) => {
+          const post = postsArray.find((p) => p._id === postId);
+          if (post) {
+            post.likes = likes;
+          }
+        };
+        
+        // Update post in ALL feed types
+        updatePostLikes(state.allPosts);
+        updatePostLikes(state.userPosts);
+        updatePostLikes(state.followingPosts);
+        updatePostLikes(state.forYouPosts);
       })
       .addCase(likePost.rejected, (state, action) => {
         state.error = action.payload;
@@ -206,20 +235,22 @@ const postsSlice = createSlice({
       })
       .addCase(addComment.fulfilled, (state, action) => {
         const updatedPost = action.payload;
-        // Update post in allPosts
-        const postIndex = state.allPosts.findIndex(
-          (p) => p._id === updatedPost._id
-        );
-        if (postIndex !== -1) {
-          state.allPosts[postIndex] = updatedPost;
-        }
-        // Update post in userPosts if it exists there
-        const userPostIndex = state.userPosts.findIndex(
-          (p) => p._id === updatedPost._id
-        );
-        if (userPostIndex !== -1) {
-          state.userPosts[userPostIndex] = updatedPost;
-        }
+        
+        // Helper function to update post in any array
+        const updatePostInArray = (postsArray) => {
+          const postIndex = postsArray.findIndex(
+            (p) => p._id === updatedPost._id
+          );
+          if (postIndex !== -1) {
+            postsArray[postIndex] = updatedPost;
+          }
+        };
+        
+        // Update post in ALL feed types
+        updatePostInArray(state.allPosts);
+        updatePostInArray(state.userPosts);
+        updatePostInArray(state.followingPosts);
+        updatePostInArray(state.forYouPosts);
       })
       .addCase(addComment.rejected, (state, action) => {
         state.error = action.payload;
@@ -230,26 +261,51 @@ const postsSlice = createSlice({
       })
       .addCase(deleteComment.fulfilled, (state, action) => {
         const updatedPost = action.payload;
-        // Update post in allPosts
-        const postIndex = state.allPosts.findIndex(
-          (p) => p._id === updatedPost._id
-        );
-        if (postIndex !== -1) {
-          state.allPosts[postIndex] = updatedPost;
-        }
-        // Update post in userPosts if it exists there
-        const userPostIndex = state.userPosts.findIndex(
-          (p) => p._id === updatedPost._id
-        );
-        if (userPostIndex !== -1) {
-          state.userPosts[userPostIndex] = updatedPost;
-        }
+        
+        // Helper function to update post in any array
+        const updatePostInArray = (postsArray) => {
+          const postIndex = postsArray.findIndex(
+            (p) => p._id === updatedPost._id
+          );
+          if (postIndex !== -1) {
+            postsArray[postIndex] = updatedPost;
+          }
+        };
+        
+        // Update post in ALL feed types
+        updatePostInArray(state.allPosts);
+        updatePostInArray(state.userPosts);
+        updatePostInArray(state.followingPosts);
+        updatePostInArray(state.forYouPosts);
       })
       .addCase(deleteComment.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      // Handle fetchFollowingPosts actions
+      .addCase(fetchFollowingPosts.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(fetchFollowingPosts.fulfilled, (state, action) => {
+        state.followingPosts = action.payload.posts;
+      })
+      .addCase(fetchFollowingPosts.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      // Handle fetchForYouPosts actions
+      .addCase(fetchForYouPosts.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(fetchForYouPosts.fulfilled, (state, action) => {
+        state.forYouPosts = action.payload.posts;
+      })
+      .addCase(fetchForYouPosts.rejected, (state, action) => {
         state.error = action.payload;
       });
   },
 });
 
-export const { clearError, setCurrentPost, addPost } = postsSlice.actions;
+export const { clearError, setCurrentPost, addPost, setCurrentFeedType } = postsSlice.actions;
+
+// Re-export the async thunks from postsAPI
+export { fetchPosts, fetchFollowingPosts, fetchForYouPosts } from "./postsAPI";
 export default postsSlice.reducer;

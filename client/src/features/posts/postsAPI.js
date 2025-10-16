@@ -294,3 +294,73 @@ export const reportPost = createAsyncThunk(
     }
   }
 );
+
+/**
+ * Fetches posts from users that the current user follows
+ * @async
+ * @function fetchFollowingPosts
+ * @param {Object} params - Parameters for fetching following posts
+ * @param {number} [params.limit=20] - Number of posts to fetch
+ * @param {number} [params.page=1] - Page number
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If authentication is missing or request fails
+ */
+export const fetchFollowingPosts = createAsyncThunk(
+  "posts/fetchFollowingPosts",
+  async ({ limit = 20, page = 1 } = {}, thunkAPI) => {
+    try {
+      const token = await tokenManager.getToken();
+
+      if (!token) {
+        return thunkAPI.rejectWithValue(
+          "Authentication required. Please log in."
+        );
+      }
+
+      const { data } = await axios.get(`${API_BASE}/api/posts/following`, {
+        params: { limit, page },
+        withCredentials: true,
+      });
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch following posts"
+      );
+    }
+  }
+);
+
+/**
+ * Fetches personalized "For You" feed with algorithmic recommendations
+ * @async
+ * @function fetchForYouPosts
+ * @param {Object} params - Parameters for fetching for you posts
+ * @param {number} [params.limit=20] - Number of posts to fetch
+ * @param {number} [params.page=1] - Page number
+ * @returns {Promise<Object>} Redux thunk action
+ * @throws {Error} If authentication is missing or request fails
+ */
+export const fetchForYouPosts = createAsyncThunk(
+  "posts/fetchForYouPosts",
+  async ({ limit = 20, page = 1 } = {}, thunkAPI) => {
+    try {
+      const token = await tokenManager.getToken();
+
+      if (!token) {
+        return thunkAPI.rejectWithValue(
+          "Authentication required. Please log in."
+        );
+      }
+
+      const { data } = await axios.get(`${API_BASE}/api/posts/for-you`, {
+        params: { limit, page },
+        withCredentials: true,
+      });
+      return data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch for you posts"
+      );
+    }
+  }
+);
