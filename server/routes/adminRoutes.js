@@ -11,4 +11,12 @@ router.use(adminProtect);
 router.get("/dashboard-stats", adminController.getDashboardStats);
 router.get("/user-stats", adminController.getUserStats);
 
+// User management
+router.get("/users", adminController.getAllUsers);
+router.put("/users/:userId", adminController.updateUser);
+router.delete("/users/:userId", adminController.deleteUser);
+
+// Analytics
+router.get("/analytics", adminController.getAnalytics);
+
 export default router;
