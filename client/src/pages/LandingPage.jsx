@@ -12,6 +12,7 @@ import {
   Stack,
 } from "@mui/material";
 import ArticlesSection from "../components/articles/ArticlesSection";
+import Footer from "../components/Footer";
 import HeroImage from "../assets/hero.png";
 import PeopleIcon from "@mui/icons-material/People";
 import ChatIcon from "@mui/icons-material/Chat";
@@ -495,6 +496,9 @@ function LandingPage() {
         {/* Articles Section */}
         <ArticlesSection />
       </Container>
+      
+      {/* Footer */}
+      <Footer />
     </Box>
   );
 }

@@ -115,31 +115,6 @@ const ArticlesSection = () => {
             </Stack>
           </Box>
         )}
-
-        <Box sx={{ textAlign: "center", mt: 4 }}>
-          <Button
-            variant="outlined"
-            component={Link}
-            to="/articles"
-            sx={{
-              color: "#1DBF73",
-              borderColor: "#1DBF73",
-              "&:hover": {
-                backgroundColor: "#1DBF73",
-                color: "white",
-                borderColor: "#1DBF73",
-              },
-              px: 4,
-              py: 1.5,
-              borderRadius: "50px",
-              textTransform: "none",
-              fontSize: "1rem",
-              fontWeight: 500,
-            }}
-          >
-            Explore More Stories
-          </Button>
-        </Box>
       </Container>
     </Box>
   );

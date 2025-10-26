@@ -33,7 +33,6 @@ import EnhancedSkeleton from "../components/LoadingStates/EnhancedSkeleton";
 import EmptyState from "../components/EmptyState";
 import PostDialog from "../components/PostDialog";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import AddIcon from "@mui/icons-material/Add";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import HomeIcon from "@mui/icons-material/Home";
 import PersonIcon from "@mui/icons-material/Person";
@@ -434,35 +433,6 @@ const ExplorePage = () => {
           </List>
         </Box>
 
-        {/* Create Post Button */}
-        <Box sx={{ 
-          p: { md: 1.5, lg: 2 }, 
-          borderTop: "1px solid #e5e7eb",
-          backgroundColor: "#fafafa",
-        }}>
-          <Fab
-            size="medium"
-            onClick={() => navigate("/create-post")}
-            sx={{
-              width: "100%",
-              height: 48,
-              borderRadius: 2,
-              background: "linear-gradient(135deg, #1DBF73 0%, #169c5f 100%)",
-              boxShadow: "none",
-              transition: "all 0.2s ease-in-out",
-              "&:hover": {
-                background: "linear-gradient(135deg, #169c5f 0%, #117a47 100%)",
-                boxShadow: "0 4px 12px rgba(29, 191, 115, 0.3)",
-                transform: "translateY(-2px)",
-              },
-              "&:active": {
-                transform: "translateY(0px)",
-              },
-            }}
-          >
-            <AddIcon sx={{ color: "white", fontSize: "1.2rem" }} />
-          </Fab>
-        </Box>
       </Paper>
 
       {/* Mobile Drawer */}
@@ -667,38 +637,6 @@ const ExplorePage = () => {
           </List>
           </Box>
 
-          {/* Create Post Button */}
-          <Box sx={{ 
-            p: 2, 
-            borderTop: "1px solid #e5e7eb",
-            backgroundColor: "#fafafa",
-          }}>
-            <Fab
-              size="medium"
-              onClick={() => {
-                navigate("/create-post");
-                setMobileDrawerOpen(false);
-              }}
-              sx={{
-                width: "100%",
-                height: 48,
-                borderRadius: 2,
-                background: "linear-gradient(135deg, #1DBF73 0%, #169c5f 100%)",
-                boxShadow: "none",
-                transition: "all 0.2s ease-in-out",
-                "&:hover": {
-                  background: "linear-gradient(135deg, #169c5f 0%, #117a47 100%)",
-                  boxShadow: "0 4px 12px rgba(29, 191, 115, 0.3)",
-                  transform: "translateY(-2px)",
-                },
-                "&:active": {
-                  transform: "translateY(0px)",
-                },
-              }}
-            >
-              <AddIcon sx={{ color: "white", fontSize: "1.2rem" }} />
-            </Fab>
-          </Box>
         </Box>
       </Drawer>
 

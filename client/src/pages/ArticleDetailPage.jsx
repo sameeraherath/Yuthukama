@@ -53,7 +53,6 @@ const articles = [
     `,
     date: 'Sep 28, 2023',
     author: 'Yuthukama Team',
-    image: 'https://source.unsplash.com/1200x600/?education,equality',
     tags: ['Education', 'Social Impact', 'Mentorship']
   },
   // Add other articles with similar structure
@@ -85,9 +84,9 @@ const ArticleDetailPage = () => {
         <Button 
           startIcon={<ArrowBackIcon />} 
           onClick={() => navigate(-1)}
-          sx={{ mb: 3, color: '#1DBF73' }}
+          sx={{ mb: 3, color: '#1DBF73', borderRadius: '20px' }}
         >
-          Back to Articles
+          Back
         </Button>
 
         <Box sx={{ mb: 6 }}>
@@ -117,26 +116,6 @@ const ArticleDetailPage = () => {
                 {article.date}
               </Typography>
             </Box>
-          </Box>
-
-          <Box 
-            sx={{ 
-              borderRadius: 2, 
-              overflow: 'hidden',
-              mb: 5,
-              boxShadow: 3
-            }}
-          >
-            <img 
-              src={article.image} 
-              alt={article.title} 
-              style={{ 
-                width: '100%', 
-                height: 'auto',
-                maxHeight: '500px',
-                objectFit: 'cover'
-              }} 
-            />
           </Box>
 
           <Box 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardMedia, Typography, Button, Box, CardActionArea } from '@mui/material';
+import { Card, CardContent, Typography, Button, Box, CardActionArea } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
 const ArticleCard = ({ article }) => {
@@ -20,13 +20,6 @@ const ArticleCard = ({ article }) => {
       }}
     >
       <CardActionArea sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-        <CardMedia
-          component="img"
-          height="200"
-          image={article.image}
-          alt={article.title}
-          sx={{ objectFit: 'cover' }}
-        />
         <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
           <Typography gutterBottom variant="h6" component="div" sx={{ 
             fontWeight: 'bold',
