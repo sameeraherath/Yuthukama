@@ -9,8 +9,6 @@ import {
   Tabs,
   Tab,
   Card,
-  CardContent,
-  TextField,
   FormControl,
   InputLabel,
   Select,
@@ -657,7 +655,7 @@ const AnalyticsTab = ({ analytics }) => (
               </TableRow>
             </TableHead>
             <TableBody>
-              {analytics.topUsers.slice(0, 5).map((user, index) => (
+              {analytics.topUsers.slice(0, 5).map((user) => (
                 <TableRow key={user._id}>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

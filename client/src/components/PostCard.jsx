@@ -11,7 +11,6 @@ import {
   CircularProgress,
   Alert,
   Avatar,
-  Chip,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -33,7 +32,6 @@ import { deletePost, toggleSavePost, reportPost } from "../features/posts/postsA
 import useAuth from "../hooks/useAuth";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
@@ -43,14 +41,11 @@ import ReportIcon from "@mui/icons-material/Report";
 import MessageButton from "./MessageButton";
 import Comments from "./Comments";
 import { likePost } from "../features/posts/postsSlice";
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import { useNavigate } from "react-router-dom";
 import {
   COLORS,
   BORDER_RADIUS,
-  COMMON_STYLES,
-  SHADOWS,
-  TRANSITIONS,
 } from "../utils/styleConstants";
 import { handleAsync, getErrorMessage, logError } from "../utils/errorHandler";
 import { showToast } from "../features/ui/uiSlice";

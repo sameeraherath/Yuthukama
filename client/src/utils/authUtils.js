@@ -1,8 +1,3 @@
-/**
- * Authentication utility functions
- * @deprecated Use tokenManager from './tokenManager.js' for new code
- */
-
 import { tokenManager } from './tokenManager.js';
 
 /**

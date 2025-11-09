@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   TextField,
@@ -10,17 +10,12 @@ import {
   ListItemButton,
   Avatar,
   Typography,
-  Paper,
   CircularProgress,
-  Chip,
   IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
-  Button,
   Divider,
-  Badge,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -29,7 +24,6 @@ import {
   Message as MessageIcon,
   Person as PersonIcon,
 } from "@mui/icons-material";
-import { motion, AnimatePresence } from "framer-motion";
 import axios from "../../utils/axiosConfig";
 import useAuth from "../../hooks/useAuth";
 

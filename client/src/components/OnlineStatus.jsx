@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Tooltip, Typography } from '@mui/material';
 import CircleIcon from '@mui/icons-material/Circle';
 import { useSelector } from 'react-redux';
@@ -12,7 +11,7 @@ import { useSelector } from 'react-redux';
  * @param {boolean} props.showText - Whether to show status text
  * @returns {JSX.Element} Online status indicator
  */
-const OnlineStatus = ({ userId, username, showText = false }) => {
+const OnlineStatus = ({ userId,showText = false }) => {
   const { userStatus } = useSelector((state) => state.chat);
   
   const userStatusData = userStatus[userId];

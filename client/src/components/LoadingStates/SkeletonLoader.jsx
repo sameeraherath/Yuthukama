@@ -1,5 +1,5 @@
 import { Skeleton, Card, CardContent, Box, Stack } from "@mui/material";
-import { BORDER_RADIUS, SPACING } from "../../utils/styleConstants";
+import { BORDER_RADIUS } from "../../utils/styleConstants";
 
 /**
  * Skeleton loader for post cards

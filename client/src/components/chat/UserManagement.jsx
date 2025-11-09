@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -11,21 +11,16 @@ import {
   Divider,
   Chip,
   Tooltip,
-  Badge,
 } from "@mui/material";
 import {
   MoreVert as MoreVertIcon,
   Block as BlockIcon,
   Report as ReportIcon,
   PersonRemove as PersonRemoveIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
   Star as StarIcon,
   StarBorder as StarBorderIcon,
 } from "@mui/icons-material";
-import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
-import useAuth from "../../hooks/useAuth";
 import OnlineStatus from "../OnlineStatus";
 
 /**
@@ -40,7 +35,6 @@ import OnlineStatus from "../OnlineStatus";
  * @returns {JSX.Element} User management interface
  */
 const UserManagement = ({ user, conversation, userStatus: propUserStatus, onBlockUser, onReportUser, onRemoveUser }) => {
-  const { user: currentUser } = useAuth();
   const { userStatus: stateUserStatus } = useSelector((state) => state.chat);
   
   // Use prop userStatus if provided, otherwise fall back to state

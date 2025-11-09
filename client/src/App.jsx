@@ -55,7 +55,6 @@ const App = () => {
         console.log("App - Session check successful");
       } catch (error) {
         console.log("App - Session check failed:", error);
-        // Don't treat this as an error - just means no valid session
       } finally {
         console.log("App - Session check complete, setting initialCheckDone to true");
         setInitialCheckDone(true);
@@ -182,7 +181,6 @@ const App = () => {
           </ProtectedRoute>
         }
       />
-      {/* Legacy Chat Routes - Full Screen */}
       <Route
         path="/chat"
         element={

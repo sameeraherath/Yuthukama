@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import { Box, Typography, Button, Paper, TextField } from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector} from 'react-redux';
 import useChat from '../hooks/useChat';
-import { addMessage } from '../features/chat/chatSlice';
+
 
 /**
  * WebSocket Test Component
@@ -12,7 +12,7 @@ import { addMessage } from '../features/chat/chatSlice';
 const WebSocketTest = () => {
   const { user } = useSelector((state) => state.auth);
   const { messages, userStatus } = useSelector((state) => state.chat);
-  const dispatch = useDispatch();
+
   
   const [testMessage, setTestMessage] = useState('');
   const [testUserId] = useState('test_user_123');
@@ -24,9 +24,7 @@ const WebSocketTest = () => {
     stopTyping,
     isTyping,
     connectionError,
-    markMessageAsRead,
     addReactionToMessage,
-    userStatus: hookUserStatus,
   } = useChat(user?._id, testUserId, 'test_conversation');
 
   const handleSendTestMessage = () => {

@@ -16,7 +16,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 // eslint-disable-next-line no-unused-vars
-import { motion } from "framer-motion";
 import PostAddIcon from "@mui/icons-material/PostAdd";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";

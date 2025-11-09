@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, IconButton, Tooltip, Popover, Typography, Chip } from '@mui/material';
 import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
-import { useDispatch, useSelector } from 'react-redux';
+
 
 /**
  * Message reactions component
@@ -14,8 +14,6 @@ import { useDispatch, useSelector } from 'react-redux';
  */
 const MessageReactions = ({ messageId, reactions = [], onAddReaction }) => {
   const [anchorEl, setAnchorEl] = useState(null);
-  const { user } = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
 
   const commonReactions = ['👍', '❤️', '😂', '😮', '😢', '😡'];
 
