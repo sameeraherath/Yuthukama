@@ -43,7 +43,17 @@ const ConversationList = ({ onSelectConversation }) => {
    */
   const getOtherParticipant = (conversation) => {
     if (!conversation?.participants) return null;
-    return conversation.participants.find((p) => p._id !== user?._id);
+    
+    // Get current user ID (handle both _id and id)
+    const currentUserId = user?._id || user?.id;
+    if (!currentUserId) return null;
+    
+    // Find the participant that is NOT the current user
+    // Convert both IDs to strings for proper comparison (handles ObjectId vs string)
+    return conversation.participants.find((p) => {
+      const participantId = p._id || p.id;
+      return participantId?.toString() !== currentUserId.toString();
+    });
   };
 
   /**
