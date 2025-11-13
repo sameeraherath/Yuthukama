@@ -197,9 +197,9 @@ const authController = {
               <style>
                 body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
                 .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background-color: #4F46E5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                .header { background-color: #10B981; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
                 .content { background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
-                .button { display: inline-block; padding: 12px 30px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .button { display: inline-block; padding: 12px 30px; background-color: #10B981; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
                 .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
                 .warning { background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px; margin: 15px 0; }
               </style>
@@ -217,7 +217,7 @@ const authController = {
                     <a href="${resetUrl}" class="button">Reset Password</a>
                   </div>
                   <p>Or copy and paste this link in your browser:</p>
-                  <p style="word-break: break-all; color: #4F46E5; background: #eef2ff; padding: 10px; border-radius: 4px;">${resetUrl}</p>
+                  <p style="word-break: break-all; color: #10B981; background: #d1fae5; padding: 10px; border-radius: 4px;">${resetUrl}</p>
                   <div class="warning">
                     <p style="margin: 0;"><strong>⏰ This link will expire in 10 minutes.</strong></p>
                   </div>
