@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import config from "../config/config.js";
+import sendEmail from "../utils/sendEmail.js";
 
 /**
  * Controller object containing authentication-related functions
@@ -180,19 +181,77 @@ const authController = {
       const resetToken = user.getResetPasswordToken();
       await user.save();
 
-      // TODO: In production, send this via email service (SendGrid, AWS SES, etc.)
-      // For now, return it in response (ONLY FOR DEVELOPMENT)
       const resetUrl = `${
         process.env.CLIENT_URL || "http://localhost:5173"
       }/reset-password/${resetToken}`;
 
-      res.json({
-        message: "Password reset link has been sent to your email",
-        // Remove resetToken from response in production!
-        resetToken:
-          process.env.NODE_ENV === "development" ? resetToken : undefined,
-        resetUrl: process.env.NODE_ENV === "development" ? resetUrl : undefined,
-      });
+      // Send email with reset link
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: "Password Reset Request - Yuthukama",
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background-color: #10B981; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                .content { background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+                .button { display: inline-block; padding: 12px 30px; background-color: #10B981; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+                .warning { background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px; margin: 15px 0; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>🔐 Password Reset Request</h1>
+                </div>
+                <div class="content">
+                  <p>Hi <strong>${user.username}</strong>,</p>
+                  <p>You requested to reset your password for your Yuthukama account.</p>
+                  <p>Click the button below to reset your password:</p>
+                  <div style="text-align: center;">
+                    <a href="${resetUrl}" class="button" style="display: inline-block; padding: 12px 30px; background-color: #10B981; color: #ffffff !important; text-decoration: none; border-radius: 5px; margin: 20px 0;">Reset Password</a>
+                  </div>
+                  <p>Or copy and paste this link in your browser:</p>
+                  <p style="word-break: break-all; color: #10B981; background: #d1fae5; padding: 10px; border-radius: 4px;">${resetUrl}</p>
+                  <div class="warning">
+                    <p style="margin: 0;"><strong>⏰ This link will expire in 10 minutes.</strong></p>
+                  </div>
+                  <p>If you didn't request a password reset, please ignore this email. Your password will remain unchanged.</p>
+                </div>
+                <div class="footer">
+                  <p>&copy; 2025 Yuthukama. All rights reserved.</p>
+                  <p>This is an automated email. Please do not reply.</p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `,
+        });
+
+        res.json({
+          message: "Password reset link has been sent to your email",
+          // Only include reset details in development mode for testing
+          resetToken:
+            process.env.NODE_ENV === "development" ? resetToken : undefined,
+          resetUrl:
+            process.env.NODE_ENV === "development" ? resetUrl : undefined,
+        });
+      } catch (emailError) {
+        console.error("Email sending error:", emailError);
+        // If email fails, clear the reset token
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
+
+        return res
+          .status(500)
+          .json({ message: "Error sending email. Please try again later." });
+      }
     } catch (error) {
       console.error("Forgot password error:", error);
       res
