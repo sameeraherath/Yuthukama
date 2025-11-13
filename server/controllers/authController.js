@@ -214,7 +214,7 @@ const authController = {
                   <p>You requested to reset your password for your Yuthukama account.</p>
                   <p>Click the button below to reset your password:</p>
                   <div style="text-align: center;">
-                    <a href="${resetUrl}" class="button">Reset Password</a>
+                    <a href="${resetUrl}" class="button" style="display: inline-block; padding: 12px 30px; background-color: #10B981; color: #ffffff !important; text-decoration: none; border-radius: 5px; margin: 20px 0;">Reset Password</a>
                   </div>
                   <p>Or copy and paste this link in your browser:</p>
                   <p style="word-break: break-all; color: #10B981; background: #d1fae5; padding: 10px; border-radius: 4px;">${resetUrl}</p>
