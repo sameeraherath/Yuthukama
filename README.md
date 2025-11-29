@@ -111,7 +111,7 @@ To create a platform where knowledge sharing, mentorship, and community building
 
 ### Frontend Technologies
 - **React 19** - Latest React with concurrent features and improved performance
-- **Redux Toolkit** - Modern state management with RTK Query for API calls
+- **Redux Toolkit** - Redux Toolkit – Centralized state management (auth, posts, chat) with thunk-based API integration
 - **React Router v7** - Declarative routing with data loading capabilities
 - **Material-UI (MUI) v6** - Comprehensive component library with theming
 - **TailwindCSS** - Utility-first CSS framework for rapid styling
