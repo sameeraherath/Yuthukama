@@ -48,7 +48,6 @@ To create a platform where knowledge sharing, mentorship, and community building
 - **JWT-based Authentication**: Secure token-based authentication system
 - **Password Security**: Bcrypt hashing with salt rounds for password protection
 - **Password Reset**: Email-based password recovery system
-- **Email Verification**: Account verification through email tokens
 - **Role-based Access**: User and admin role management
 - **Rate Limiting**: Protection against brute force attacks
 
@@ -58,15 +57,11 @@ To create a platform where knowledge sharing, mentorship, and community building
 - **Read Receipts**: Message read status tracking
 - **Message Reactions**: Emoji reactions on messages
 - **File Attachments**: Support for images, documents, and media files
-- **Message Editing**: Edit sent messages with timestamp tracking
-- **Message Deletion**: Soft delete with audit trail
 - **Online Status**: Real-time user presence indicators
 
 ### 🤖 AI-Powered Features
 - **AI Chatbot**: Intelligent assistant powered by Gemini AI
-- **Contextual Responses**: AI understands conversation context
 - **Mentorship Support**: AI-assisted guidance and recommendations
-- **Smart Suggestions**: Personalized content recommendations
 
 ### 📱 Social Media Features
 - **Post Creation**: Rich text posts with image support
@@ -75,7 +70,6 @@ To create a platform where knowledge sharing, mentorship, and community building
 - **Personalized Feeds**: "For You" and "Following" feed algorithms
 - **Trending Posts**: Popular content discovery
 - **Saved Posts**: Bookmark posts for later reference
-- **Post Reporting**: Community moderation tools
 - **Advanced Search**: Search posts by content, category, and user
 
 ### 👥 Community & Mentorship
@@ -89,16 +83,11 @@ To create a platform where knowledge sharing, mentorship, and community building
 ### 🔔 Notifications System
 - **Real-time Notifications**: Instant notification delivery
 - **Multiple Types**: Likes, comments, follows, mentions, messages
-- **Notification Preferences**: Granular control over notification types
-- **In-app Notifications**: Rich notification interface
-- **Notification History**: Complete notification timeline
 
 ### 📊 Admin Features
 - **Dashboard Analytics**: Comprehensive platform statistics
 - **User Management**: Admin tools for user oversight
 - **Content Moderation**: Post and user management tools
-- **System Monitoring**: Platform health and performance metrics
-- **Data Export**: Analytics and user data export capabilities
 
 ### 🎨 User Experience
 - **Responsive Design**: Mobile-first approach with Material-UI
