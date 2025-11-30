@@ -130,7 +130,7 @@ To create a platform where knowledge sharing, mentorship, and community building
 - **Gemini AI** - Google's AI model for chatbot functionality
 - **MongoDB Atlas** - Cloud-hosted MongoDB database
 - **Vercel** - Frontend deployment and hosting platform
-- **Railway/Heroku** - Backend deployment platforms
+- **AWS EC2** - Virtual servers for hosting and running backend application
 
 ### Development Tools
 - **ESLint** - Code linting and style enforcement
