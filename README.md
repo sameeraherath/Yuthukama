@@ -317,7 +317,7 @@ The frontend will start on `http://localhost:5173`
 
 3. **Access the Application**
    - **Frontend**: `http://localhost:5173`
-   - **Backend API**: `http://localhost:5000`
+   - **Backend**: `http://localhost:5000`
    - **API Documentation**: `http://localhost:5000/api-docs`
 
 ### Production Build
@@ -370,7 +370,6 @@ npm start
 - **Start Conversations**: Click on user profiles and select "Message"
 - **Send Messages**: Type in the chat input and press Enter
 - **File Attachments**: Click the attachment icon to send files
-- **Message Reactions**: Hover over messages and click the reaction button
 
 #### AI Chatbot
 - **Access AI**: Click the AI assistant icon in the navigation
