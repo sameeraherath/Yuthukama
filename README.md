@@ -189,23 +189,6 @@ server/
 └── server.js         # Main server entry point
 ```
 
-### Data Flow Architecture
-
-1. **Authentication Flow**:
-   - User login → JWT token generation → Token storage in HTTP-only cookies
-   - Protected routes → Token validation → User context
-
-2. **Real-time Communication**:
-   - Socket.IO connection → User authentication → Room management
-   - Message events → Database persistence → Real-time broadcasting
-
-3. **State Management**:
-   - Redux Toolkit slices → API calls → State updates → Component re-renders
-   - RTK Query for caching and synchronization
-
-4. **File Upload Flow**:
-   - Client upload → Multer processing → AWS S3 storage → Database URL storage
-
 ### Security Architecture
 
 - **Authentication**: JWT tokens with HTTP-only cookies
