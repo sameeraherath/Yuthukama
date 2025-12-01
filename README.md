@@ -73,11 +73,8 @@ To create a platform where knowledge sharing, mentorship, and community building
 - **Advanced Search**: Search posts by content
 
 ### 👥 Community & Mentorship
-- **User Profiles**: Comprehensive user profiles with stats
+- **User Profiles**: Simple user profiles with essential details
 - **Follower System**: Social connections and networking
-- **Mentorship Matching**: Connect mentors with mentees
-- **Community Building**: Group interactions and discussions
-- **User Recommendations**: AI-powered user suggestions
 - **Event Announcements**: Community event notifications
 
 ### 🔔 Notifications System
@@ -91,10 +88,7 @@ To create a platform where knowledge sharing, mentorship, and community building
 
 ### 🎨 User Experience
 - **Responsive Design**: Mobile-first approach with Material-UI
-- **Dark/Light Themes**: Theme customization options
-- **Accessibility**: WCAG compliant interface design
 - **Performance Optimization**: Fast loading and smooth interactions
-- **Progressive Web App**: PWA capabilities for mobile experience
 
 ## Tech Stack
 
