@@ -299,34 +299,6 @@ npm run dev
 
 Visit `http://localhost:5173` to see the application running.
 
-## Environment Variables
-
-For detailed information about all environment variables, see [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md).
-
-### Required Variables
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/yuthukama` |
-| `JWT_SECRET` | Secret key for JWT token signing | `your_super_secret_key_minimum_32_chars` |
-| `PORT` | Server port number | `5000` |
-
-### Optional Variables
-
-| Variable | Description | Default | Required For |
-|----------|-------------|---------|--------------|
-| `AWS_ACCESS_KEY_ID` | AWS access key for S3 | - | File uploads |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret key for S3 | - | File uploads |
-| `AWS_REGION` | AWS region for S3 | `us-east-1` | File uploads |
-| `AWS_S3_BUCKET` | S3 bucket name | - | File uploads |
-| `GEMINI_API_KEY` | Google Gemini AI API key | - | AI chatbot |
-| `EMAIL_HOST` | SMTP server host | - | Email features |
-| `EMAIL_PORT` | SMTP server port | `587` | Email features |
-| `EMAIL_USER` | SMTP username | - | Email features |
-| `EMAIL_PASS` | SMTP password | - | Email features |
-
-## Usage
-
 ### Development Environment
 
 1. **Start the Backend Server**
