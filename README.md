@@ -65,12 +65,12 @@ To create a platform where knowledge sharing, mentorship, and community building
 
 ### 📱 Social Media Features
 - **Post Creation**: Rich text posts with image support
-- **Engagement**: Like, comment, and share functionality
+- **Engagement**: Users can like and comment on posts.
 - **Follow System**: Follow/unfollow users with notifications
 - **Personalized Feeds**: "For You" and "Following" feed algorithms
 - **Trending Posts**: Popular content discovery
 - **Saved Posts**: Bookmark posts for later reference
-- **Advanced Search**: Search posts by content, category, and user
+- **Advanced Search**: Search posts by content
 
 ### 👥 Community & Mentorship
 - **User Profiles**: Comprehensive user profiles with stats
